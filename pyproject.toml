@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "autocheck-anyrouter"
+version = "0.1.0"
+description = "Any Router 自动签到工具，支持多种通知方式和自定义配置"
+requires-python = ">=3.11"
+dependencies = [
+  "httpx[http2]==0.28.1",
+  "playwright==1.55.0",
+  "python-dotenv==1.1.1",
+  "stencil-template==4.1.1"
+]
+
+[project.scripts]
+autocheck-anyrouter = "checkin:run_main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[dependency-groups]
+dev = [
+  "pytest==8.4.1",
+  "pytest-mock==3.14.1",
+  "pytest-cov==6.2.1",
+  "python-dotenv==1.1.1",
+  "ruff==0.12.11"
+]
+
+[tool.ruff]
+line-length = 120
+fix = true
+
+[tool.ruff.lint]
+select = ["ASYNC", "E", "F", "FAST", "I", "PLE"]
+ignore = ["ASYNC109", "ASYNC230", "E101", "E402", "E501", "F841", "E731"]
+unfixable = ["E101", "E402", "E501", "F841", "E731"]
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "tab"
+docstring-code-format = true
