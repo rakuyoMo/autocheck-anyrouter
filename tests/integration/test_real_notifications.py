@@ -10,15 +10,15 @@ class TestIntegration:
 	@pytest.fixture
 	def notification_kit_from_env(self):
 		"""从环境变量创建 NotificationKit 实例（用于集成测试）"""
-		from notif.notify import NotificationKit
+		from src.notif.notify import NotificationKit
 		return NotificationKit()
 
 	@pytest.fixture
 	def test_notification_data(self):
 		"""创建测试用的通知数据"""
-		from core.models.notification_data import NotificationData
-		from core.models.account_result import AccountResult
-		from core.models.notification_stats import NotificationStats
+		from src.core.models.notification_data import NotificationData
+		from src.core.models.account_result import AccountResult
+		from src.core.models.notification_stats import NotificationStats
 
 		return NotificationData(
 			accounts=[
@@ -53,12 +53,12 @@ class TestIntegration:
 		# 如果没有抛出异常，则测试通过
 		# 注意：这个测试不验证通知是否真的成功发送，只验证代码执行流程正确
 
-	@patch('notif.notify.NotificationKit._send_email_with_template')
-	@patch('notif.notify.NotificationKit._send_dingtalk_with_template')
-	@patch('notif.notify.NotificationKit._send_wecom_with_template')
-	@patch('notif.notify.NotificationKit._send_pushplus_with_template')
-	@patch('notif.notify.NotificationKit._send_feishu_with_template')
-	@patch('notif.notify.NotificationKit._send_serverpush_with_template')
+	@patch('src.notif.notify.NotificationKit._send_email_with_template')
+	@patch('src.notif.notify.NotificationKit._send_dingtalk_with_template')
+	@patch('src.notif.notify.NotificationKit._send_wecom_with_template')
+	@patch('src.notif.notify.NotificationKit._send_pushplus_with_template')
+	@patch('src.notif.notify.NotificationKit._send_feishu_with_template')
+	@patch('src.notif.notify.NotificationKit._send_serverpush_with_template')
 	def test_push_message_routing_logic(
 		self,
 		mock_serverpush,

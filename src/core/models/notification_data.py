@@ -1,8 +1,8 @@
 from typing import List, Optional
 from dataclasses import dataclass
 
-from .account_result import AccountResult
-from .notification_stats import NotificationStats
+from core.models.account_result import AccountResult
+from core.models.notification_stats import NotificationStats
 
 
 @dataclass

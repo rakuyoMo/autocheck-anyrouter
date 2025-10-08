@@ -13,15 +13,15 @@ class TestTemplateRendering:
 	@pytest.fixture
 	def notification_kit(self):
 		"""创建不依赖环境变量的 NotificationKit 实例"""
-		from notif.notify import NotificationKit
+		from src.notif.notify import NotificationKit
 		return NotificationKit()
 
 	@pytest.fixture
 	def single_success_data(self):
 		"""单账号成功的测试数据"""
-		from core.models.notification_data import NotificationData
-		from core.models.account_result import AccountResult
-		from core.models.notification_stats import NotificationStats
+		from src.core.models.notification_data import NotificationData
+		from src.core.models.account_result import AccountResult
+		from src.core.models.notification_stats import NotificationStats
 
 		return NotificationData(
 			accounts=[
@@ -40,9 +40,9 @@ class TestTemplateRendering:
 	@pytest.fixture
 	def single_failure_data(self):
 		"""单账号失败的测试数据"""
-		from core.models.notification_data import NotificationData
-		from core.models.account_result import AccountResult
-		from core.models.notification_stats import NotificationStats
+		from src.core.models.notification_data import NotificationData
+		from src.core.models.account_result import AccountResult
+		from src.core.models.notification_stats import NotificationStats
 
 		return NotificationData(
 			accounts=[
@@ -61,9 +61,9 @@ class TestTemplateRendering:
 	@pytest.fixture
 	def multiple_mixed_data(self):
 		"""多账号混合的测试数据"""
-		from core.models.notification_data import NotificationData
-		from core.models.account_result import AccountResult
-		from core.models.notification_stats import NotificationStats
+		from src.core.models.notification_data import NotificationData
+		from src.core.models.account_result import AccountResult
+		from src.core.models.notification_stats import NotificationStats
 
 		return NotificationData(
 			accounts=[
@@ -233,9 +233,9 @@ class TestTemplateRendering:
 
 	def test_custom_template_with_convenience_flags(self, notification_kit):
 		"""测试自定义模板使用便利标志（all_success, all_failed, partial_success）"""
-		from core.models.notification_data import NotificationData
-		from core.models.account_result import AccountResult
-		from core.models.notification_stats import NotificationStats
+		from src.core.models.notification_data import NotificationData
+		from src.core.models.account_result import AccountResult
+		from src.core.models.notification_stats import NotificationStats
 
 		template = '{% if all_success %}ALL SUCCESS{% endif %}{% if all_failed %}ALL FAILED{% endif %}{% if partial_success %}PARTIAL{% endif %}'
 

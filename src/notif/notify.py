@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Dict, Any, Optional, Literal, Union
 import httpx
 import stencil
 
-from .models import (
+from notif.models import (
 	EmailConfig,
 	WebhookConfig,
 	PushPlusConfig,

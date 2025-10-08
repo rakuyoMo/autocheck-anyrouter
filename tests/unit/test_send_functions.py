@@ -30,7 +30,7 @@ class TestNotificationSending:
 			if 'NOTIF_CONFIG' in key or any(x in key for x in ['EMAIL', 'WEBHOOK', 'TOKEN', 'KEY']):
 				monkeypatch.delenv(key, raising=False)
 
-		from notif.notify import NotificationKit
+		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
 
 		with pytest.raises(ValueError, match=error_message):
@@ -52,7 +52,7 @@ class TestNotificationSending:
 		mock_server = MagicMock()
 		mock_smtp.return_value.__enter__.return_value = mock_server
 
-		from notif.notify import NotificationKit
+		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
 		kit.send_email('测试标题', '测试内容')
 
@@ -87,7 +87,7 @@ class TestNotificationSending:
 		mock_client_instance = MagicMock()
 		mock_client.return_value.__enter__.return_value = mock_client_instance
 
-		from notif.notify import NotificationKit
+		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
 		getattr(kit, method_name)('测试标题', '测试内容')
 
@@ -123,7 +123,7 @@ class TestNotificationSending:
 		mock_client_instance = MagicMock()
 		mock_client.return_value.__enter__.return_value = mock_client_instance
 
-		from notif.notify import NotificationKit
+		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
 		kit.send_feishu('测试标题', '测试内容')
 
@@ -171,7 +171,7 @@ class TestNotificationSending:
 		mock_client_instance = MagicMock()
 		mock_client.return_value.__enter__.return_value = mock_client_instance
 
-		from notif.notify import NotificationKit
+		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
 		kit.send_wecom('测试标题', '测试内容')
 

@@ -1,7 +1,7 @@
-from .email_config import EmailConfig
-from .webhook_config import WebhookConfig
-from .pushplus_config import PushPlusConfig
-from .serverpush_config import ServerPushConfig
+from notif.models.email_config import EmailConfig
+from notif.models.webhook_config import WebhookConfig
+from notif.models.pushplus_config import PushPlusConfig
+from notif.models.serverpush_config import ServerPushConfig
 
 __all__ = [
     'EmailConfig',

@@ -7,7 +7,7 @@ class TestNotificationDataModel:
 	@pytest.fixture
 	def create_account_result(self):
 		"""创建账号结果的工厂函数"""
-		from core.models.account_result import AccountResult
+		from src.core.models.account_result import AccountResult
 
 		def _create(
 			name: str = '测试账号',
@@ -30,9 +30,9 @@ class TestNotificationDataModel:
 	def create_notification_data(self, create_account_result):
 		"""创建通知数据的工厂函数"""
 		from typing import List
-		from core.models.notification_data import NotificationData
-		from core.models.account_result import AccountResult
-		from core.models.notification_stats import NotificationStats
+		from src.core.models.notification_data import NotificationData
+		from src.core.models.account_result import AccountResult
+		from src.core.models.notification_stats import NotificationStats
 
 		def _create(
 			accounts: List[AccountResult],

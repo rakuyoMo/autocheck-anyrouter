@@ -14,7 +14,7 @@ class TestConfigParsing:
 			if 'NOTIF_CONFIG' in key or key in ['EMAIL_USER', 'WEIXIN_WEBHOOK', 'DINGDING_WEBHOOK', 'FEISHU_WEBHOOK', 'PUSHPLUS_TOKEN', 'SERVERPUSHKEY']:
 				monkeypatch.delenv(key, raising=False)
 
-		from notif.notify import NotificationKit
+		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
 
 		assert kit.email_config is None
@@ -46,7 +46,7 @@ class TestConfigParsing:
 
 		monkeypatch.setenv('WECOM_NOTIF_CONFIG', json.dumps(config))
 
-		from notif.notify import NotificationKit
+		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
 
 		assert kit.wecom_config is not None
@@ -161,7 +161,7 @@ class TestConfigParsing:
 
 		monkeypatch.setenv('PUSHPLUS_NOTIF_CONFIG', json.dumps(config))
 
-		from notif.notify import NotificationKit
+		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
 
 		assert kit.pushplus_config is not None
@@ -209,7 +209,7 @@ class TestConfigParsing:
 
 		monkeypatch.setenv('SERVERPUSH_NOTIF_CONFIG', json.dumps(config))
 
-		from notif.notify import NotificationKit
+		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
 
 		assert kit.serverpush_config is not None
@@ -267,7 +267,7 @@ class TestConfigParsing:
 
 		monkeypatch.setenv('EMAIL_NOTIF_CONFIG', json.dumps(config))
 
-		from notif.notify import NotificationKit
+		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
 
 		assert kit.email_config is not None
