@@ -1,2 +1,21 @@
 [tools]
 python = "3.11"
+
+[env]
+PYTHONPATH = "./src"
+PYTHONIOENCODING = "utf-8"
+
+[tasks]
+# 依赖安装
+install = "mise exec -- python -m pip install -e ."
+install-dev = "mise exec -- python -m pip install -e '.[dev]'"
+
+# Playwright 浏览器安装
+install-browsers = "mise exec -- python -m playwright install chromium --with-deps"
+
+# 运行签到脚本
+checkin = "mise exec -- python src/core/checkin.py"
+
+# 测试相关
+test = "mise exec -- pytest tests/"
+test-cov = "mise exec -- pytest tests/ --cov=src --cov-report=html"

@@ -53,7 +53,7 @@ runs:
         FEISHU_NOTIF_CONFIG: ${{ inputs.feishu-notif-config }}
         WECOM_NOTIF_CONFIG: ${{ inputs.wecom-notif-config }}
       run: |
-        uv run src/core/checkin.py
+        mise run checkin
 
     - name: 执行结果
       if: always()

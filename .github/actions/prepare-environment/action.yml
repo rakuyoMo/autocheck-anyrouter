@@ -9,8 +9,8 @@ branding:
 
 outputs:
   cache-hit:
-    description: 'UV 依赖缓存是否命中'
-    value: ${{ steps.uv-cache.outputs.cache-hit }}
+    description: 'Mise 依赖缓存是否命中'
+    value: ${{ steps.mise-cache.outputs.cache-hit }}
   playwright-version:
     description: 'Playwright 版本'
     value: ${{ steps.playwright-version.outputs.version }}
@@ -22,34 +22,31 @@ runs:
       with:
         version: "latest"
 
-    - uses: astral-sh/setup-uv@v3
-      with:
-        version: "latest"
-
-    - name: 缓存 UV 依赖
+    - name: 缓存 Mise 依赖
       uses: actions/cache@v4
-      id: uv-cache
+      id: mise-cache
       with:
         path: |
-          ~/.cache/uv
-          .venv
-        key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+          ~/.local/share/mise
+          ~/.cache/mise
+        key: ${{ runner.os }}-mise-${{ hashFiles('pyproject.toml', 'mise.toml') }}
         restore-keys: |
-          ${{ runner.os }}-uv-
+          ${{ runner.os }}-mise-
 
     - name: 安装依赖
-      if: steps.uv-cache.outputs.cache-hit != 'true'
+      if: steps.mise-cache.outputs.cache-hit != 'true'
       shell: bash
       run: |
         echo "缓存未命中，开始安装项目依赖..."
-        uv sync
+        mise install
+        mise run install-dev
         echo "✅ 环境初始化完成"
 
     - name: 获取 Playwright 版本
       id: playwright-version
       shell: bash
       run: |
-        version=$(uv run python -c "import importlib.metadata; print(importlib.metadata.version('playwright'))")
+        version=$(mise exec -- python -c "import importlib.metadata; print(importlib.metadata.version('playwright'))")
         echo "version=$version" >> $GITHUB_OUTPUT
         echo "Playwright version: $version"
 
@@ -69,4 +66,4 @@ runs:
       shell: bash
       run: |
         echo "缓存未命中，开始安装 Playwright 浏览器..."
-        uv run playwright install chromium --with-deps
+        mise run install-browsers
