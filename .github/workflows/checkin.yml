@@ -14,11 +14,8 @@ jobs:
     - name: 检出代码
       uses: actions/checkout@v4
 
-    - name: 准备环境
-      uses: ./.github/actions/prepare-environment
-
     - name: 执行签到
-      uses: ./.github/actions/execute-checkin
+      uses: ./.github/
       with:
         accounts: ${{ secrets.ANYROUTER_ACCOUNTS }}
         dingtalk-notif-config: ${{ secrets.DINGTALK_NOTIF_CONFIG }}
