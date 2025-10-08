@@ -11,6 +11,9 @@ jobs:
     env:
       PYTHONIOENCODING: utf-8
     steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
     - name: 准备环境
       uses: ./.github/actions/prepare-environment
 
