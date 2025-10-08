@@ -45,9 +45,12 @@ class TestNotificationSending:
 				monkeypatch.delenv(key, raising=False)
 
 		# 设置邮箱配置
-		monkeypatch.setenv('EMAIL_USER', 'test@example.com')
-		monkeypatch.setenv('EMAIL_PASS', 'testpass')
-		monkeypatch.setenv('EMAIL_TO', 'recipient@example.com')
+		email_config = {
+			'user': 'test@example.com',
+			'pass': 'testpass',
+			'to': 'recipient@example.com'
+		}
+		monkeypatch.setenv('EMAIL_NOTIF_CONFIG', json.dumps(email_config))
 
 		mock_server = MagicMock()
 		mock_smtp.return_value.__enter__.return_value = mock_server
@@ -59,12 +62,12 @@ class TestNotificationSending:
 		assert mock_server.login.called
 		assert mock_server.send_message.called
 
-	@pytest.mark.parametrize('platform,method_name,env_key,env_value', [
-		('pushplus', 'send_pushplus', 'PUSHPLUS_TOKEN', 'test_token'),
-		('serverpush', 'send_serverpush', 'SERVERPUSHKEY', 'test_key'),
-		('dingtalk', 'send_dingtalk', 'DINGDING_WEBHOOK', 'https://example.com/webhook'),
-		('feishu', 'send_feishu', 'FEISHU_WEBHOOK', 'https://example.com/webhook'),
-		('wecom', 'send_wecom', 'WEIXIN_WEBHOOK', 'https://example.com/webhook'),
+	@pytest.mark.parametrize('platform,method_name,env_key,config_key,env_value', [
+		('pushplus', 'send_pushplus', 'PUSHPLUS_NOTIF_CONFIG', 'token', 'test_token'),
+		('serverpush', 'send_serverpush', 'SERVERPUSH_NOTIF_CONFIG', 'send_key', 'test_key'),
+		('dingtalk', 'send_dingtalk', 'DINGTALK_NOTIF_CONFIG', 'webhook', 'https://example.com/webhook'),
+		('feishu', 'send_feishu', 'FEISHU_NOTIF_CONFIG', 'webhook', 'https://example.com/webhook'),
+		('wecom', 'send_wecom', 'WECOM_NOTIF_CONFIG', 'webhook', 'https://example.com/webhook'),
 	])
 	@patch('httpx.Client')
 	def test_http_platforms_sending_with_mock(
@@ -74,6 +77,7 @@ class TestNotificationSending:
 		platform,
 		method_name,
 		env_key,
+		config_key,
 		env_value
 	):
 		"""测试各 HTTP 平台的发送逻辑（使用 mock）"""
@@ -82,7 +86,8 @@ class TestNotificationSending:
 			if 'NOTIF_CONFIG' in key or any(x in key for x in ['WEBHOOK', 'TOKEN', 'KEY']):
 				monkeypatch.delenv(key, raising=False)
 
-		monkeypatch.setenv(env_key, env_value)
+		config = {config_key: env_value}
+		monkeypatch.setenv(env_key, json.dumps(config))
 
 		mock_client_instance = MagicMock()
 		mock_client.return_value.__enter__.return_value = mock_client_instance

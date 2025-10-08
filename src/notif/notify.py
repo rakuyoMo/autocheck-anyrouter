@@ -4,7 +4,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Any, Optional, Literal, Union
+from typing import Dict, Any, Optional, Literal, Union
 
 import httpx
 import stencil
@@ -167,171 +167,121 @@ class NotificationKit:
 
 	def _load_email_config(self) -> Optional[EmailConfig]:
 		"""加载邮箱配置"""
-		# 检查新的配置方式
 		email_notif_config = os.getenv('EMAIL_NOTIF_CONFIG')
-		if email_notif_config:
-			parsed = self._parse_env_config(email_notif_config)
-			if isinstance(parsed, dict):
-				# 如果 template 为 None，则使用默认模板
-				template = parsed.get('template')
-				if template is None:
-					default_config = self._load_default_config('email')
-					template = default_config.get('template') if default_config else None
+		if not email_notif_config:
+			return None
 
-				return EmailConfig(
-					user=parsed['user'],
-					password=parsed['pass'],
-					to=parsed['to'],
-					smtp_server=parsed.get('smtp_server'),
-					platform_settings=parsed.get('platform_settings'),
-					template=template
-				)
+		parsed = self._parse_env_config(email_notif_config)
+		if not isinstance(parsed, dict):
+			return None
 
-		# 检查旧的配置方式
-		email_user = os.getenv('EMAIL_USER')
-		email_pass = os.getenv('EMAIL_PASS')
-		email_to = os.getenv('EMAIL_TO')
-		custom_smtp = os.getenv('CUSTOM_SMTP_SERVER')
-
-		if email_user and email_pass and email_to:
-			# 加载默认模板
+		# 如果 template 为 None，则使用默认模板
+		template = parsed.get('template')
+		if template is None:
 			default_config = self._load_default_config('email')
-			return EmailConfig(
-				user=email_user,
-				password=email_pass,
-				to=email_to,
-				smtp_server=custom_smtp,
-				platform_settings=default_config.get('platform_settings') if default_config else None,
-				template=default_config.get('template') if default_config else None
-			)
+			template = default_config.get('template') if default_config else None
 
-		return None
+		return EmailConfig(
+			user=parsed['user'],
+			password=parsed['pass'],
+			to=parsed['to'],
+			smtp_server=parsed.get('smtp_server'),
+			platform_settings=parsed.get('platform_settings'),
+			template=template
+		)
 
-	def _load_webhook_config(self, platform: str, env_key: str, notif_config_key: str) -> Optional[WebhookConfig]:
+	def _load_webhook_config(self, platform: str, notif_config_key: str) -> Optional[WebhookConfig]:
 		"""加载 Webhook 配置的通用方法"""
-		# 检查新的配置方式
 		notif_config = os.getenv(notif_config_key)
-		if notif_config:
-			parsed = self._parse_env_config(notif_config)
-			if isinstance(parsed, dict):
-				# 如果 template 为 None，则使用默认模板
-				template = parsed.get('template')
-				if template is None:
-					default_config = self._load_default_config(platform)
-					template = default_config.get('template') if default_config else None
+		if not notif_config:
+			return None
 
-				return WebhookConfig(
-					webhook=parsed['webhook'],
-					platform_settings=parsed.get('platform_settings'),
-					template=template
-				)
-			else:
-				# 纯字符串，当做 webhook URL，使用默认模板
+		parsed = self._parse_env_config(notif_config)
+		if isinstance(parsed, dict):
+			# 如果 template 为 None，则使用默认模板
+			template = parsed.get('template')
+			if template is None:
 				default_config = self._load_default_config(platform)
-				return WebhookConfig(
-					webhook=parsed,
-					platform_settings=default_config.get('platform_settings') if default_config else None,
-					template=default_config.get('template') if default_config else None
-				)
+				template = default_config.get('template') if default_config else None
 
-		# 检查旧的配置方式
-		old_webhook = os.getenv(env_key)
-		if old_webhook:
+			return WebhookConfig(
+				webhook=parsed['webhook'],
+				platform_settings=parsed.get('platform_settings'),
+				template=template
+			)
+		else:
+			# 纯字符串，当做 webhook URL，使用默认模板
 			default_config = self._load_default_config(platform)
 			return WebhookConfig(
-				webhook=old_webhook,
+				webhook=parsed,
 				platform_settings=default_config.get('platform_settings') if default_config else None,
 				template=default_config.get('template') if default_config else None
 			)
 
-		return None
-
 	def _load_dingtalk_config(self) -> Optional[WebhookConfig]:
-		return self._load_webhook_config('dingtalk', 'DINGDING_WEBHOOK', 'DINGTALK_NOTIF_CONFIG')
+		return self._load_webhook_config('dingtalk', 'DINGTALK_NOTIF_CONFIG')
 
 	def _load_feishu_config(self) -> Optional[WebhookConfig]:
-		return self._load_webhook_config('feishu', 'FEISHU_WEBHOOK', 'FEISHU_NOTIF_CONFIG')
+		return self._load_webhook_config('feishu', 'FEISHU_NOTIF_CONFIG')
 
 	def _load_wecom_config(self) -> Optional[WebhookConfig]:
-		return self._load_webhook_config('wecom', 'WEIXIN_WEBHOOK', 'WECOM_NOTIF_CONFIG')
+		return self._load_webhook_config('wecom', 'WECOM_NOTIF_CONFIG')
 
 	def _load_pushplus_config(self) -> Optional[PushPlusConfig]:
 		"""加载 PushPlus 配置"""
-		# 检查新的配置方式
 		pushplus_notif_config = os.getenv('PUSHPLUS_NOTIF_CONFIG')
-		if pushplus_notif_config:
-			parsed = self._parse_env_config(pushplus_notif_config)
-			if isinstance(parsed, dict):
-				# 如果 template 为 None，则使用默认模板
-				template = parsed.get('template')
-				if template is None:
-					default_config = self._load_default_config('pushplus')
-					template = default_config.get('template') if default_config else None
+		if not pushplus_notif_config:
+			return None
 
-				return PushPlusConfig(
-					token=parsed['token'],
-					platform_settings=parsed.get('platform_settings'),
-					template=template
-				)
-			else:
-				# 纯字符串，当做 token，使用默认模板
+		parsed = self._parse_env_config(pushplus_notif_config)
+		if isinstance(parsed, dict):
+			# 如果 template 为 None，则使用默认模板
+			template = parsed.get('template')
+			if template is None:
 				default_config = self._load_default_config('pushplus')
-				return PushPlusConfig(
-					token=parsed,
-					platform_settings=default_config.get('platform_settings') if default_config else None,
-					template=default_config.get('template') if default_config else None
-				)
+				template = default_config.get('template') if default_config else None
 
-		# 检查旧的配置方式
-		pushplus_token = os.getenv('PUSHPLUS_TOKEN')
-		if pushplus_token:
+			return PushPlusConfig(
+				token=parsed['token'],
+				platform_settings=parsed.get('platform_settings'),
+				template=template
+			)
+		else:
+			# 纯字符串，当做 token，使用默认模板
 			default_config = self._load_default_config('pushplus')
 			return PushPlusConfig(
-				token=pushplus_token,
+				token=parsed,
 				platform_settings=default_config.get('platform_settings') if default_config else None,
 				template=default_config.get('template') if default_config else None
 			)
-
-		return None
 
 	def _load_serverpush_config(self) -> Optional[ServerPushConfig]:
 		"""加载 Server 酱配置"""
-		# 检查新的配置方式
 		serverpush_notif_config = os.getenv('SERVERPUSH_NOTIF_CONFIG')
-		if serverpush_notif_config:
-			parsed = self._parse_env_config(serverpush_notif_config)
-			if isinstance(parsed, dict):
-				# 如果 template 为 None，则使用默认模板
-				template = parsed.get('template')
-				if template is None:
-					default_config = self._load_default_config('serverpush')
-					template = default_config.get('template') if default_config else None
+		if not serverpush_notif_config:
+			return None
 
-				return ServerPushConfig(
-					send_key=parsed['send_key'],
-					platform_settings=parsed.get('platform_settings'),
-					template=template
-				)
-			else:
-				# 纯字符串，当做 send_key，使用默认模板
+		parsed = self._parse_env_config(serverpush_notif_config)
+		if isinstance(parsed, dict):
+			# 如果 template 为 None，则使用默认模板
+			template = parsed.get('template')
+			if template is None:
 				default_config = self._load_default_config('serverpush')
-				return ServerPushConfig(
-					send_key=parsed,
-					platform_settings=default_config.get('platform_settings') if default_config else None,
-					template=default_config.get('template') if default_config else None
-				)
+				template = default_config.get('template') if default_config else None
 
-		# 检查旧的配置方式
-		server_push_key = os.getenv('SERVERPUSHKEY')
-		if server_push_key:
+			return ServerPushConfig(
+				send_key=parsed['send_key'],
+				platform_settings=parsed.get('platform_settings'),
+				template=template
+			)
+		else:
+			# 纯字符串，当做 send_key，使用默认模板
 			default_config = self._load_default_config('serverpush')
 			return ServerPushConfig(
-				send_key=server_push_key,
+				send_key=parsed,
 				platform_settings=default_config.get('platform_settings') if default_config else None,
 				template=default_config.get('template') if default_config else None
 			)
-
-		return None
 
 	# 模板渲染方法
 	def _render_template(self, template: str, data: NotificationData) -> str:
