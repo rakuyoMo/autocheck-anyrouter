@@ -1,0 +1,63 @@
+name: 'Execute AnyRouter Checkin'
+description: '执行 AnyRouter 签到（包含缓存处理）'
+author: 'rakuyo'
+
+branding:
+  icon: 'check-circle'
+  color: 'green'
+
+inputs:
+  accounts:
+    description: 'AnyRouter 账号信息'
+    required: true
+  # 通知配置
+  dingtalk-notif-config:
+    description: '钉钉通知配置'
+    required: false
+  email-notif-config:
+    description: '邮件通知配置'
+    required: false
+  pushplus-notif-config:
+    description: 'PushPlus 通知配置'
+    required: false
+  serverpush-notif-config:
+    description: 'Server酱通知配置'
+    required: false
+  feishu-notif-config:
+    description: '飞书通知配置'
+    required: false
+  wecom-notif-config:
+    description: '企业微信通知配置'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 恢复余额历史缓存
+      uses: actions/cache@v4
+      with:
+        path: balance_hash.txt
+        key: balance-hash-${{ github.sha }}
+        restore-keys: |
+          balance-hash-
+
+    - name: 执行签到
+      shell: bash
+      env:
+        ANYROUTER_ACCOUNTS: ${{ inputs.accounts }}
+        # 通知配置
+        DINGTALK_NOTIF_CONFIG: ${{ inputs.dingtalk-notif-config }}
+        EMAIL_NOTIF_CONFIG: ${{ inputs.email-notif-config }}
+        PUSHPLUS_NOTIF_CONFIG: ${{ inputs.pushplus-notif-config }}
+        SERVERPUSH_NOTIF_CONFIG: ${{ inputs.serverpush-notif-config }}
+        FEISHU_NOTIF_CONFIG: ${{ inputs.feishu-notif-config }}
+        WECOM_NOTIF_CONFIG: ${{ inputs.wecom-notif-config }}
+      run: |
+        uv run src/core/checkin.py
+
+    - name: 执行结果
+      if: always()
+      shell: bash
+      run: |
+        echo "签到任务执行完成"
+        echo "时间: $(date)"

@@ -6,83 +6,22 @@ on:
 
 jobs:
   checkin:
-    runs-on: windows-2025
+    runs-on: ubuntu-latest
     environment: production
     env:
       PYTHONIOENCODING: utf-8
     steps:
-    - uses: actions/checkout@v4
-
-    - uses: astral-sh/setup-uv@v3
-      with:
-        version: "latest"
-
-    - uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: 缓存 UV 依赖
-      uses: actions/cache@v4
-      id: uv-cache
-      with:
-        path: |
-          ~/.cache/uv
-          .venv
-        key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml', 'uv.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-uv-
-
-    - name: 安装依赖
-      if: steps.uv-cache.outputs.cache-hit != 'true'
-      run: |
-        echo "缓存未命中，开始安装项目依赖..."
-        uv sync
-        echo "✅ 环境初始化完成"
-
-    - name: 获取 Playwright 版本
-      id: playwright-version
-      run: |
-        $version = uv run python -c "import importlib.metadata; print(importlib.metadata.version('playwright'))"
-        echo "version=$version" >> $env:GITHUB_OUTPUT
-        echo "Playwright version: $version"
-
-    - name: 缓存 Playwright 浏览器
-      uses: actions/cache@v4
-      id: playwright-cache
-      with:
-        path: ~\AppData\Local\ms-playwright
-        key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
-        restore-keys: |
-          ${{ runner.os }}-playwright-
-
-    - name: 安装 Playwright 浏览器
-      if: steps.playwright-cache.outputs.cache-hit != 'true'
-      run: |
-        echo "缓存未命中，开始安装 Playwright 浏览器..."
-        uv run playwright install chromium --with-deps
-
-    - name: 恢复余额历史缓存
-      uses: actions/cache@v4
-      with:
-        path: balance_hash.txt
-        key: balance-hash-${{ github.sha }}
-        restore-keys: |
-          balance-hash-
+    - name: 准备环境
+      uses: ./.github/actions/prepare-environment
 
     - name: 执行签到
-      env:
-        ANYROUTER_ACCOUNTS: ${{ secrets.ANYROUTER_ACCOUNTS }}
-        DINGTALK_NOTIF_CONFIG: ${{ secrets.DINGTALK_NOTIF_CONFIG }}
-        EMAIL_NOTIF_CONFIG: ${{ secrets.EMAIL_NOTIF_CONFIG }}
-        PUSHPLUS_NOTIF_CONFIG: ${{ secrets.PUSHPLUS_NOTIF_CONFIG }}
-        SERVERPUSH_NOTIF_CONFIG: ${{ secrets.SERVERPUSH_NOTIF_CONFIG }}
-        FEISHU_NOTIF_CONFIG: ${{ secrets.FEISHU_NOTIF_CONFIG }}
-        WECOM_NOTIF_CONFIG: ${{ secrets.WECOM_NOTIF_CONFIG }}
-      run: |
-        uv run src/checkin.py
+      uses: ./.github/actions/execute-checkin
+      with:
+        accounts: ${{ secrets.ANYROUTER_ACCOUNTS }}
+        dingtalk-notif-config: ${{ secrets.DINGTALK_NOTIF_CONFIG }}
+        email-notif-config: ${{ secrets.EMAIL_NOTIF_CONFIG }}
+        pushplus-notif-config: ${{ secrets.PUSHPLUS_NOTIF_CONFIG }}
+        serverpush-notif-config: ${{ secrets.SERVERPUSH_NOTIF_CONFIG }}
+        feishu-notif-config: ${{ secrets.FEISHU_NOTIF_CONFIG }}
+        wecom-notif-config: ${{ secrets.WECOM_NOTIF_CONFIG }}
 
-    - name: 执行结果
-      if: always()
-      run: |
-        echo "签到任务执行完成"
-        echo "时间: $(Get-Date)"

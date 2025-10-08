@@ -1,0 +1,74 @@
+name: 'Prepare Checkin Environment'
+description: '准备 AnyRouter 签到的运行环境'
+author: 'rakuyo'
+
+branding:
+  icon: 'package'
+  color: 'blue'
+
+
+outputs:
+  cache-hit:
+    description: 'UV 依赖缓存是否命中'
+    value: ${{ steps.uv-cache.outputs.cache-hit }}
+  playwright-version:
+    description: 'Playwright 版本'
+    value: ${{ steps.playwright-version.outputs.version }}
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v4
+
+    - uses: jdx/mise-action@v2
+      with:
+        version: "latest"
+
+    - uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+
+    - name: 缓存 UV 依赖
+      uses: actions/cache@v4
+      id: uv-cache
+      with:
+        path: |
+          ~/.cache/uv
+          .venv
+        key: ${{ runner.os }}-uv-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
+
+    - name: 安装依赖
+      if: steps.uv-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "缓存未命中，开始安装项目依赖..."
+        uv sync
+        echo "✅ 环境初始化完成"
+
+    - name: 获取 Playwright 版本
+      id: playwright-version
+      shell: bash
+      run: |
+        version=$(uv run python -c "import importlib.metadata; print(importlib.metadata.version('playwright'))")
+        echo "version=$version" >> $GITHUB_OUTPUT
+        echo "Playwright version: $version"
+
+    - name: 缓存 Playwright 浏览器
+      uses: actions/cache@v4
+      id: playwright-cache
+      with:
+        path: |
+          ~/.cache/ms-playwright
+          %LOCALAPPDATA%\ms-playwright
+        key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+        restore-keys: |
+          ${{ runner.os }}-playwright-
+
+    - name: 安装 Playwright 浏览器
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "缓存未命中，开始安装 Playwright 浏览器..."
+        uv run playwright install chromium --with-deps
