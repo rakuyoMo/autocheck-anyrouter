@@ -129,15 +129,20 @@ class NotificationKit:
 			msg_type: 消息类型
 		"""
 		notifications = [
-			('邮箱', self._send_email_with_template),
-			('PushPlus', self._send_pushplus_with_template),
-			('Server 酱', self._send_serverpush_with_template),
-			('钉钉', self._send_dingtalk_with_template),
-			('飞书', self._send_feishu_with_template),
-			('企业微信', self._send_wecom_with_template),
+			('邮箱', self._send_email_with_template, self.email_config),
+			('PushPlus', self._send_pushplus_with_template, self.pushplus_config),
+			('Server 酱', self._send_serverpush_with_template, self.serverpush_config),
+			('钉钉', self._send_dingtalk_with_template, self.dingtalk_config),
+			('飞书', self._send_feishu_with_template, self.feishu_config),
+			('企业微信', self._send_wecom_with_template, self.wecom_config),
 		]
 
-		for name, func in notifications:
+		for name, func, config in notifications:
+			# 检查配置是否存在，不存在则跳过
+			if not config:
+				logger.info(f"未配置，跳过推送", name)
+				continue
+
 			try:
 				func(title, content, msg_type)
 				logger.success(f"消息推送成功！", name)
