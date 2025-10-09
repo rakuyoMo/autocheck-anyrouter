@@ -20,4 +20,3 @@ class AccountResult:
 
     # 错误信息，失败时才有
     error: Optional[str] = None
-

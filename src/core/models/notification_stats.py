@@ -13,4 +13,3 @@ class NotificationStats:
 
     # 总数量
     total_count: int
-

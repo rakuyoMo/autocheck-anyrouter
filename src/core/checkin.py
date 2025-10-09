@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-AnyRouter.top 自动签到脚本
-"""
 
 import asyncio
 import hashlib
@@ -46,9 +43,11 @@ def load_accounts() -> Optional[List[Dict[str, Any]]]:
 			if not isinstance(account, dict):
 				print(f'ERROR: Account {i + 1} configuration format is incorrect')
 				return None
+
 			if 'cookies' not in account or 'api_user' not in account:
 				print(f'ERROR: Account {i + 1} missing required fields (cookies, api_user)')
 				return None
+
 			# 如果有 name 字段，确保它不是空字符串
 			if 'name' in account and not account['name']:
 				print(f'ERROR: Account {i + 1} name field cannot be empty')
@@ -69,10 +68,13 @@ def load_balance_hash() -> Optional[str]:
 		if BALANCE_HASH_FILE.exists():
 			with open(BALANCE_HASH_FILE, 'r', encoding='utf-8') as f:
 				return f.read().strip()
+
 	except (OSError, IOError) as e:
 		print(f'Warning: Failed to load balance hash: {e}')
+
 	except Exception as e:
 		print(f'Warning: Unexpected error loading balance hash: {e}')
+
 	return None
 
 
@@ -83,8 +85,10 @@ def save_balance_hash(balance_hash: str):
 		BALANCE_HASH_FILE.parent.mkdir(parents=True, exist_ok=True)
 		with open(BALANCE_HASH_FILE, 'w', encoding='utf-8') as f:
 			f.write(balance_hash)
+
 	except (OSError, IOError) as e:
 		print(f'Warning: Failed to save balance hash: {e}')
+
 	except Exception as e:
 		print(f'Warning: Unexpected error saving balance hash: {e}')
 
@@ -182,6 +186,7 @@ async def get_waf_cookies_with_playwright(account_name: str) -> Optional[Dict[st
 	except Exception as e:
 		print(f'[FAILED] {account_name}: Error occurred while getting WAF cookies: {e}')
 		return None
+
 	finally:
 		# 确保资源被正确释放
 		if context:
@@ -213,13 +218,28 @@ async def get_user_info(client, headers: Dict[str, str]) -> Dict[str, Any]:
 					'used_quota': used_quota,
 					'display': f':money: Current balance: ${quota}, Used: ${used_quota}'
 				}
-		return {'success': False, 'error': f'Failed to get user info: HTTP {response.status_code}'}
+		return {
+			'success': False, 
+			'error': f'Failed to get user info: HTTP {response.status_code}'
+		}
+
 	except httpx.TimeoutException:
-		return {'success': False, 'error': 'Failed to get user info: Request timeout'}
+		return {
+			'success': False, 
+			'error': 'Failed to get user info: Request timeout'
+		}
+
 	except httpx.RequestError as e:
-		return {'success': False, 'error': f'Failed to get user info: Network error'}
+		return {
+			'success': False, 
+			'error': f'Failed to get user info: Network error'
+		}
+
 	except Exception as e:
-		return {'success': False, 'error': f'Failed to get user info: {str(e)[:50]}...'}
+		return {
+			'success': False, 
+			'error': f'Failed to get user info: {str(e)[:50]}...'
+		}
 
 
 async def check_in_account(account_info: Dict[str, Any], account_index: int) -> tuple[bool, Optional[Dict[str, Any]]]:
@@ -278,7 +298,10 @@ async def check_in_account(account_info: Dict[str, Any], account_index: int) -> 
 
 			# 更新签到请求头
 			checkin_headers = headers.copy()
-			checkin_headers.update({'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'})
+			checkin_headers.update({
+				'Content-Type': 'application/json', 
+				'X-Requested-With': 'XMLHttpRequest'
+			})
 
 			response = await client.post('https://anyrouter.top/api/user/sign_in', headers=checkin_headers, timeout=30)
 
@@ -397,11 +420,13 @@ async def main():
 			balance_changed = True
 			need_notify = True
 			print('[NOTIFY] First run detected, will send notification with current balances')
+
 		elif current_balance_hash != last_balance_hash:
 			# 余额有变化
 			balance_changed = True
 			need_notify = True
 			print('[NOTIFY] Balance changes detected, will send notification')
+
 		else:
 			print('[INFO] No balance changes detected')
 
@@ -456,9 +481,11 @@ def run_main():
 	"""运行主函数的包装函数"""
 	try:
 		asyncio.run(main())
+		
 	except KeyboardInterrupt:
 		print('\n[WARNING] Program interrupted by user')
 		sys.exit(1)
+
 	except Exception as e:
 		print(f'\n[FAILED] Error occurred during program execution: {e}')
 		sys.exit(1)

@@ -32,4 +32,3 @@ class NotificationData:
     def partial_success(self) -> bool:
         """是否部分成功"""
         return self.stats.success_count > 0 and self.stats.failed_count > 0
-
