@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-autocheck-anyrouter = "core.checkin:run_main"
+autocheck-anyrouter = "src.main:run_main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

@@ -47,7 +47,7 @@ class CheckinService:
 
         class File:
             """文件配置"""
-            BALANCE_HASH_NAME = '.autocheck-anyrouter-balance-hash.txt'
+            BALANCE_HASH_NAME = 'balance_hash.txt'
 
         class Browser:
             """浏览器配置"""
@@ -73,8 +73,8 @@ class CheckinService:
 
     def __init__(self):
         """初始化签到服务"""
-        # 使用用户主目录存储余额 hash 文件，确保路径一致性
-        self.balance_hash_file = Path.home() / self.Config.File.BALANCE_HASH_NAME
+        # 将余额 hash 文件存储在当前工作目录，方便 GitHub Actions 缓存
+        self.balance_hash_file = Path(self.Config.File.BALANCE_HASH_NAME)
 
         # 隐私控制：判断是否应该显示敏感信息
         self.show_sensitive_info = self._should_show_sensitive_info()
@@ -521,9 +521,9 @@ class CheckinService:
 
                 headers = {
                     'User-Agent': ' '.join(self.Config.Browser.USER_AGENT_PARTS),
-					'Referer': self.Config.URLs.CONSOLE,
+                    'Referer': self.Config.URLs.CONSOLE,
                     'Origin': self.Config.URLs.BASE,
-					'new-api-user': api_user,
+                    'new-api-user': api_user,
                     'Accept': 'application/json, text/plain, */*',
                     'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
                     'Accept-Encoding': 'gzip, deflate, br, zstd',
