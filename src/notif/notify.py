@@ -172,8 +172,13 @@ class NotificationKit:
 		if not email_notif_config:
 			return None
 
+		# 解析失败
 		parsed = self._parse_env_config(email_notif_config)
 		if not isinstance(parsed, dict):
+			return None
+
+		# 缺少必需字段
+		if 'user' not in parsed or 'pass' not in parsed or 'to' not in parsed:
 			return None
 
 		# 如果 template 为 None，则使用默认模板
@@ -198,7 +203,13 @@ class NotificationKit:
 			return None
 
 		parsed = self._parse_env_config(notif_config)
+
+		# 字典格式配置
 		if isinstance(parsed, dict):
+			# 缺少必需字段
+			if 'webhook' not in parsed:
+				return None
+
 			# 如果 template 为 None，则使用默认模板
 			template = parsed.get('template')
 			if template is None:
@@ -210,14 +221,14 @@ class NotificationKit:
 				platform_settings=parsed.get('platform_settings'),
 				template=template
 			)
-		else:
-			# 纯字符串，当做 webhook URL，使用默认模板
-			default_config = self._load_default_config(platform)
-			return WebhookConfig(
-				webhook=parsed,
-				platform_settings=default_config.get('platform_settings') if default_config else None,
-				template=default_config.get('template') if default_config else None
-			)
+
+		# 纯字符串，当做 webhook URL，使用默认模板
+		default_config = self._load_default_config(platform)
+		return WebhookConfig(
+			webhook=parsed,
+			platform_settings=default_config.get('platform_settings') if default_config else None,
+			template=default_config.get('template') if default_config else None
+		)
 
 	def _load_dingtalk_config(self) -> Optional[WebhookConfig]:
 		return self._load_webhook_config('dingtalk', 'DINGTALK_NOTIF_CONFIG')
@@ -235,7 +246,13 @@ class NotificationKit:
 			return None
 
 		parsed = self._parse_env_config(pushplus_notif_config)
+
+		# 字典格式配置
 		if isinstance(parsed, dict):
+			# 缺少必需字段
+			if 'token' not in parsed:
+				return None
+
 			# 如果 template 为 None，则使用默认模板
 			template = parsed.get('template')
 			if template is None:
@@ -247,14 +264,14 @@ class NotificationKit:
 				platform_settings=parsed.get('platform_settings'),
 				template=template
 			)
-		else:
-			# 纯字符串，当做 token，使用默认模板
-			default_config = self._load_default_config('pushplus')
-			return PushPlusConfig(
-				token=parsed,
-				platform_settings=default_config.get('platform_settings') if default_config else None,
-				template=default_config.get('template') if default_config else None
-			)
+
+		# 纯字符串，当做 token，使用默认模板
+		default_config = self._load_default_config('pushplus')
+		return PushPlusConfig(
+			token=parsed,
+			platform_settings=default_config.get('platform_settings') if default_config else None,
+			template=default_config.get('template') if default_config else None
+		)
 
 	def _load_serverpush_config(self) -> Optional[ServerPushConfig]:
 		"""加载 Server 酱配置"""
@@ -263,7 +280,13 @@ class NotificationKit:
 			return None
 
 		parsed = self._parse_env_config(serverpush_notif_config)
+
+		# 字典格式配置
 		if isinstance(parsed, dict):
+			# 缺少必需字段
+			if 'send_key' not in parsed:
+				return None
+
 			# 如果 template 为 None，则使用默认模板
 			template = parsed.get('template')
 			if template is None:
@@ -275,14 +298,14 @@ class NotificationKit:
 				platform_settings=parsed.get('platform_settings'),
 				template=template
 			)
-		else:
-			# 纯字符串，当做 send_key，使用默认模板
-			default_config = self._load_default_config('serverpush')
-			return ServerPushConfig(
-				send_key=parsed,
-				platform_settings=default_config.get('platform_settings') if default_config else None,
-				template=default_config.get('template') if default_config else None
-			)
+
+		# 纯字符串，当做 send_key，使用默认模板
+		default_config = self._load_default_config('serverpush')
+		return ServerPushConfig(
+			send_key=parsed,
+			platform_settings=default_config.get('platform_settings') if default_config else None,
+			template=default_config.get('template') if default_config else None
+		)
 
 	# 模板渲染方法
 	def _render_template(self, template: str, data: NotificationData) -> str:
