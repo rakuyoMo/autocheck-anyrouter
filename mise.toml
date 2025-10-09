@@ -16,8 +16,8 @@ install-browsers = "mise exec -- python -m playwright install chromium --with-de
 # 获取 Playwright 版本
 playwright-version = "mise exec -- python -c 'import importlib.metadata; print(importlib.metadata.version(\"playwright\"))'"
 
-# 运行签到脚本
-checkin = "mise exec -- python src/main.py"
+# 运行签到脚本（使用 pyproject.toml 中定义的入口点）
+checkin = "mise exec -- autocheck-anyrouter"
 
 # 测试相关
 test = "mise exec -- pytest tests/"
