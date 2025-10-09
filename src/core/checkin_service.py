@@ -333,9 +333,13 @@ class CheckinService:
 
         try:
             async with async_playwright() as p:
+                # 检测是否在 CI 环境中运行
+                is_ci = os.getenv('CI') == 'true' or os.getenv('GITHUB_ACTIONS') == 'true'
+
                 # 使用标准无痕模式，避免临时目录的潜在问题
+                # CI 环境使用 headless 模式，本地开发可以看到浏览器界面
                 browser = await p.chromium.launch(
-                    headless=False,
+                    headless=is_ci,
                     args=self.Config.Browser.ARGS,
                 )
 
