@@ -9,7 +9,8 @@ import json
 import os
 import sys
 from datetime import datetime
-from typing import List
+from pathlib import Path
+from typing import List, Optional, Dict, Any
 
 import httpx
 from dotenv import load_dotenv
@@ -21,10 +22,11 @@ from core.models import NotificationData, AccountResult, NotificationStats
 # 禁用变量插值以保留模板中的 $ 符号
 load_dotenv(interpolate=False)
 
-BALANCE_HASH_FILE = 'balance_hash.txt'
+# 使用用户主目录存储余额 hash 文件，确保路径一致性
+BALANCE_HASH_FILE = Path.home() / '.autocheck-anyrouter-balance-hash.txt'
 
 
-def load_accounts():
+def load_accounts() -> Optional[List[Dict[str, Any]]]:
 	"""从环境变量加载多账号配置"""
 	accounts_str = os.getenv('ANYROUTER_ACCOUNTS')
 	if not accounts_str:
@@ -53,45 +55,56 @@ def load_accounts():
 				return None
 
 		return accounts_data
+	except json.JSONDecodeError as e:
+		print(f'ERROR: Invalid JSON format in account configuration: {e}')
+		return None
 	except Exception as e:
 		print(f'ERROR: Account configuration format is incorrect: {e}')
 		return None
 
 
-def load_balance_hash():
+def load_balance_hash() -> Optional[str]:
 	"""加载余额hash"""
 	try:
-		if os.path.exists(BALANCE_HASH_FILE):
+		if BALANCE_HASH_FILE.exists():
 			with open(BALANCE_HASH_FILE, 'r', encoding='utf-8') as f:
 				return f.read().strip()
-	except Exception:
-		pass
+	except (OSError, IOError) as e:
+		print(f'Warning: Failed to load balance hash: {e}')
+	except Exception as e:
+		print(f'Warning: Unexpected error loading balance hash: {e}')
 	return None
 
 
-def save_balance_hash(balance_hash):
+def save_balance_hash(balance_hash: str):
 	"""保存余额hash"""
 	try:
+		# 确保父目录存在
+		BALANCE_HASH_FILE.parent.mkdir(parents=True, exist_ok=True)
 		with open(BALANCE_HASH_FILE, 'w', encoding='utf-8') as f:
 			f.write(balance_hash)
-	except Exception as e:
+	except (OSError, IOError) as e:
 		print(f'Warning: Failed to save balance hash: {e}')
+	except Exception as e:
+		print(f'Warning: Unexpected error saving balance hash: {e}')
 
 
-def generate_balance_hash(balances):
+def generate_balance_hash(balances: Optional[Dict[str, Dict[str, float]]]) -> Optional[str]:
 	"""生成余额数据的hash"""
+	if not balances:
+		return None
 	# 将包含 quota 和 used 的结构转换为简单的 quota 值用于 hash 计算
 	simple_balances = {k: v['quota'] for k, v in balances.items()} if balances else {}
 	balance_json = json.dumps(simple_balances, sort_keys=True, separators=(',', ':'))
 	return hashlib.sha256(balance_json.encode('utf-8')).hexdigest()[:16]
 
 
-def get_account_display_name(account_info, account_index):
+def get_account_display_name(account_info: Dict[str, Any], account_index: int) -> str:
 	"""获取账号显示名称"""
 	return account_info.get('name', f'Account {account_index + 1}')
 
 
-def parse_cookies(cookies_data):
+def parse_cookies(cookies_data) -> Dict[str, str]:
 	"""解析 cookies 数据"""
 	if isinstance(cookies_data, dict):
 		return cookies_data
