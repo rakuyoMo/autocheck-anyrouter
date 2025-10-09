@@ -17,6 +17,7 @@ from notif.models import (
 )
 
 from core.models.notification_data import NotificationData
+from tools.logger import logger
 
 
 class NotificationKit:
@@ -139,10 +140,10 @@ class NotificationKit:
 		for name, func in notifications:
 			try:
 				func(title, content, msg_type)
-				print(f'[{name}]: Message push successful!')
-			except Exception as e:
-				print(f'[{name}]: Message push failed! Reason: {str(e)}')
+				logger.success(f"消息推送成功！", name)
 
+			except Exception as e:
+				logger.error(f"消息推送失败！原因：{str(e)}", name)
 
 	# 配置加载方法
 	def _load_default_config(self, platform: str) -> Optional[Dict[str, Any]]:
@@ -153,7 +154,7 @@ class NotificationKit:
 				with open(config_file, 'r', encoding='utf-8') as f:
 					return json.load(f)
 			except Exception as e:
-				print(f'Warning: Failed to load default config file {config_file}: {e}')
+				logger.warning(f"加载默认配置文件 {config_file} 失败：{e}")
 		return None
 
 	def _parse_env_config(self, env_value: str) -> Union[str, Dict[str, Any]]:
@@ -326,10 +327,10 @@ class NotificationKit:
 
 			return rendered_result
 		except Exception as e:
-			print(f'ERROR: Template rendering failed: {e}')
+			logger.error(f"模板渲染失败：{e}")
 			# 如果模板渲染失败，返回简单格式
 			return f'{data.timestamp}\n\n' + '\n\n'.join([
-				f'[{"SUCCESS" if account.status == "success" else "FAIL"}] {account.name}'
+				f'[{"成功" if account.status == "success" else "失败"}] {account.name}'
 				for account in data.accounts
 			])
 
@@ -399,5 +400,3 @@ class NotificationKit:
 			rendered_content = str(content)
 
 		self.send_wecom(title, rendered_content)
-
-

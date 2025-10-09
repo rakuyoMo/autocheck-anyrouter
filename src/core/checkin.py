@@ -15,6 +15,7 @@ from playwright.async_api import async_playwright
 
 from notif import notify
 from core.models import NotificationData, AccountResult, NotificationStats
+from tools.logger import logger
 
 # 禁用变量插值以保留模板中的 $ 符号
 load_dotenv(interpolate=False)
@@ -27,7 +28,31 @@ def load_accounts() -> Optional[List[Dict[str, Any]]]:
 	"""从环境变量加载多账号配置"""
 	accounts_str = os.getenv('ANYROUTER_ACCOUNTS')
 	if not accounts_str:
-		print('ERROR: ANYROUTER_ACCOUNTS environment variable not found')
+		logger.print_banner('👋 欢迎使用 AnyRouter 自动签到工具！')
+		logger.print_multiline([
+			'',
+			'❌ 检测到您还未配置账号信息',
+			'',
+			'📋 配置步骤：',
+			'1. 进入 GitHub 仓库设置页面',
+			'2. 点击 "Secrets and variables" > "Actions"',
+			'3. 点击 "New repository secret"',
+			'4. 创建名为 ANYROUTER_ACCOUNTS 的 secret',
+			'',
+			'📝 ANYROUTER_ACCOUNTS 格式示例：',
+			'[',
+			'  {',
+			'    "name": "账号1",',
+			'    "cookies": "cookie1=value1; cookie2=value2",',
+			'    "api_user": "your_api_user"',
+			'  }',
+			']',
+			'',
+			'💡 提示：',
+			'- name 字段为账号显示名称（可选）',
+			'- cookies 为登录后的 cookie 字符串',
+			'- api_user 为 API 用户标识',
+		])
 		return None
 
 	try:
@@ -35,30 +60,31 @@ def load_accounts() -> Optional[List[Dict[str, Any]]]:
 
 		# 检查是否为数组格式
 		if not isinstance(accounts_data, list):
-			print('ERROR: Account configuration must use array format [{}]')
+			logger.error("账号配置必须使用数组格式 [{}]")
 			return None
 
 		# 验证账号数据格式
 		for i, account in enumerate(accounts_data):
 			if not isinstance(account, dict):
-				print(f'ERROR: Account {i + 1} configuration format is incorrect')
+				logger.error(f"账号 {i + 1} 配置格式不正确")
 				return None
 
 			if 'cookies' not in account or 'api_user' not in account:
-				print(f'ERROR: Account {i + 1} missing required fields (cookies, api_user)')
+				logger.error(f"账号 {i + 1} 缺少必需字段 (cookies, api_user)")
 				return None
 
 			# 如果有 name 字段，确保它不是空字符串
 			if 'name' in account and not account['name']:
-				print(f'ERROR: Account {i + 1} name field cannot be empty')
+				logger.error(f"账号 {i + 1} 的名称字段不能为空")
 				return None
 
 		return accounts_data
 	except json.JSONDecodeError as e:
-		print(f'ERROR: Invalid JSON format in account configuration: {e}')
+		logger.error(f"账号配置中的 JSON 格式无效：{e}")
 		return None
+		
 	except Exception as e:
-		print(f'ERROR: Account configuration format is incorrect: {e}')
+		logger.error(f"账号配置格式不正确：{e}")
 		return None
 
 
@@ -70,10 +96,10 @@ def load_balance_hash() -> Optional[str]:
 				return f.read().strip()
 
 	except (OSError, IOError) as e:
-		print(f'Warning: Failed to load balance hash: {e}')
+		logger.warning(f"加载余额哈希失败：{e}")
 
 	except Exception as e:
-		print(f'Warning: Unexpected error loading balance hash: {e}')
+		logger.warning(f"加载余额哈希时发生意外错误：{e}")
 
 	return None
 
@@ -87,10 +113,10 @@ def save_balance_hash(balance_hash: str):
 			f.write(balance_hash)
 
 	except (OSError, IOError) as e:
-		print(f'Warning: Failed to save balance hash: {e}')
+		logger.warning(f"保存余额哈希失败：{e}")
 
 	except Exception as e:
-		print(f'Warning: Unexpected error saving balance hash: {e}')
+		logger.warning(f"保存余额哈希时发生意外错误：{e}")
 
 
 def generate_balance_hash(balances: Optional[Dict[str, Dict[str, float]]]) -> Optional[str]:
@@ -106,7 +132,7 @@ def generate_balance_hash(balances: Optional[Dict[str, Dict[str, float]]]) -> Op
 
 def get_account_display_name(account_info: Dict[str, Any], account_index: int) -> str:
 	"""获取账号显示名称"""
-	return account_info.get('name', f'Account {account_index + 1}')
+	return account_info.get('name', f'账号 {account_index + 1}')
 
 
 def parse_cookies(cookies_data) -> Dict[str, str]:
@@ -126,7 +152,7 @@ def parse_cookies(cookies_data) -> Dict[str, str]:
 
 async def get_waf_cookies_with_playwright(account_name: str) -> Optional[Dict[str, str]]:
 	"""使用 Playwright 获取 WAF cookies（无痕模式）"""
-	print(f'[PROCESSING] {account_name}: Starting browser to get WAF cookies...')
+	logger.processing("正在启动浏览器获取 WAF cookies...", account_name)
 
 	browser = None
 	context = None
@@ -152,7 +178,7 @@ async def get_waf_cookies_with_playwright(account_name: str) -> Optional[Dict[st
 
 			page = await context.new_page()
 
-			print(f'[PROCESSING] {account_name}: Step 1: Access login page to get initial cookies...')
+			logger.processing("步骤 1: 访问登录页面获取初始 cookies...", account_name)
 
 			await page.goto('https://anyrouter.top/login', wait_until='networkidle')
 
@@ -170,21 +196,21 @@ async def get_waf_cookies_with_playwright(account_name: str) -> Optional[Dict[st
 				if cookie_name in ['acw_tc', 'cdn_sec_tc', 'acw_sc__v2'] and cookie_value is not None:
 					waf_cookies[cookie_name] = cookie_value
 
-			print(f'[INFO] {account_name}: Got {len(waf_cookies)} WAF cookies after step 1')
+			logger.info(f"步骤 1 后获得 {len(waf_cookies)} 个 WAF cookies", account_name)
 
 			required_cookies = ['acw_tc', 'cdn_sec_tc', 'acw_sc__v2']
 			missing_cookies = [c for c in required_cookies if c not in waf_cookies]
 
 			if missing_cookies:
-				print(f'[FAILED] {account_name}: Missing WAF cookies: {missing_cookies}')
+				logger.error(f"缺少 WAF cookies: {missing_cookies}", account_name)
 				return None
 
-			print(f'[SUCCESS] {account_name}: Successfully got all WAF cookies')
+			logger.success("成功获取所有 WAF cookies", account_name)
 
 			return waf_cookies
 
 	except Exception as e:
-		print(f'[FAILED] {account_name}: Error occurred while getting WAF cookies: {e}')
+		logger.error(f"获取 WAF cookies 时发生错误：{e}", account_name)
 		return None
 
 	finally:
@@ -225,46 +251,46 @@ async def get_user_info(client, headers: Dict[str, str]) -> Dict[str, Any]:
 
 	except httpx.TimeoutException:
 		return {
-			'success': False, 
-			'error': 'Failed to get user info: Request timeout'
+			'success': False,
+			'error': '获取用户信息失败：请求超时'
 		}
 
-	except httpx.RequestError as e:
+	except httpx.RequestError:
 		return {
-			'success': False, 
-			'error': f'Failed to get user info: Network error'
+			'success': False,
+			'error': '获取用户信息失败：网络错误'
 		}
 
 	except Exception as e:
 		return {
-			'success': False, 
-			'error': f'Failed to get user info: {str(e)[:50]}...'
+			'success': False,
+			'error': f'获取用户信息失败：{str(e)[:50]}...'
 		}
 
 
 async def check_in_account(account_info: Dict[str, Any], account_index: int) -> tuple[bool, Optional[Dict[str, Any]]]:
 	"""为单个账号执行签到操作"""
 	account_name = get_account_display_name(account_info, account_index)
-	print(f'\n[PROCESSING] Starting to process {account_name}')
+	logger.processing(f"开始处理 {account_name}")
 
 	# 解析账号配置
 	cookies_data = account_info.get('cookies', {})
 	api_user = account_info.get('api_user', '')
 
 	if not api_user:
-		print(f'[FAILED] {account_name}: API user identifier not found')
+		logger.error("未找到 API 用户标识符", account_name)
 		return False, None
 
 	# 解析用户 cookies
 	user_cookies = parse_cookies(cookies_data)
 	if not user_cookies:
-		print(f'[FAILED] {account_name}: Invalid configuration format')
+		logger.error("配置格式无效", account_name)
 		return False, None
 
 	# 步骤1：获取 WAF cookies
 	waf_cookies = await get_waf_cookies_with_playwright(account_name)
 	if not waf_cookies:
-		print(f'[FAILED] {account_name}: Unable to get WAF cookies')
+		logger.error("无法获取 WAF cookies", account_name)
 		return False, None
 
 	# 步骤2：使用 httpx 进行 API 请求
@@ -292,60 +318,76 @@ async def check_in_account(account_info: Dict[str, Any], account_index: int) -> 
 			if user_info and user_info.get('success'):
 				print(user_info['display'])
 			elif user_info:
-				print(user_info.get('error', 'Unknown error'))
+				print(user_info.get('error', '未知错误'))
 
-			print(f'[NETWORK] {account_name}: Executing check-in')
+			logger.debug(
+				message="执行签到",
+				tag="网络",
+				account_name=account_name
+			)
 
 			# 更新签到请求头
 			checkin_headers = headers.copy()
 			checkin_headers.update({
-				'Content-Type': 'application/json', 
+				'Content-Type': 'application/json',
 				'X-Requested-With': 'XMLHttpRequest'
 			})
 
 			response = await client.post('https://anyrouter.top/api/user/sign_in', headers=checkin_headers, timeout=30)
 
-			print(f'[RESPONSE] {account_name}: Response status code {response.status_code}')
+			logger.debug(
+				message=f"响应状态码 {response.status_code}",
+				tag="响应",
+				account_name=account_name
+			)
 
 			if response.status_code == 200:
 				try:
 					result = response.json()
 					if result.get('ret') == 1 or result.get('code') == 0 or result.get('success'):
-						print(f'[SUCCESS] {account_name}: Check-in successful!')
+						logger.success("签到成功!", account_name)
 						return True, user_info
 					else:
-						error_msg = result.get('msg', result.get('message', 'Unknown error'))
-						print(f'[FAILED] {account_name}: Check-in failed - {error_msg}')
+						error_msg = result.get('msg', result.get('message', '未知错误'))
+						logger.error(f"Check-in failed - {error_msg}", account_name)
 						return False, user_info
 				except json.JSONDecodeError:
 					# 如果不是 JSON 响应，检查是否包含成功标识
 					if 'success' in response.text.lower():
-						print(f'[SUCCESS] {account_name}: Check-in successful!')
+						logger.success("签到成功!", account_name)
 						return True, user_info
 					else:
-						print(f'[FAILED] {account_name}: Check-in failed - Invalid response format')
+						logger.error("Check-in failed - Invalid response format", account_name)
 						return False, user_info
 			else:
-				print(f'[FAILED] {account_name}: Check-in failed - HTTP {response.status_code}')
+				logger.error(f"Check-in failed - HTTP {response.status_code}", account_name)
 				return False, user_info
 
 		except Exception as e:
-			print(f'[FAILED] {account_name}: Error occurred during check-in process - {str(e)[:50]}...')
+			logger.error(f"签到过程中发生错误 - {str(e)[:50]}...", account_name)
 			return False, None
 
 
 async def main():
 	"""主函数"""
-	print('[SYSTEM] AnyRouter.top multi-account auto check-in script started (using Playwright)')
-	print(f'[TIME] Execution time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+	logger.info(
+		message="AnyRouter.top 多账号自动签到脚本启动（使用 Playwright）",
+		tag="系统",
+		show_timestamp=True
+	)
 
 	# 加载账号配置
 	accounts = load_accounts()
 	if not accounts:
-		print('[FAILED] Unable to load account configuration, program exits')
-		sys.exit(1)
+		logger.print_multiline([
+			'',
+			'🚀 配置完成后，请重新运行工作流即可自动签到！',
+			'',
+			'[INFO] 程序正常退出（等待配置完成）',
+		])
+		sys.exit(0)
 
-	print(f'[INFO] Found {len(accounts)} account configurations')
+	logger.info(f"找到 {len(accounts)} 个账号配置")
 
 	# 加载余额hash
 	last_balance_hash = load_balance_hash()
@@ -380,7 +422,7 @@ async def main():
 			if not success:
 				should_notify_this_account = True
 				need_notify = True
-				print(f'[NOTIFY] {account_name} failed, will send notification')
+				logger.notify(f"失败，将发送通知", account_name)
 
 			# 收集余额数据和处理结果
 			if user_info and user_info.get('success'):
@@ -401,7 +443,7 @@ async def main():
 
 		except Exception as e:
 			account_name = get_account_display_name(account, i)
-			print(f'[FAILED] {account_name} processing exception: {e}')
+			logger.error(f"处理异常：{e}", account_name)
 			need_notify = True  # 异常也需要通知
 
 			# 创建失败的账号结果
@@ -419,16 +461,16 @@ async def main():
 			# 首次运行
 			balance_changed = True
 			need_notify = True
-			print('[NOTIFY] First run detected, will send notification with current balances')
+			logger.notify("检测到首次运行，将发送包含当前余额的通知")
 
 		elif current_balance_hash != last_balance_hash:
 			# 余额有变化
 			balance_changed = True
 			need_notify = True
-			print('[NOTIFY] Balance changes detected, will send notification')
+			logger.notify("检测到余额变化，将发送通知")
 
 		else:
-			print('[INFO] No balance changes detected')
+			logger.info("未检测到余额变化")
 
 	# 为有余额变化的情况添加所有成功账号到通知内容
 	if balance_changed:
@@ -466,12 +508,15 @@ async def main():
 
 		# 发送通知
 		notify.push_message('AnyRouter 签到提醒', notification_data, msg_type='text')
-		print('[NOTIFY] Notification sent due to failures or balance changes')
+		logger.notify("因失败或余额变化已发送通知")
 	else:
-		print('[INFO] All accounts successful and no balance changes detected, notification skipped')
+		logger.info("所有账号成功且未检测到余额变化，跳过通知")
 
 	# 日志总结
-	print(f'[RESULT] Final result: Success {success_count}/{total_count}, Failed {total_count - success_count}/{total_count}')
+	logger.info(
+		message=f"最终结果：成功 {success_count}/{total_count}，失败 {total_count - success_count}/{total_count}",
+		tag="结果"
+	)
 
 	# 设置退出码
 	sys.exit(0 if success_count > 0 else 1)
@@ -481,13 +526,13 @@ def run_main():
 	"""运行主函数的包装函数"""
 	try:
 		asyncio.run(main())
-		
+
 	except KeyboardInterrupt:
-		print('\n[WARNING] Program interrupted by user')
+		logger.warning("程序被用户中断")
 		sys.exit(1)
 
 	except Exception as e:
-		print(f'\n[FAILED] Error occurred during program execution: {e}')
+		logger.error(f"程序执行过程中发生错误：{e}")
 		sys.exit(1)
 
 
