@@ -221,7 +221,7 @@ class CheckinService:
             )
 
             # 发送通知
-            notify.push_message(
+            await notify.push_message(
                 title='AnyRouter 签到提醒',
                 content=notification_data,
                 msg_type='text'

@@ -33,7 +33,7 @@ class NotificationKit:
 		self.pushplus_config = self._load_pushplus_config()
 		self.serverpush_config = self._load_serverpush_config()
 
-	def send_email(self, title: str, content: str, msg_type: Literal['text', 'html'] = 'text'):
+	async def send_email(self, title: str, content: str, msg_type: Literal['text', 'html'] = 'text'):
 		if not self.email_config:
 			raise ValueError('未配置邮箱信息')
 
@@ -55,7 +55,7 @@ class NotificationKit:
 			server.login(self.email_config.user, self.email_config.password)
 			server.send_message(msg)
 
-	def send_pushplus(self, title: str, content: str):
+	async def send_pushplus(self, title: str, content: str):
 		if not self.pushplus_config:
 			raise ValueError('未配置PushPlus Token')
 
@@ -65,26 +65,26 @@ class NotificationKit:
 			'content': content,
 			'template': 'html'
 		}
-		with httpx.Client(timeout=30.0) as client:
-			client.post('http://www.pushplus.plus/send', json=data)
+		async with httpx.AsyncClient(timeout=30.0) as client:
+			await client.post('http://www.pushplus.plus/send', json=data)
 
-	def send_serverpush(self, title: str, content: str):
+	async def send_serverpush(self, title: str, content: str):
 		if not self.serverpush_config:
 			raise ValueError('未配置Server Push key')
 
 		data = {'title': title, 'desp': content}
-		with httpx.Client(timeout=30.0) as client:
-			client.post(f'https://sctapi.ftqq.com/{self.serverpush_config.send_key}.send', json=data)
+		async with httpx.AsyncClient(timeout=30.0) as client:
+			await client.post(f'https://sctapi.ftqq.com/{self.serverpush_config.send_key}.send', json=data)
 
-	def send_dingtalk(self, title: str, content: str):
+	async def send_dingtalk(self, title: str, content: str):
 		if not self.dingtalk_config:
 			raise ValueError('未配置钉钉 Webhook')
 
 		data = {'msgtype': 'text', 'text': {'content': f'{title}\n{content}'}}
-		with httpx.Client(timeout=30.0) as client:
-			client.post(self.dingtalk_config.webhook, json=data)
+		async with httpx.AsyncClient(timeout=30.0) as client:
+			await client.post(self.dingtalk_config.webhook, json=data)
 
-	def send_feishu(self, title: str, content: str):
+	async def send_feishu(self, title: str, content: str):
 		if not self.feishu_config:
 			raise ValueError('未配置飞书 Webhook')
 
@@ -104,10 +104,10 @@ class NotificationKit:
 		else:
 			data = {'msg_type': 'text', 'text': {'content': f'{title}\n{content}'}}
 
-		with httpx.Client(timeout=30.0) as client:
-			client.post(self.feishu_config.webhook, json=data)
+		async with httpx.AsyncClient(timeout=30.0) as client:
+			await client.post(self.feishu_config.webhook, json=data)
 
-	def send_wecom(self, title: str, content: str):
+	async def send_wecom(self, title: str, content: str):
 		if not self.wecom_config:
 			raise ValueError('未配置企业微信 Webhook')
 
@@ -122,10 +122,10 @@ class NotificationKit:
 		else:
 			data = {'msgtype': 'text', 'text': {'content': f'{title}\n{content}'}}
 
-		with httpx.Client(timeout=30.0) as client:
-			client.post(self.wecom_config.webhook, json=data)
+		async with httpx.AsyncClient(timeout=30.0) as client:
+			await client.post(self.wecom_config.webhook, json=data)
 
-	def push_message(self, title: str, content: Union[str, NotificationData], msg_type: Literal['text', 'html'] = 'text'):
+	async def push_message(self, title: str, content: Union[str, NotificationData], msg_type: Literal['text', 'html'] = 'text'):
 		"""发送通知消息
 
 		Args:
@@ -149,7 +149,7 @@ class NotificationKit:
 				continue
 
 			try:
-				func(title, content, msg_type)
+				await func(title, content, msg_type)
 				logger.success(f"消息推送成功！", name)
 
 			except Exception as e:
@@ -368,7 +368,7 @@ class NotificationKit:
 			])
 
 	# 带模板的发送方法
-	def _send_email_with_template(self, title: str, content: Union[str, NotificationData], msg_type: Literal['text', 'html'] = 'text'):
+	async def _send_email_with_template(self, title: str, content: Union[str, NotificationData], msg_type: Literal['text', 'html'] = 'text'):
 		if not self.email_config:
 			return
 
@@ -377,9 +377,9 @@ class NotificationKit:
 		else:
 			rendered_content = str(content)
 
-		self.send_email(title, rendered_content, msg_type)
+		await self.send_email(title, rendered_content, msg_type)
 
-	def _send_pushplus_with_template(self, title: str, content: Union[str, NotificationData], msg_type: Literal['text', 'html'] = 'text'):
+	async def _send_pushplus_with_template(self, title: str, content: Union[str, NotificationData], msg_type: Literal['text', 'html'] = 'text'):
 		if not self.pushplus_config:
 			return
 
@@ -388,9 +388,9 @@ class NotificationKit:
 		else:
 			rendered_content = str(content)
 
-		self.send_pushplus(title, rendered_content)
+		await self.send_pushplus(title, rendered_content)
 
-	def _send_serverpush_with_template(self, title: str, content: Union[str, NotificationData], msg_type: Literal['text', 'html'] = 'text'):
+	async def _send_serverpush_with_template(self, title: str, content: Union[str, NotificationData], msg_type: Literal['text', 'html'] = 'text'):
 		if not self.serverpush_config:
 			return
 
@@ -399,9 +399,9 @@ class NotificationKit:
 		else:
 			rendered_content = str(content)
 
-		self.send_serverpush(title, rendered_content)
+		await self.send_serverpush(title, rendered_content)
 
-	def _send_dingtalk_with_template(self, title: str, content: Union[str, NotificationData], msg_type: Literal['text', 'html'] = 'text'):
+	async def _send_dingtalk_with_template(self, title: str, content: Union[str, NotificationData], msg_type: Literal['text', 'html'] = 'text'):
 		if not self.dingtalk_config:
 			return
 
@@ -410,9 +410,9 @@ class NotificationKit:
 		else:
 			rendered_content = str(content)
 
-		self.send_dingtalk(title, rendered_content)
+		await self.send_dingtalk(title, rendered_content)
 
-	def _send_feishu_with_template(self, title: str, content: Union[str, NotificationData], msg_type: Literal['text', 'html'] = 'text'):
+	async def _send_feishu_with_template(self, title: str, content: Union[str, NotificationData], msg_type: Literal['text', 'html'] = 'text'):
 		if not self.feishu_config:
 			return
 
@@ -421,9 +421,9 @@ class NotificationKit:
 		else:
 			rendered_content = str(content)
 
-		self.send_feishu(title, rendered_content)
+		await self.send_feishu(title, rendered_content)
 
-	def _send_wecom_with_template(self, title: str, content: Union[str, NotificationData], msg_type: Literal['text', 'html'] = 'text'):
+	async def _send_wecom_with_template(self, title: str, content: Union[str, NotificationData], msg_type: Literal['text', 'html'] = 'text'):
 		if not self.wecom_config:
 			return
 
@@ -432,4 +432,4 @@ class NotificationKit:
 		else:
 			rendered_content = str(content)
 
-		self.send_wecom(title, rendered_content)
+		await self.send_wecom(title, rendered_content)
