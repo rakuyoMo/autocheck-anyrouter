@@ -52,9 +52,7 @@ runs:
       uses: actions/cache@v4
       id: playwright-cache
       with:
-        path: |
-          ~/.cache/ms-playwright
-          %LOCALAPPDATA%\ms-playwright
+        path: ~/.cache/ms-playwright
         key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
         restore-keys: |
           ${{ runner.os }}-playwright-
