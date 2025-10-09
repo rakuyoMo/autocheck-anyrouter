@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import asyncio
 import hashlib
 import json
 import os
@@ -39,6 +38,12 @@ class CheckinService:
         class Env:
             """环境变量配置"""
             ACCOUNTS_KEY = 'ANYROUTER_ACCOUNTS'
+            SHOW_SENSITIVE_INFO = 'SHOW_SENSITIVE_INFO'
+            REPO_VISIBILITY = 'REPO_VISIBILITY'
+            ACTIONS_RUNNER_DEBUG = 'ACTIONS_RUNNER_DEBUG'
+            GITHUB_STEP_SUMMARY = 'GITHUB_STEP_SUMMARY'
+            CI = 'CI'
+            GITHUB_ACTIONS = 'GITHUB_ACTIONS'
 
         class File:
             """文件配置"""
@@ -70,6 +75,9 @@ class CheckinService:
         """初始化签到服务"""
         # 使用用户主目录存储余额 hash 文件，确保路径一致性
         self.balance_hash_file = Path.home() / self.Config.File.BALANCE_HASH_NAME
+
+        # 隐私控制：判断是否应该显示敏感信息
+        self.show_sensitive_info = self._should_show_sensitive_info()
 
     async def run(self):
         """执行签到流程"""
@@ -107,11 +115,13 @@ class CheckinService:
             account_key = f'account_{i + 1}'
             try:
                 success, user_info = await self._check_in_account(account, i)
-                account_name = self._get_account_display_name(account, i)
+                # 日志使用脱敏名称，通知使用完整名称
+                safe_account_name = self._get_safe_account_name(account, i)
+                full_account_name = self._get_full_account_name(account, i)
 
-                # 创建账号结果
+                # 创建账号结果（通知使用完整名称）
                 account_result = AccountResult(
-                    name=account_name,
+                    name=full_account_name,
                     status="success" if success else "failed"
                 )
 
@@ -125,7 +135,7 @@ class CheckinService:
                 if not success:
                     should_notify_this_account = True
                     need_notify = True
-                    logger.notify(f"失败，将发送通知", account_name)
+                    logger.notify(f"失败，将发送通知", safe_account_name)
 
                 # 收集余额数据和处理结果
                 if user_info and user_info.get('success'):
@@ -145,13 +155,15 @@ class CheckinService:
                     account_results.append(account_result)
 
             except Exception as e:
-                account_name = self._get_account_display_name(account, i)
-                logger.error(f"处理异常：{e}", account_name)
+                # 日志使用脱敏名称，通知使用完整名称
+                safe_account_name = self._get_safe_account_name(account, i)
+                full_account_name = self._get_full_account_name(account, i)
+                logger.error(f"处理异常：{e}", safe_account_name)
                 need_notify = True  # 异常也需要通知
 
-                # 创建失败的账号结果
+                # 创建失败的账号结果（通知使用完整名称）
                 account_result = AccountResult(
-                    name=account_name,
+                    name=full_account_name,
                     status="failed",
                     error=f'异常: {str(e)[:50]}...'
                 )
@@ -180,11 +192,12 @@ class CheckinService:
             for i, account in enumerate(accounts):
                 account_key = f'account_{i + 1}'
                 if account_key in current_balances:
-                    account_name = self._get_account_display_name(account, i)
+                    # 通知使用完整名称
+                    full_account_name = self._get_full_account_name(account, i)
                     # 检查是否已经在结果列表中（避免重复）
-                    if not any(result.name == account_name for result in account_results):
+                    if not any(result.name == full_account_name for result in account_results):
                         account_result = AccountResult(
-                            name=account_name,
+                            name=full_account_name,
                             status="success",
                             quota=current_balances[account_key]["quota"],
                             used=current_balances[account_key]["used"]
@@ -210,7 +223,11 @@ class CheckinService:
             )
 
             # 发送通知
-            notify.push_message('AnyRouter 签到提醒', notification_data, msg_type='text')
+            notify.push_message(
+                title='AnyRouter 签到提醒',
+                content=notification_data,
+                msg_type='text'
+            )
             logger.notify("因失败或余额变化已发送通知")
         else:
             logger.info("所有账号成功且未检测到余额变化，跳过通知")
@@ -219,6 +236,14 @@ class CheckinService:
         logger.info(
             message=f"最终结果：成功 {success_count}/{total_count}，失败 {total_count - success_count}/{total_count}",
             tag="结果"
+        )
+
+        # 生成 GitHub Actions Step Summary
+        self._generate_github_summary(
+            success_count=success_count,
+            total_count=total_count,
+            current_balances=current_balances,
+            accounts=accounts
         )
 
         # 设置退出码
@@ -334,7 +359,10 @@ class CheckinService:
         try:
             async with async_playwright() as p:
                 # 检测是否在 CI 环境中运行
-                is_ci = os.getenv('CI') == 'true' or os.getenv('GITHUB_ACTIONS') == 'true'
+                is_ci = any(
+                    os.getenv(env) == 'true'
+                    for env in (self.Config.Env.CI, self.Config.Env.GITHUB_ACTIONS)
+                )
 
                 # 使用标准无痕模式，避免临时目录的潜在问题
                 # CI 环境使用 headless 模式，本地开发可以看到浏览器界面
@@ -400,7 +428,11 @@ class CheckinService:
     async def _get_user_info(self, client, headers: Dict[str, str]) -> Dict[str, Any]:
         """获取用户信息"""
         try:
-            response = await client.get(self.Config.URLs.USER_INFO, headers=headers, timeout=30)
+            response = await client.get(
+                url=self.Config.URLs.USER_INFO,
+                headers=headers,
+                timeout=30
+            )
 
             # HTTP 请求失败
             if response.status_code != 200:
@@ -433,7 +465,7 @@ class CheckinService:
                 'success': True,
                 'quota': quota,
                 'used_quota': used_quota,
-                'display': f':money: 当前余额: ${quota}, 已用: ${used_quota}'
+                'display': self._get_safe_balance_display(quota=quota, used=used_quota)
             }
 
         except httpx.TimeoutException:
@@ -456,7 +488,7 @@ class CheckinService:
 
     async def _check_in_account(self, account_info: Dict[str, Any], account_index: int) -> tuple[bool, Optional[Dict[str, Any]]]:
         """为单个账号执行签到操作"""
-        account_name = self._get_account_display_name(account_info, account_index)
+        account_name = self._get_safe_account_name(account_info, account_index)
         logger.processing(f"开始处理 {account_name}")
 
         # 解析账号配置
@@ -521,7 +553,11 @@ class CheckinService:
                     'X-Requested-With': 'XMLHttpRequest'
                 })
 
-                response = await client.post(self.Config.URLs.CHECKIN, headers=checkin_headers, timeout=30)
+                response = await client.post(
+                    url=self.Config.URLs.CHECKIN,
+                    headers=checkin_headers,
+                    timeout=30
+                )
 
                 logger.debug(
                     message=f"响应状态码 {response.status_code}",
@@ -591,10 +627,218 @@ class CheckinService:
 
         # 将包含 quota 和 used 的结构转换为简单的 quota 值用于 hash 计算
         simple_balances = {k: v['quota'] for k, v in balances.items()} if balances else {}
-        balance_json = json.dumps(simple_balances, sort_keys=True, separators=(',', ':'))
+        balance_json = json.dumps(
+            obj=simple_balances,
+            sort_keys=True,
+            separators=(',', ':')
+        )
         return hashlib.sha256(balance_json.encode('utf-8')).hexdigest()[:16]
 
     @staticmethod
-    def _get_account_display_name(account_info: Dict[str, Any], account_index: int) -> str:
-        """获取账号显示名称"""
-        return account_info.get('name', f'账号 {account_index + 1}')
+    def _should_show_sensitive_info() -> bool:
+        """判断是否应该显示敏感信息
+
+        优先级：
+        1. SHOW_SENSITIVE_INFO（手动控制，最高优先级）
+        2. ACTIONS_RUNNER_DEBUG（调试模式）
+        3. REPO_VISIBILITY（仓库可见性，私有仓库显示，公开仓库脱敏）
+        4. 本地运行（默认显示）
+        """
+        # 1. 检查用户手动配置（最高优先级）
+        manual_config = os.getenv(CheckinService.Config.Env.SHOW_SENSITIVE_INFO)
+        if manual_config is not None:
+            return manual_config.lower() == 'true'
+
+        # 2. 检查调试模式
+        debug_mode = os.getenv(CheckinService.Config.Env.ACTIONS_RUNNER_DEBUG, '').lower() == 'true'
+        if debug_mode:
+            return True
+
+        # 3. 检查仓库可见性
+        repo_visibility = os.getenv(CheckinService.Config.Env.REPO_VISIBILITY, '').lower()
+        if repo_visibility:
+            # 私有仓库显示，公开仓库脱敏
+            return repo_visibility != 'public'
+
+        # 4. 本地运行（无 REPO_VISIBILITY）默认显示
+        return True
+
+    def _get_full_account_name(self, account_info: Dict[str, Any], account_index: int) -> str:
+        """获取完整的账号名称（不脱敏）
+
+        Args:
+            account_info: 账号信息
+            account_index: 账号索引
+
+        Returns:
+            完整的账号名称
+        """
+        # 获取原始名称并去除首尾空格
+        name = account_info.get('name', '').strip()
+
+        # 如果没有配置 name 或者 name 是空字符串（包括纯空格的情况）
+        if not name:
+            return f'账号 {account_index + 1}'
+
+        return name
+
+    def _get_safe_account_name(self, account_info: Dict[str, Any], account_index: int) -> str:
+        """获取安全的账号名称（根据隐私设置）
+
+        Args:
+            account_info: 账号信息
+            account_index: 账号索引
+
+        Returns:
+            脱敏时返回 "首字符 + hash 后 4 位"，否则返回自定义名称
+        """
+        # 获取完整名称
+        full_name = self._get_full_account_name(account_info, account_index)
+
+        # 如果不需要脱敏，直接返回完整名称
+        if self.show_sensitive_info:
+            return full_name
+
+        # 如果是默认名称（"账号 N"），不需要脱敏
+        if full_name.startswith('账号 '):
+            return full_name
+
+        # 脱敏模式：首字符 + name 的 hash 后 4 位
+        first_char = full_name[0]
+        name_hash = hashlib.sha256(full_name.encode('utf-8')).hexdigest()[:4]
+        return f'{first_char}{name_hash}'
+
+    def _get_safe_balance_display(self, quota: float, used: float) -> str:
+        """获取安全的余额展示（根据隐私设置）
+
+        Args:
+            quota: 总额度
+            used: 已使用额度
+
+        Returns:
+            脱敏时返回描述，否则返回详细金额
+        """
+        if self.show_sensitive_info:
+            return f':money: 当前余额: ${quota}, 已用: ${used}'
+        return ':money: 余额正常'
+
+    def _generate_github_summary(
+        self,
+        success_count: int,
+        total_count: int,
+        current_balances: Dict[str, Dict[str, float]],
+        accounts: List[Dict[str, Any]]
+    ):
+        """生成 GitHub Actions Step Summary"""
+        # 检查是否在 GitHub Actions 环境中运行
+        summary_file = os.getenv(self.Config.Env.GITHUB_STEP_SUMMARY)
+        if not summary_file:
+            logger.debug("未检测到 GitHub Actions 环境，跳过 summary 生成", tag="Summary")
+            return
+
+        try:
+            # 构建所有账号的结果列表
+            all_account_results: List[AccountResult] = []
+            for i, account in enumerate(accounts):
+                account_key = f'account_{i + 1}'
+                # 根据隐私设置获取账号名称
+                account_name = self._get_safe_account_name(account, i)
+
+                if account_key in current_balances:
+                    # 成功获取余额的账号
+                    account_result = AccountResult(
+                        name=account_name,
+                        status="success",
+                        quota=current_balances[account_key]["quota"],
+                        used=current_balances[account_key]["used"]
+                    )
+                else:
+                    # 失败的账号
+                    account_result = AccountResult(
+                        name=account_name,
+                        status="failed",
+                        error="签到失败"
+                    )
+
+                all_account_results.append(account_result)
+
+            # 分组账号
+            success_accounts = [acc for acc in all_account_results if acc.status == 'success']
+            failed_accounts = [acc for acc in all_account_results if acc.status != 'success']
+
+            failed_count = total_count - success_count
+            has_success = len(success_accounts) > 0
+            has_failed = len(failed_accounts) > 0
+            all_success = len(failed_accounts) == 0
+            all_failed = len(success_accounts) == 0
+
+            # 构建 markdown 字符串
+            lines = []
+
+            # 主标题
+            lines.append('## 🎯 AnyRouter 签到任务完成')
+            lines.append('')
+
+            # 状态标题
+            if all_success:
+                lines.append('**✅ 所有账号全部签到成功！**')
+            elif has_success and has_failed:
+                lines.append('**⚠️ 部分账号签到成功**')
+            else:
+                lines.append('**❌ 所有账号签到失败**')
+
+            lines.append('')
+
+            # 详细信息
+            lines.append('### **详细信息**')
+            lines.append(f'- **执行时间**：{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+            lines.append(f'- **成功比例**：{success_count}/{total_count}')
+            lines.append(f'- **失败比例**：{failed_count}/{total_count}')
+            lines.append('')
+
+            # 成功账号表格
+            if has_success:
+                lines.append('### 成功账号')
+                if self.show_sensitive_info:
+                    # 显示详细余额信息
+                    lines.append('| 账号 | 剩余（$） | 已用（$） |')
+                    lines.append('| :----- | :---- | :---- |')
+                    for account in success_accounts:
+                        lines.append(f'|{account.name}|{account.quota}|{account.used}|')
+                else:
+                    # 脱敏模式：只显示账号和状态
+                    lines.append('| 账号 | 状态 |')
+                    lines.append('| :----- | :---- |')
+                    for account in success_accounts:
+                        lines.append(f'|{account.name}|✅ 签到成功|')
+                lines.append('')
+
+            # 失败账号表格
+            if has_failed:
+                lines.append('### 失败账号')
+                if self.show_sensitive_info:
+                    # 显示详细错误信息
+                    lines.append('| 账号 | 错误原因 |')
+                    lines.append('| :----- | :----- |')
+                    for account in failed_accounts:
+                        error_msg = account.error if account.error else '未知错误'
+                        lines.append(f'|{account.name}|{error_msg}|')
+                else:
+                    # 脱敏模式：只显示账号和简单错误提示
+                    lines.append('| 账号 | 状态 |')
+                    lines.append('| :----- | :----- |')
+                    for account in failed_accounts:
+                        lines.append(f'|{account.name}|❌ 签到失败|')
+
+            # 拼接成最终字符串
+            summary_content = '\n'.join(lines)
+
+            # 写入 summary 文件
+            with open(summary_file, 'a', encoding='utf-8') as f:
+                f.write(summary_content)
+                f.write('\n')
+
+            logger.info("GitHub Actions Step Summary 生成成功", tag="Summary")
+
+        except Exception as e:
+            logger.warning(f"生成 GitHub Actions Step Summary 失败：{e}", tag="Summary")

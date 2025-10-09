@@ -1,0 +1,29 @@
+name: '配置 Playwright 环境'
+description: '获取 Playwright 版本、缓存并安装浏览器'
+
+outputs:
+  version:
+    description: 'Playwright 版本'
+    value: ${{ steps.playwright-version.outputs.version }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 🔍 获取 Playwright 版本
+      id: playwright-version
+      shell: bash
+      run: |
+        version=$(mise run playwright-version)
+        echo "version=$version" >> $GITHUB_OUTPUT
+
+    - name: 🎭 缓存 Playwright 浏览器
+      uses: actions/cache@v4
+      id: playwright-cache
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+
+    - name: 🌐 安装 Playwright 浏览器
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: mise run install-browsers

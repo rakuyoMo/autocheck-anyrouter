@@ -10,18 +10,40 @@ jobs:
     environment: production
     env:
       PYTHONIOENCODING: utf-8
+      # 账号配置
+      ANYROUTER_ACCOUNTS: ${{ secrets.ANYROUTER_ACCOUNTS }}
+      # 仓库可见性，用于隐私控制
+      REPO_VISIBILITY: ${{ github.event.repository.visibility }}
+      # 通知配置
+      DINGTALK_NOTIF_CONFIG: ${{ secrets.DINGTALK_NOTIF_CONFIG }}
+      EMAIL_NOTIF_CONFIG: ${{ secrets.EMAIL_NOTIF_CONFIG }}
+      PUSHPLUS_NOTIF_CONFIG: ${{ secrets.PUSHPLUS_NOTIF_CONFIG }}
+      SERVERPUSH_NOTIF_CONFIG: ${{ secrets.SERVERPUSH_NOTIF_CONFIG }}
+      FEISHU_NOTIF_CONFIG: ${{ secrets.FEISHU_NOTIF_CONFIG }}
+      WECOM_NOTIF_CONFIG: ${{ secrets.WECOM_NOTIF_CONFIG }}
     steps:
-    - name: 检出代码
-      uses: actions/checkout@v4
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
 
-    - name: 执行签到
-      uses: ./.github/
-      with:
-        accounts: ${{ secrets.ANYROUTER_ACCOUNTS }}
-        dingtalk-notif-config: ${{ secrets.DINGTALK_NOTIF_CONFIG }}
-        email-notif-config: ${{ secrets.EMAIL_NOTIF_CONFIG }}
-        pushplus-notif-config: ${{ secrets.PUSHPLUS_NOTIF_CONFIG }}
-        serverpush-notif-config: ${{ secrets.SERVERPUSH_NOTIF_CONFIG }}
-        feishu-notif-config: ${{ secrets.FEISHU_NOTIF_CONFIG }}
-        wecom-notif-config: ${{ secrets.WECOM_NOTIF_CONFIG }}
+      - name: 🔧 安装 Mise
+        uses: jdx/mise-action@v3
+        with:
+          cache_key: "{{default}}-${{ hashFiles('pyproject.toml') }}"
 
+      - name: ⚙️ 安装依赖
+        run: mise run install
+
+      - name: 🎭 配置 Playwright 环境
+        uses: ./.github/actions/setup-playwright
+        id: playwright-setup
+
+      - name: 💾 恢复余额历史缓存
+        uses: actions/cache@v4
+        with:
+          path: balance_hash.txt
+          key: balance-hash-${{ github.sha }}
+          restore-keys: |
+            balance-hash-
+
+      - name: 🚀 执行签到任务
+        run: mise run checkin

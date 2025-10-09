@@ -1,5 +1,5 @@
-name: 'Execute AnyRouter Checkin'
-description: '执行 AnyRouter 签到（包含缓存处理）'
+name: 'AutoCheck AnyRouter'
+description: '自动签到 AnyRouter 服务'
 author: 'rakuyo'
 
 branding:
@@ -33,7 +33,20 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: 恢复余额历史缓存
+    - name: 🔧 安装 Mise
+      uses: jdx/mise-action@v3
+      with:
+        cache_key: "{{default}}-${{ hashFiles('pyproject.toml') }}"
+
+    - name: ⚙️ 安装依赖
+      shell: bash
+      run: mise run install
+
+    - name: 🎭 配置 Playwright 环境
+      uses: ./.github/actions/setup-playwright
+      id: playwright-setup
+
+    - name: 💾 恢复余额历史缓存
       uses: actions/cache@v4
       with:
         path: balance_hash.txt
@@ -41,10 +54,13 @@ runs:
         restore-keys: |
           balance-hash-
 
-    - name: 执行签到
+    - name: 🚀 执行签到任务
       shell: bash
       env:
+        # 账号配置
         ANYROUTER_ACCOUNTS: ${{ inputs.accounts }}
+        # 仓库可见性，用于隐私控制
+        REPO_VISIBILITY: ${{ github.event.repository.visibility }}
         # 通知配置
         DINGTALK_NOTIF_CONFIG: ${{ inputs.dingtalk-notif-config }}
         EMAIL_NOTIF_CONFIG: ${{ inputs.email-notif-config }}
@@ -52,12 +68,4 @@ runs:
         SERVERPUSH_NOTIF_CONFIG: ${{ inputs.serverpush-notif-config }}
         FEISHU_NOTIF_CONFIG: ${{ inputs.feishu-notif-config }}
         WECOM_NOTIF_CONFIG: ${{ inputs.wecom-notif-config }}
-      run: |
-        mise run checkin
-
-    - name: 执行结果
-      if: always()
-      shell: bash
-      run: |
-        echo "签到任务执行完成"
-        echo "时间: $(date)"
+      run: mise run checkin
