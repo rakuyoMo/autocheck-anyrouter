@@ -401,4 +401,3 @@ class NotificationKit:
 		self.send_wecom(title, rendered_content)
 
 
-notify = NotificationKit()

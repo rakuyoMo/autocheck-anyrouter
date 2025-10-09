@@ -13,7 +13,7 @@ import httpx
 from dotenv import load_dotenv
 from playwright.async_api import async_playwright
 
-from notif.notify import notify
+from notif import notify
 from core.models import NotificationData, AccountResult, NotificationStats
 
 # 禁用变量插值以保留模板中的 $ 符号
