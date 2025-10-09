@@ -1,20 +1,24 @@
 import pytest
 
+from collections.abc import Callable
+
+from src.core.models.account_result import AccountResult
+from src.core.models.notification_data import NotificationData
+from src.core.models.notification_stats import NotificationStats
+
 
 class TestNotificationDataModel:
 	"""测试 NotificationData 数据模型"""
 
 	@pytest.fixture
-	def create_account_result(self):
+	def create_account_result(self) -> Callable:
 		"""创建账号结果的工厂函数"""
-		from src.core.models.account_result import AccountResult
-
 		def _create(
 			name: str = '测试账号',
 			status: str = 'success',
 			quota: float = 25.0,
 			used: float = 5.0,
-			error: str = None
+			error: str | None = None
 		) -> AccountResult:
 			return AccountResult(
 				name=name,
@@ -27,15 +31,10 @@ class TestNotificationDataModel:
 		return _create
 
 	@pytest.fixture
-	def create_notification_data(self, create_account_result):
+	def create_notification_data(self, create_account_result: Callable) -> Callable:
 		"""创建通知数据的工厂函数"""
-		from typing import List
-		from src.core.models.notification_data import NotificationData
-		from src.core.models.account_result import AccountResult
-		from src.core.models.notification_stats import NotificationStats
-
 		def _create(
-			accounts: List[AccountResult],
+			accounts: list[AccountResult],
 			timestamp: str = '2024-01-01 12:00:00'
 		) -> NotificationData:
 			success_count = sum(1 for acc in accounts if acc.status == 'success')
@@ -55,7 +54,7 @@ class TestNotificationDataModel:
 
 		return _create
 
-	def test_all_success_property(self, create_account_result, create_notification_data):
+	def test_all_success_property(self, create_account_result: Callable, create_notification_data: Callable):
 		"""测试 all_success 属性"""
 		data = create_notification_data([
 			create_account_result(name='Account-1'),
@@ -65,7 +64,7 @@ class TestNotificationDataModel:
 		assert data.all_failed is False
 		assert data.partial_success is False
 
-	def test_all_failed_property(self, create_account_result, create_notification_data):
+	def test_all_failed_property(self, create_account_result: Callable, create_notification_data: Callable):
 		"""测试 all_failed 属性"""
 		data = create_notification_data([
 			create_account_result(name='Account-1', status='failed', error='Error 1'),
@@ -75,7 +74,7 @@ class TestNotificationDataModel:
 		assert data.all_failed is True
 		assert data.partial_success is False
 
-	def test_partial_success_property(self, create_account_result, create_notification_data):
+	def test_partial_success_property(self, create_account_result: Callable, create_notification_data: Callable):
 		"""测试 partial_success 属性"""
 		data = create_notification_data([
 			create_account_result(name='Account-1'),

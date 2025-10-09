@@ -3,6 +3,11 @@ from pathlib import Path
 
 import pytest
 
+from src.core.models.account_result import AccountResult
+from src.core.models.notification_data import NotificationData
+from src.core.models.notification_stats import NotificationStats
+from src.notif.notify import NotificationKit
+
 
 project_root = Path(__file__).parent.parent.parent
 
@@ -11,18 +16,13 @@ class TestTemplateRendering:
 	"""测试模板渲染功能"""
 
 	@pytest.fixture
-	def notification_kit(self):
+	def notification_kit(self) -> NotificationKit:
 		"""创建不依赖环境变量的 NotificationKit 实例"""
-		from src.notif.notify import NotificationKit
 		return NotificationKit()
 
 	@pytest.fixture
-	def single_success_data(self):
+	def single_success_data(self) -> NotificationData:
 		"""单账号成功的测试数据"""
-		from src.core.models.notification_data import NotificationData
-		from src.core.models.account_result import AccountResult
-		from src.core.models.notification_stats import NotificationStats
-
 		return NotificationData(
 			accounts=[
 				AccountResult(
@@ -38,12 +38,8 @@ class TestTemplateRendering:
 		)
 
 	@pytest.fixture
-	def single_failure_data(self):
+	def single_failure_data(self) -> NotificationData:
 		"""单账号失败的测试数据"""
-		from src.core.models.notification_data import NotificationData
-		from src.core.models.account_result import AccountResult
-		from src.core.models.notification_stats import NotificationStats
-
 		return NotificationData(
 			accounts=[
 				AccountResult(
@@ -59,12 +55,8 @@ class TestTemplateRendering:
 		)
 
 	@pytest.fixture
-	def multiple_mixed_data(self):
+	def multiple_mixed_data(self) -> NotificationData:
 		"""多账号混合的测试数据"""
-		from src.core.models.notification_data import NotificationData
-		from src.core.models.account_result import AccountResult
-		from src.core.models.notification_stats import NotificationStats
-
 		return NotificationData(
 			accounts=[
 				AccountResult(name='Account-1', status='success', quota=25.0, used=5.0, error=None),
@@ -83,10 +75,10 @@ class TestTemplateRendering:
 	])
 	def test_default_template_single_success(
 		self,
-		notification_kit,
-		single_success_data,
-		platform,
-		template_file
+		notification_kit: NotificationKit,
+		single_success_data: NotificationData,
+		platform: str,
+		template_file: str
 	):
 		"""测试默认模板渲染单账号成功场景"""
 		config_path = project_root / 'src' / 'notif' / 'configs' / template_file
@@ -103,7 +95,11 @@ class TestTemplateRendering:
 		assert '[FAIL] Failed: 0/1' in result
 		assert '[SUCCESS] All accounts check-in successful!' in result
 
-	def test_wecom_default_template_single_success(self, notification_kit, single_success_data):
+	def test_wecom_default_template_single_success(
+		self,
+		notification_kit: NotificationKit,
+		single_success_data: NotificationData
+	):
 		"""测试企业微信默认模板渲染单账号成功场景（Markdown 格式）"""
 		config_path = project_root / 'src' / 'notif' / 'configs' / 'wecom.json'
 		with open(config_path) as f:
@@ -119,7 +115,11 @@ class TestTemplateRendering:
 		assert '**[FAIL] Failed:** 0/1' in result
 		assert '**[SUCCESS] All accounts check-in successful!**' in result
 
-	def test_feishu_default_template_single_success(self, notification_kit, single_success_data):
+	def test_feishu_default_template_single_success(
+		self,
+		notification_kit: NotificationKit,
+		single_success_data: NotificationData
+	):
 		"""测试飞书默认模板渲染单账号成功场景（Markdown 格式）"""
 		config_path = project_root / 'src' / 'notif' / 'configs' / 'feishu.json'
 		with open(config_path) as f:
@@ -140,10 +140,10 @@ class TestTemplateRendering:
 	])
 	def test_default_template_single_failure(
 		self,
-		notification_kit,
-		single_failure_data,
-		platform,
-		template_file
+		notification_kit: NotificationKit,
+		single_failure_data: NotificationData,
+		platform: str,
+		template_file: str
 	):
 		"""测试默认模板渲染单账号失败场景"""
 		config_path = project_root / 'src' / 'notif' / 'configs' / template_file
@@ -159,7 +159,11 @@ class TestTemplateRendering:
 		assert '[FAIL] Failed: 1/1' in result
 		assert '[ERROR] All accounts check-in failed' in result
 
-	def test_wecom_default_template_single_failure(self, notification_kit, single_failure_data):
+	def test_wecom_default_template_single_failure(
+		self,
+		notification_kit: NotificationKit,
+		single_failure_data: NotificationData
+	):
 		"""测试企业微信默认模板渲染单账号失败场景（Markdown 格式）"""
 		config_path = project_root / 'src' / 'notif' / 'configs' / 'wecom.json'
 		with open(config_path) as f:
@@ -179,10 +183,10 @@ class TestTemplateRendering:
 	])
 	def test_default_template_multiple_mixed(
 		self,
-		notification_kit,
-		multiple_mixed_data,
-		platform,
-		template_file
+		notification_kit: NotificationKit,
+		multiple_mixed_data: NotificationData,
+		platform: str,
+		template_file: str
 	):
 		"""测试默认模板渲染多账号混合场景"""
 		config_path = project_root / 'src' / 'notif' / 'configs' / template_file
@@ -202,7 +206,11 @@ class TestTemplateRendering:
 		assert '[FAIL] Failed: 1/3' in result
 		assert '[WARN] Some accounts check-in successful' in result
 
-	def test_wecom_default_template_multiple_mixed(self, notification_kit, multiple_mixed_data):
+	def test_wecom_default_template_multiple_mixed(
+		self,
+		notification_kit: NotificationKit,
+		multiple_mixed_data: NotificationData
+	):
 		"""测试企业微信默认模板渲染多账号混合场景（Markdown 格式）"""
 		config_path = project_root / 'src' / 'notif' / 'configs' / 'wecom.json'
 		with open(config_path) as f:
@@ -221,7 +229,11 @@ class TestTemplateRendering:
 		assert '**[FAIL] Failed:** 1/3' in result
 		assert '**[WARN] Some accounts check-in successful**' in result
 
-	def test_custom_template_with_variables(self, notification_kit, single_success_data):
+	def test_custom_template_with_variables(
+		self,
+		notification_kit: NotificationKit,
+		single_success_data: NotificationData
+	):
 		"""测试自定义模板的变量访问"""
 		template = '{{ timestamp }} - {% for account in accounts %}{{ account.name }}: {{ account.status }}{% endfor %} - 成功: {{ stats.success_count }}/{{ stats.total_count }}'
 		result = notification_kit._render_template(template, single_success_data)
@@ -231,12 +243,8 @@ class TestTemplateRendering:
 		assert 'success' in result
 		assert '1/1' in result
 
-	def test_custom_template_with_convenience_flags(self, notification_kit):
+	def test_custom_template_with_convenience_flags(self, notification_kit: NotificationKit):
 		"""测试自定义模板使用便利标志（all_success, all_failed, partial_success）"""
-		from src.core.models.notification_data import NotificationData
-		from src.core.models.account_result import AccountResult
-		from src.core.models.notification_stats import NotificationStats
-
 		template = '{% if all_success %}ALL SUCCESS{% endif %}{% if all_failed %}ALL FAILED{% endif %}{% if partial_success %}PARTIAL{% endif %}'
 
 		# 测试 all_success
@@ -269,7 +277,11 @@ class TestTemplateRendering:
 		result = notification_kit._render_template(template, data_partial)
 		assert 'PARTIAL' in result
 
-	def test_invalid_template_fallback(self, notification_kit, single_success_data):
+	def test_invalid_template_fallback(
+		self,
+		notification_kit: NotificationKit,
+		single_success_data: NotificationData
+	):
 		"""测试无效模板语法时的回退处理"""
 		# 使用会触发解析错误的模板语法
 		invalid_template = '{% if unclosed_block %}'

@@ -7,7 +7,7 @@ import pytest
 class TestConfigParsing:
 	"""测试配置解析功能"""
 
-	def test_no_config_returns_none(self, monkeypatch):
+	def test_no_config_returns_none(self, monkeypatch: pytest.MonkeyPatch):
 		"""测试无配置时所有配置为 None"""
 		# 清空所有相关环境变量
 		for key in list(os.environ.keys()):
@@ -29,7 +29,13 @@ class TestConfigParsing:
 		('json_with_null_template', False, None),
 		('json_without_template_key', False, None),
 	])
-	def test_wecom_config_formats(self, monkeypatch, config_format, has_template, template_value):
+	def test_wecom_config_formats(
+		self,
+		monkeypatch: pytest.MonkeyPatch,
+		config_format: str,
+		has_template: bool,
+		template_value: str | None
+	):
 		"""测试企业微信配置的各种格式"""
 		# 清空环境
 		for key in list(os.environ.keys()):
@@ -65,7 +71,12 @@ class TestConfigParsing:
 		('json_with_custom_template', True),
 		('json_with_null_template', False),
 	])
-	def test_pushplus_config_formats(self, monkeypatch, config_format, has_template):
+	def test_pushplus_config_formats(
+		self,
+		monkeypatch: pytest.MonkeyPatch,
+		config_format: str,
+		has_template: bool
+	):
 		"""测试 PushPlus 配置的各种格式"""
 		# 清空环境
 		for key in list(os.environ.keys()):
@@ -96,7 +107,12 @@ class TestConfigParsing:
 		('json_with_custom_template', True),
 		('json_with_null_template', False),
 	])
-	def test_serverpush_config_formats(self, monkeypatch, config_format, has_template):
+	def test_serverpush_config_formats(
+		self,
+		monkeypatch: pytest.MonkeyPatch,
+		config_format: str,
+		has_template: bool
+	):
 		"""测试 Server 酱配置的各种格式"""
 		# 清空环境
 		for key in list(os.environ.keys()):
@@ -127,7 +143,12 @@ class TestConfigParsing:
 		('json_with_custom_template', True),
 		('json_with_null_template', False),
 	])
-	def test_email_config_formats(self, monkeypatch, config_format, has_template):
+	def test_email_config_formats(
+		self,
+		monkeypatch: pytest.MonkeyPatch,
+		config_format: str,
+		has_template: bool
+	):
 		"""测试邮箱配置的各种格式"""
 		# 清空环境
 		for key in list(os.environ.keys()):

@@ -1,6 +1,6 @@
 import json
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -16,13 +16,14 @@ class TestNotificationSending:
 		('feishu', 'send_feishu', {}, '未配置飞书 Webhook'),
 		('wecom', 'send_wecom', {}, '未配置企业微信 Webhook'),
 	])
-	def test_send_without_config_raises_error(
+	@pytest.mark.asyncio
+	async def test_send_without_config_raises_error(
 		self,
-		monkeypatch,
-		platform,
-		method_name,
-		env_config,
-		error_message
+		monkeypatch: pytest.MonkeyPatch,
+		platform: str,
+		method_name: str,
+		env_config: dict,
+		error_message: str
 	):
 		"""测试无配置时发送抛出异常"""
 		# 清空所有配置相关环境变量
@@ -34,10 +35,11 @@ class TestNotificationSending:
 		kit = NotificationKit()
 
 		with pytest.raises(ValueError, match=error_message):
-			getattr(kit, method_name)('测试标题', '测试内容')
+			await getattr(kit, method_name)('测试标题', '测试内容')
 
+	@pytest.mark.asyncio
 	@patch('smtplib.SMTP_SSL')
-	def test_email_sending_with_mock(self, mock_smtp, monkeypatch):
+	async def test_email_sending_with_mock(self, mock_smtp: MagicMock, monkeypatch: pytest.MonkeyPatch):
 		"""测试邮箱发送逻辑（使用 mock）"""
 		# 清空环境
 		for key in list(os.environ.keys()):
@@ -57,7 +59,7 @@ class TestNotificationSending:
 
 		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
-		kit.send_email('测试标题', '测试内容')
+		await kit.send_email('测试标题', '测试内容')
 
 		assert mock_server.login.called
 		assert mock_server.send_message.called
@@ -69,16 +71,17 @@ class TestNotificationSending:
 		('feishu', 'send_feishu', 'FEISHU_NOTIF_CONFIG', 'webhook', 'https://example.com/webhook'),
 		('wecom', 'send_wecom', 'WECOM_NOTIF_CONFIG', 'webhook', 'https://example.com/webhook'),
 	])
-	@patch('httpx.Client')
-	def test_http_platforms_sending_with_mock(
+	@pytest.mark.asyncio
+	@patch('httpx.AsyncClient')
+	async def test_http_platforms_sending_with_mock(
 		self,
-		mock_client,
-		monkeypatch,
-		platform,
-		method_name,
-		env_key,
-		config_key,
-		env_value
+		mock_client: MagicMock,
+		monkeypatch: pytest.MonkeyPatch,
+		platform: str,
+		method_name: str,
+		env_key: str,
+		config_key: str,
+		env_value: str
 	):
 		"""测试各 HTTP 平台的发送逻辑（使用 mock）"""
 		# 清空环境
@@ -89,12 +92,12 @@ class TestNotificationSending:
 		config = {config_key: env_value}
 		monkeypatch.setenv(env_key, json.dumps(config))
 
-		mock_client_instance = MagicMock()
-		mock_client.return_value.__enter__.return_value = mock_client_instance
+		mock_client_instance = AsyncMock()
+		mock_client.return_value.__aenter__.return_value = mock_client_instance
 
 		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
-		getattr(kit, method_name)('测试标题', '测试内容')
+		await getattr(kit, method_name)('测试标题', '测试内容')
 
 		mock_client_instance.post.assert_called_once()
 
@@ -103,8 +106,15 @@ class TestNotificationSending:
 		(True, 'blue'),
 		(False, None),
 	])
-	@patch('httpx.Client')
-	def test_feishu_card_modes(self, mock_client, monkeypatch, use_card, color_theme):
+	@pytest.mark.asyncio
+	@patch('httpx.AsyncClient')
+	async def test_feishu_card_modes(
+		self,
+		mock_client: MagicMock,
+		monkeypatch: pytest.MonkeyPatch,
+		use_card: bool,
+		color_theme: str | None
+	):
 		"""测试飞书的卡片模式和普通模式"""
 		# 清空环境
 		for key in list(os.environ.keys()):
@@ -125,12 +135,12 @@ class TestNotificationSending:
 
 		monkeypatch.setenv('FEISHU_NOTIF_CONFIG', json.dumps(config))
 
-		mock_client_instance = MagicMock()
-		mock_client.return_value.__enter__.return_value = mock_client_instance
+		mock_client_instance = AsyncMock()
+		mock_client.return_value.__aenter__.return_value = mock_client_instance
 
 		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
-		kit.send_feishu('测试标题', '测试内容')
+		await kit.send_feishu('测试标题', '测试内容')
 
 		# 验证调用了 post 方法
 		assert mock_client_instance.post.called
@@ -154,8 +164,15 @@ class TestNotificationSending:
 		(None, 'text'),
 		('invalid', 'text'),
 	])
-	@patch('httpx.Client')
-	def test_wecom_markdown_style_modes(self, mock_client, monkeypatch, markdown_style, expected_msgtype):
+	@pytest.mark.asyncio
+	@patch('httpx.AsyncClient')
+	async def test_wecom_markdown_style_modes(
+		self,
+		mock_client: MagicMock,
+		monkeypatch: pytest.MonkeyPatch,
+		markdown_style: str | None,
+		expected_msgtype: str
+	):
 		"""测试企业微信的 markdown_style 配置"""
 		# 清空环境
 		for key in list(os.environ.keys()):
@@ -173,12 +190,12 @@ class TestNotificationSending:
 
 		monkeypatch.setenv('WECOM_NOTIF_CONFIG', json.dumps(config))
 
-		mock_client_instance = MagicMock()
-		mock_client.return_value.__enter__.return_value = mock_client_instance
+		mock_client_instance = AsyncMock()
+		mock_client.return_value.__aenter__.return_value = mock_client_instance
 
 		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
-		kit.send_wecom('测试标题', '测试内容')
+		await kit.send_wecom('测试标题', '测试内容')
 
 		# 验证调用了 post 方法
 		assert mock_client_instance.post.called
