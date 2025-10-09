@@ -4,8 +4,8 @@ from notif.models.pushplus_config import PushPlusConfig
 from notif.models.serverpush_config import ServerPushConfig
 
 __all__ = [
-    'EmailConfig',
-    'WebhookConfig',
-    'PushPlusConfig',
-    'ServerPushConfig',
+	'EmailConfig',
+	'WebhookConfig',
+	'PushPlusConfig',
+	'ServerPushConfig',
 ]
