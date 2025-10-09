@@ -14,7 +14,7 @@ install-dev = "mise exec -- python -m pip install -e '.[dev]'"
 install-browsers = "mise exec -- python -m playwright install chromium --with-deps"
 
 # 运行签到脚本
-checkin = "mise exec -- python src/core/checkin.py"
+checkin = "mise exec -- python src/main.py"
 
 # 测试相关
 test = "mise exec -- pytest tests/"
