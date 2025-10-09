@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from .log_level import LogLevel
 
@@ -7,7 +6,7 @@ from .log_level import LogLevel
 class Logger:
     """日志工具类，用于统一格式化输出日志"""
 
-    def debug(self, message: str, tag: Optional[str] = None, account_name: Optional[str] = None, show_timestamp: bool = False):
+    def debug(self, message: str, tag: str | None = None, account_name: str | None = None, show_timestamp: bool = False):
         """输出调试级别日志"""
         formatted_message = self._format_message(
             level=LogLevel.DEBUG,
@@ -18,7 +17,7 @@ class Logger:
         )
         self._print(formatted_message)
 
-    def info(self, message: str, tag: Optional[str] = None, account_name: Optional[str] = None, show_timestamp: bool = False):
+    def info(self, message: str, tag: str | None = None, account_name: str | None = None, show_timestamp: bool = False):
         """输出信息级别日志"""
         formatted_message = self._format_message(
             level=LogLevel.INFO,
@@ -29,7 +28,7 @@ class Logger:
         )
         self._print(formatted_message)
 
-    def warning(self, message: str, tag: Optional[str] = None, account_name: Optional[str] = None, show_timestamp: bool = False):
+    def warning(self, message: str, tag: str | None = None, account_name: str | None = None, show_timestamp: bool = False):
         """输出警告级别日志"""
         formatted_message = self._format_message(
             level=LogLevel.WARNING,
@@ -40,7 +39,7 @@ class Logger:
         )
         self._print(formatted_message)
 
-    def error(self, message: str, tag: Optional[str] = None, account_name: Optional[str] = None, show_timestamp: bool = False):
+    def error(self, message: str, tag: str | None = None, account_name: str | None = None, show_timestamp: bool = False):
         """输出错误级别日志"""
         formatted_message = self._format_message(
             level=LogLevel.ERROR,
@@ -51,7 +50,7 @@ class Logger:
         )
         self._print(formatted_message)
 
-    def success(self, message: str, account_name: Optional[str] = None, show_timestamp: bool = False):
+    def success(self, message: str, account_name: str | None = None, show_timestamp: bool = False):
         """输出成功级别日志 - 便捷方法，使用 INFO 级别和成功标签"""
         self.info(
             message=message,
@@ -60,7 +59,7 @@ class Logger:
             show_timestamp=show_timestamp
         )
 
-    def processing(self, message: str, account_name: Optional[str] = None, show_timestamp: bool = False):
+    def processing(self, message: str, account_name: str | None = None, show_timestamp: bool = False):
         """输出处理中日志 - 便捷方法，使用 INFO 级别和处理中标签"""
         self.info(
             message=message,
@@ -69,12 +68,12 @@ class Logger:
             show_timestamp=show_timestamp
         )
 
-    def notify(self, message: str, account_name: Optional[str] = None, show_timestamp: bool = False):
+    def notify(self, message: str, account_name: str | None = None, show_timestamp: bool = False):
         """输出通知相关日志 - 便捷方法，使用 INFO 级别和通知标签"""
         self.info(
-            message=message, 
-            tag="通知", 
-            account_name=account_name, 
+            message=message,
+            tag="通知",
+            account_name=account_name,
             show_timestamp=show_timestamp
         )
 
@@ -126,8 +125,8 @@ class Logger:
         self,
         level: LogLevel,
         message: str,
-        tag: Optional[str] = None,
-        account_name: Optional[str] = None,
+        tag: str | None = None,
+        account_name: str | None = None,
         show_timestamp: bool = False
     ) -> str:
         """格式化日志消息

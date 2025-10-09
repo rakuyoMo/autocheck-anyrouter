@@ -4,7 +4,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
-from typing import Dict, Any, Optional, Literal, Union
+from typing import Any, Literal, Union
 
 import httpx
 import stencil
@@ -45,7 +45,12 @@ class NotificationKit:
 		body = MIMEText(content, msg_type, 'utf-8')
 		msg.attach(body)
 
-		smtp_server = self.email_config.smtp_server if self.email_config.smtp_server else f'smtp.{self.email_config.user.split("@")[1]}'
+		# 如果有自定义 SMTP 服务器，使用它；否则从邮箱地址推断
+		if self.email_config.smtp_server:
+			smtp_server = self.email_config.smtp_server
+		else:
+			smtp_server = f'smtp.{self.email_config.user.split("@")[1]}'
+
 		with smtplib.SMTP_SSL(smtp_server, 465) as server:
 			server.login(self.email_config.user, self.email_config.password)
 			server.send_message(msg)
@@ -151,7 +156,7 @@ class NotificationKit:
 				logger.error(f"消息推送失败！原因：{str(e)}", name)
 
 	# 配置加载方法
-	def _load_default_config(self, platform: str) -> Optional[Dict[str, Any]]:
+	def _load_default_config(self, platform: str) -> dict[str, Any] | None:
 		"""加载默认配置文件"""
 		config_file = self.config_dir / f'{platform}.json'
 		if config_file.exists():
@@ -162,7 +167,7 @@ class NotificationKit:
 				logger.warning(f"加载默认配置文件 {config_file} 失败：{e}")
 		return None
 
-	def _parse_env_config(self, env_value: str) -> Union[str, Dict[str, Any]]:
+	def _parse_env_config(self, env_value: str) -> Union[str, dict[str, Any]]:
 		"""解析环境变量配置"""
 		try:
 			# 尝试解析为 JSON
@@ -171,7 +176,7 @@ class NotificationKit:
 			# 如果不是 JSON，就当做纯字符串（Token 或 Webhook URL）
 			return env_value
 
-	def _load_email_config(self) -> Optional[EmailConfig]:
+	def _load_email_config(self) -> EmailConfig | None:
 		"""加载邮箱配置"""
 		email_notif_config = os.getenv('EMAIL_NOTIF_CONFIG')
 		if not email_notif_config:
@@ -201,7 +206,7 @@ class NotificationKit:
 			template=template
 		)
 
-	def _load_webhook_config(self, platform: str, notif_config_key: str) -> Optional[WebhookConfig]:
+	def _load_webhook_config(self, platform: str, notif_config_key: str) -> WebhookConfig | None:
 		"""加载 Webhook 配置的通用方法"""
 		notif_config = os.getenv(notif_config_key)
 		if not notif_config:
@@ -235,16 +240,16 @@ class NotificationKit:
 			template=default_config.get('template') if default_config else None
 		)
 
-	def _load_dingtalk_config(self) -> Optional[WebhookConfig]:
+	def _load_dingtalk_config(self) -> WebhookConfig | None:
 		return self._load_webhook_config('dingtalk', 'DINGTALK_NOTIF_CONFIG')
 
-	def _load_feishu_config(self) -> Optional[WebhookConfig]:
+	def _load_feishu_config(self) -> WebhookConfig | None:
 		return self._load_webhook_config('feishu', 'FEISHU_NOTIF_CONFIG')
 
-	def _load_wecom_config(self) -> Optional[WebhookConfig]:
+	def _load_wecom_config(self) -> WebhookConfig | None:
 		return self._load_webhook_config('wecom', 'WECOM_NOTIF_CONFIG')
 
-	def _load_pushplus_config(self) -> Optional[PushPlusConfig]:
+	def _load_pushplus_config(self) -> PushPlusConfig | None:
 		"""加载 PushPlus 配置"""
 		pushplus_notif_config = os.getenv('PUSHPLUS_NOTIF_CONFIG')
 		if not pushplus_notif_config:
@@ -278,7 +283,7 @@ class NotificationKit:
 			template=default_config.get('template') if default_config else None
 		)
 
-	def _load_serverpush_config(self) -> Optional[ServerPushConfig]:
+	def _load_serverpush_config(self) -> ServerPushConfig | None:
 		"""加载 Server 酱配置"""
 		serverpush_notif_config = os.getenv('SERVERPUSH_NOTIF_CONFIG')
 		if not serverpush_notif_config:

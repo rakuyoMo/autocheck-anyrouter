@@ -4,7 +4,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import Any
 
 import httpx
 from dotenv import load_dotenv
@@ -104,7 +104,7 @@ class CheckinService:
         # 为每个账号执行签到
         success_count = 0
         total_count = len(accounts)
-        account_results: List[AccountResult] = []  # 使用结构化数据存储结果
+        account_results: list[AccountResult] = []  # 使用结构化数据存储结果
         current_balances = {}
         need_notify = False  # 是否需要发送通知
         balance_changed = False  # 余额是否有变化
@@ -247,46 +247,46 @@ class CheckinService:
         # 设置退出码
         sys.exit(0 if success_count > 0 else 1)
 
-    def _load_accounts(self) -> Optional[List[Dict[str, Any]]]:
+    def _load_accounts(self) -> list[dict[str, Any]]:
         """从环境变量加载多账号配置"""
         accounts_str = os.getenv(self.Config.Env.ACCOUNTS_KEY)
         if not accounts_str:
             # 未配置账号信息
             self._print_account_config_guide()
-            return None
+            return []
 
         # JSON 解析失败
         try:
             accounts_data = json.loads(accounts_str)
         except json.JSONDecodeError as e:
             logger.error(f"账号配置中的 JSON 格式无效：{e}")
-            return None
+            return []
 
         except Exception as e:
             logger.error(f"账号配置格式不正确：{e}")
-            return None
+            return []
 
         # 不是数组格式
         if not isinstance(accounts_data, list):
             logger.error("账号配置必须使用数组格式 [{}]")
-            return None
+            return []
 
         # 验证账号数据格式
         for i, account in enumerate(accounts_data):
             # 账号不是字典格式
             if not isinstance(account, dict):
                 logger.error(f"账号 {i + 1} 配置格式不正确")
-                return None
+                return []
 
             # 缺少必需字段
             if 'cookies' not in account or 'api_user' not in account:
                 logger.error(f"账号 {i + 1} 缺少必需字段 (cookies, api_user)")
-                return None
+                return []
 
             # name 字段为空字符串
             if 'name' in account and not account['name']:
                 logger.error(f"账号 {i + 1} 的名称字段不能为空")
-                return None
+                return []
 
         return accounts_data
 
@@ -318,7 +318,7 @@ class CheckinService:
             '- api_user 为 API 用户标识',
         ])
 
-    def _load_balance_hash(self) -> Optional[str]:
+    def _load_balance_hash(self) -> str | None:
         """加载余额 hash"""
         try:
             if self.balance_hash_file.exists():
@@ -347,7 +347,7 @@ class CheckinService:
         except Exception as e:
             logger.warning(f"保存余额哈希时发生意外错误：{e}")
 
-    async def _get_waf_cookies_with_playwright(self, account_name: str) -> Optional[Dict[str, str]]:
+    async def _get_waf_cookies_with_playwright(self, account_name: str) -> dict[str, str] | None:
         """使用 Playwright 获取 WAF cookies（无痕模式）"""
         logger.processing("正在启动浏览器获取 WAF cookies...", account_name)
 
@@ -423,7 +423,7 @@ class CheckinService:
                 except Exception:
                     pass
 
-    async def _get_user_info(self, client, headers: Dict[str, str]) -> Dict[str, Any]:
+    async def _get_user_info(self, client, headers: dict[str, str]) -> dict[str, Any]:
         """获取用户信息"""
         try:
             response = await client.get(
@@ -484,7 +484,7 @@ class CheckinService:
                 'error': f'获取用户信息失败：{str(e)[:50]}...'
             }
 
-    async def _check_in_account(self, account_info: Dict[str, Any], account_index: int) -> tuple[bool, Optional[Dict[str, Any]]]:
+    async def _check_in_account(self, account_info: dict[str, Any], account_index: int) -> tuple[bool, dict[str, Any] | None]:
         """为单个账号执行签到操作"""
         account_name = self._get_safe_account_name(account_info, account_index)
         logger.processing(f"开始处理 {account_name}")
@@ -595,7 +595,7 @@ class CheckinService:
                 return False, None
 
     @staticmethod
-    def _parse_cookies(cookies_data) -> Dict[str, str]:
+    def _parse_cookies(cookies_data) -> dict[str, str]:
         """解析 cookies 数据"""
         # 已经是字典格式
         if isinstance(cookies_data, dict):
@@ -618,7 +618,7 @@ class CheckinService:
         return cookies_dict
 
     @staticmethod
-    def _generate_balance_hash(balances: Optional[Dict[str, Dict[str, float]]]) -> Optional[str]:
+    def _generate_balance_hash(balances: dict[str, dict[str, float]] | None) -> str | None:
         """生成余额数据的 hash"""
         if not balances:
             return None
@@ -661,7 +661,7 @@ class CheckinService:
         # 4. 本地运行（无 REPO_VISIBILITY）默认显示
         return True
 
-    def _get_full_account_name(self, account_info: Dict[str, Any], account_index: int) -> str:
+    def _get_full_account_name(self, account_info: dict[str, Any], account_index: int) -> str:
         """获取完整的账号名称（不脱敏）
 
         Args:
@@ -680,7 +680,7 @@ class CheckinService:
 
         return name
 
-    def _get_safe_account_name(self, account_info: Dict[str, Any], account_index: int) -> str:
+    def _get_safe_account_name(self, account_info: dict[str, Any], account_index: int) -> str:
         """获取安全的账号名称（根据隐私设置）
 
         Args:
@@ -724,8 +724,8 @@ class CheckinService:
         self,
         success_count: int,
         total_count: int,
-        current_balances: Dict[str, Dict[str, float]],
-        accounts: List[Dict[str, Any]]
+        current_balances: dict[str, dict[str, float]],
+        accounts: list[dict[str, Any]]
     ):
         """生成 GitHub Actions Step Summary"""
         # 检查是否在 GitHub Actions 环境中运行
@@ -736,7 +736,7 @@ class CheckinService:
 
         try:
             # 构建所有账号的结果列表
-            all_account_results: List[AccountResult] = []
+            all_account_results: list[AccountResult] = []
             for i, account in enumerate(accounts):
                 account_key = f'account_{i + 1}'
                 # 根据隐私设置获取账号名称

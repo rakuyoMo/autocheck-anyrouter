@@ -1,4 +1,3 @@
-from typing import List, Optional
 from dataclasses import dataclass
 
 from core.models.account_result import AccountResult
@@ -10,13 +9,13 @@ class NotificationData:
     """通知数据结构"""
 
     # 账号列表和处理结果
-    accounts: List[AccountResult]
+    accounts: list[AccountResult]
 
     # 统计信息
     stats: NotificationStats
 
     # 执行时间戳
-    timestamp: Optional[str] = None
+    timestamp: str | None = None
 
     @property
     def all_success(self) -> bool:

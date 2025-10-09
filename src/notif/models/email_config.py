@@ -1,5 +1,5 @@
-from typing import Dict, Any, Optional
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -16,10 +16,10 @@ class EmailConfig:
     to: str
 
     # 自定义 SMTP 服务器地址（可选），如果不指定则自动从邮箱地址推断
-    smtp_server: Optional[str] = None
+    smtp_server: str | None = None
 
     # 平台设置
-    platform_settings: Optional[Dict[str, Any]] = None
+    platform_settings: dict[str, Any] | None = None
 
     # 模板内容，如果为空则使用默认模板
-    template: Optional[str] = None
+    template: str | None = None

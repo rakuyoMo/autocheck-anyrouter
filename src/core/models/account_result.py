@@ -1,4 +1,3 @@
-from typing import Optional
 from dataclasses import dataclass
 
 
@@ -13,10 +12,10 @@ class AccountResult:
     status: str
 
     # 当前余额，成功时才有
-    quota: Optional[float] = None
+    quota: float | None = None
 
     # 已使用余额，成功时才有
-    used: Optional[float] = None
+    used: float | None = None
 
     # 错误信息，失败时才有
-    error: Optional[str] = None
+    error: str | None = None
