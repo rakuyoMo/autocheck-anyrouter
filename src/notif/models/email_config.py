@@ -23,3 +23,6 @@ class EmailConfig:
 
 	# 模板内容，如果为空则使用默认模板
 	template: str | None = None
+
+	# 默认消息类型（'text' 或 'html'），如果不指定则自动检测
+	default_msg_type: str | None = None
