@@ -78,7 +78,8 @@ class Logger:
 		)
 
 	def print_banner(self, title: str, width: int = 60, show_timestamp: bool = False):
-		"""打印横幅样式的内容
+		"""
+		打印横幅样式的内容
 
 		Args:
 			title: 横幅标题
@@ -96,7 +97,8 @@ class Logger:
 		self._print(border)
 
 	def print_multiline(self, messages: list[str], show_timestamp: bool = False):
-		"""打印多行消息，每行都会被原样输出
+		"""
+		打印多行消息，每行都会被原样输出
 
 		Args:
 			messages: 消息列表
@@ -110,7 +112,8 @@ class Logger:
 			self._print(message)
 
 	def _print(self, message: str):
-		"""封装日志输出函数，便于未来统一替换日志基底
+		"""
+		封装日志输出函数，便于未来统一替换日志基底
 
 		Args:
 			message: 要打印的消息
@@ -129,7 +132,8 @@ class Logger:
 		account_name: str | None = None,
 		show_timestamp: bool = False
 	) -> str:
-		"""格式化日志消息
+		"""
+		格式化日志消息
 
 		Args:
 			level: 日志级别

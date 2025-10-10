@@ -133,7 +133,7 @@ class CheckinService:
 				if not success:
 					should_notify_this_account = True
 					need_notify = True
-					logger.notify(f"失败，将发送通知", safe_account_name)
+					logger.notify("失败，将发送通知", safe_account_name)
 
 				# 收集余额数据和处理结果
 				if user_info and user_info.get('success'):
