@@ -25,17 +25,20 @@ class TestConfigParsing:
 		assert kit.pushplus_config is None
 		assert kit.serverpush_config is None
 
-	@pytest.mark.parametrize('config_format,has_template,template_value', [
-		('json_with_custom_template', True, 'custom template content'),
-		('json_with_null_template', False, None),
-		('json_without_template_key', False, None),
-	])
+	@pytest.mark.parametrize(
+		'config_format,has_template,template_value',
+		[
+			('json_with_custom_template', True, 'custom template content'),
+			('json_with_null_template', False, None),
+			('json_without_template_key', False, None),
+		],
+	)
 	def test_wecom_config_formats(
 		self,
 		monkeypatch: pytest.MonkeyPatch,
 		config_format: str,
 		has_template: bool,
-		template_value: str | None
+		template_value: str | None,
 	):
 		"""测试企业微信配置的各种格式"""
 		# 清空环境
@@ -66,16 +69,18 @@ class TestConfigParsing:
 			assert kit.wecom_config.template is not None
 			assert len(kit.wecom_config.template) > 0
 
-	
-	@pytest.mark.parametrize('config_format,has_template', [
-		('json_with_custom_template', True),
-		('json_with_null_template', False),
-	])
+	@pytest.mark.parametrize(
+		'config_format,has_template',
+		[
+			('json_with_custom_template', True),
+			('json_with_null_template', False),
+		],
+	)
 	def test_pushplus_config_formats(
 		self,
 		monkeypatch: pytest.MonkeyPatch,
 		config_format: str,
-		has_template: bool
+		has_template: bool,
 	):
 		"""测试 PushPlus 配置的各种格式"""
 		# 清空环境
@@ -102,15 +107,18 @@ class TestConfigParsing:
 			assert kit.pushplus_config.template is not None
 			assert len(kit.pushplus_config.template) > 0
 
-	@pytest.mark.parametrize('config_format,has_template', [
-		('json_with_custom_template', True),
-		('json_with_null_template', False),
-	])
+	@pytest.mark.parametrize(
+		'config_format,has_template',
+		[
+			('json_with_custom_template', True),
+			('json_with_null_template', False),
+		],
+	)
 	def test_serverpush_config_formats(
 		self,
 		monkeypatch: pytest.MonkeyPatch,
 		config_format: str,
-		has_template: bool
+		has_template: bool,
 	):
 		"""测试 Server 酱配置的各种格式"""
 		# 清空环境
@@ -137,15 +145,18 @@ class TestConfigParsing:
 			assert kit.serverpush_config.template is not None
 			assert len(kit.serverpush_config.template) > 0
 
-	@pytest.mark.parametrize('config_format,has_template', [
-		('json_with_custom_template', True),
-		('json_with_null_template', False),
-	])
+	@pytest.mark.parametrize(
+		'config_format,has_template',
+		[
+			('json_with_custom_template', True),
+			('json_with_null_template', False),
+		],
+	)
 	def test_email_config_formats(
 		self,
 		monkeypatch: pytest.MonkeyPatch,
 		config_format: str,
-		has_template: bool
+		has_template: bool,
 	):
 		"""测试邮箱配置的各种格式"""
 		# 清空环境
@@ -159,14 +170,14 @@ class TestConfigParsing:
 				'user': 'test@example.com',
 				'pass': 'test_password',
 				'to': 'recipient@example.com',
-				'template': 'custom email template'
+				'template': 'custom email template',
 			}
 		else:  # json_with_null_template
 			config = {
 				'user': 'test@example.com',
 				'pass': 'test_password',
 				'to': 'recipient@example.com',
-				'template': None
+				'template': None,
 			}
 
 		monkeypatch.setenv('EMAIL_NOTIF_CONFIG', json.dumps(config))

@@ -27,14 +27,12 @@ class DingTalkSender:
 		data = {
 			'msgtype': 'text',
 			'text': {
-				'content': f'{title}\n{content}'
-			}
+				'content': f'{title}\n{content}',
+			},
 		}
 		async with httpx.AsyncClient(timeout=30.0) as client:
 			response = await client.post(self.config.webhook, json=data)
 
 			# 检查响应状态码
 			if not response.is_success:
-				raise Exception(
-					f'钉钉推送失败，HTTP 状态码：{response.status_code}，响应内容：{response.text[:200]}'
-				)
+				raise Exception(f'钉钉推送失败，HTTP 状态码：{response.status_code}，响应内容：{response.text[:200]}')

@@ -26,6 +26,7 @@ class CheckinService:
 
 		class URLs:
 			"""URL 配置"""
+
 			BASE = 'https://anyrouter.top'
 			LOGIN = f'{BASE}/login'
 			API_BASE = f'{BASE}/api'
@@ -35,6 +36,7 @@ class CheckinService:
 
 		class Env:
 			"""环境变量配置"""
+
 			ACCOUNTS_KEY = 'ANYROUTER_ACCOUNTS'
 			SHOW_SENSITIVE_INFO = 'SHOW_SENSITIVE_INFO'
 			REPO_VISIBILITY = 'REPO_VISIBILITY'
@@ -45,10 +47,12 @@ class CheckinService:
 
 		class File:
 			"""文件配置"""
+
 			BALANCE_HASH_NAME = 'balance_hash.txt'
 
 		class Browser:
 			"""浏览器配置"""
+
 			USER_AGENT_PARTS = [
 				'Mozilla/5.0',
 				'(Windows NT 10.0; Win64; x64)',
@@ -67,6 +71,7 @@ class CheckinService:
 
 		class WAF:
 			"""WAF 配置"""
+
 			COOKIE_NAMES = ['acw_tc', 'cdn_sec_tc', 'acw_sc__v2']
 
 	def __init__(self):
@@ -80,9 +85,9 @@ class CheckinService:
 	async def run(self):
 		"""执行签到流程"""
 		logger.info(
-			message="AnyRouter.top 多账号自动签到脚本启动（使用 Playwright）",
-			tag="系统",
-			show_timestamp=True
+			message='AnyRouter.top 多账号自动签到脚本启动（使用 Playwright）',
+			tag='系统',
+			show_timestamp=True,
 		)
 
 		# 加载账号配置
@@ -93,10 +98,10 @@ class CheckinService:
 				'🚀 配置完成后，请重新运行工作流即可自动签到！',
 				'',
 				'[INFO] 程序正常退出（等待配置完成）',
-			])
+			])  # fmt: skip
 			sys.exit(0)
 
-		logger.info(f"找到 {len(accounts)} 个账号配置")
+		logger.info(f'找到 {len(accounts)} 个账号配置')
 
 		# 加载余额 hash
 		last_balance_hash = self._load_balance_hash()
@@ -120,7 +125,7 @@ class CheckinService:
 				# 创建账号结果（通知使用完整名称）
 				account_result = AccountResult(
 					name=full_account_name,
-					status="success" if success else "failed"
+					status='success' if success else 'failed',
 				)
 
 				if success:
@@ -133,7 +138,7 @@ class CheckinService:
 				if not success:
 					should_notify_this_account = True
 					need_notify = True
-					logger.notify("失败，将发送通知", safe_account_name)
+					logger.notify('失败，将发送通知', safe_account_name)
 
 				# 收集余额数据和处理结果
 				if user_info and user_info.get('success'):
@@ -157,17 +162,17 @@ class CheckinService:
 				safe_account_name = self._get_safe_account_name(account, i)
 				full_account_name = self._get_full_account_name(account, i)
 				logger.error(
-					message=f"处理异常：{e}",
+					message=f'处理异常：{e}',
 					account_name=safe_account_name,
-					exc_info=True
+					exc_info=True,
 				)
 				need_notify = True  # 异常也需要通知
 
 				# 创建失败的账号结果（通知使用完整名称）
 				account_result = AccountResult(
 					name=full_account_name,
-					status="failed",
-					error=f'异常: {str(e)[:50]}...'
+					status='failed',
+					error=f'异常: {str(e)[:50]}...',
 				)
 				account_results.append(account_result)
 
@@ -178,16 +183,16 @@ class CheckinService:
 				# 首次运行
 				balance_changed = True
 				need_notify = True
-				logger.notify("检测到首次运行，将发送包含当前余额的通知")
+				logger.notify('检测到首次运行，将发送包含当前余额的通知')
 
 			elif current_balance_hash != last_balance_hash:
 				# 余额有变化
 				balance_changed = True
 				need_notify = True
-				logger.notify("检测到余额变化，将发送通知")
+				logger.notify('检测到余额变化，将发送通知')
 
 			else:
-				logger.info("未检测到余额变化")
+				logger.info('未检测到余额变化')
 
 		# 为有余额变化的情况添加所有成功账号到通知内容
 		if balance_changed:
@@ -200,9 +205,9 @@ class CheckinService:
 					if not any(result.name == full_account_name for result in account_results):
 						account_result = AccountResult(
 							name=full_account_name,
-							status="success",
-							quota=current_balances[account_key]["quota"],
-							used=current_balances[account_key]["used"]
+							status='success',
+							quota=current_balances[account_key]['quota'],
+							used=current_balances[account_key]['used'],
 						)
 						account_results.append(account_result)
 
@@ -215,28 +220,28 @@ class CheckinService:
 			stats = NotificationStats(
 				success_count=success_count,
 				failed_count=total_count - success_count,
-				total_count=total_count
+				total_count=total_count,
 			)
 
 			notification_data = NotificationData(
 				accounts=account_results,
 				stats=stats,
-				timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+				timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
 			)
 
 			# 发送通知
 			await notify.push_message(
 				title='AnyRouter 签到提醒',
-				content=notification_data
+				content=notification_data,
 			)
-			logger.notify("因失败或余额变化已发送通知")
+			logger.notify('因失败或余额变化已发送通知')
 		else:
-			logger.info("所有账号成功且未检测到余额变化，跳过通知")
+			logger.info('所有账号成功且未检测到余额变化，跳过通知')
 
 		# 日志总结
 		logger.info(
-			message=f"最终结果：成功 {success_count}/{total_count}，失败 {total_count - success_count}/{total_count}",
-			tag="结果"
+			message=f'最终结果：成功 {success_count}/{total_count}，失败 {total_count - success_count}/{total_count}',
+			tag='结果',
 		)
 
 		# 生成 GitHub Actions Step Summary
@@ -244,7 +249,7 @@ class CheckinService:
 			success_count=success_count,
 			total_count=total_count,
 			current_balances=current_balances,
-			accounts=accounts
+			accounts=accounts,
 		)
 
 		# 设置退出码
@@ -263,38 +268,38 @@ class CheckinService:
 			accounts_data = json.loads(accounts_str)
 		except json.JSONDecodeError as e:
 			logger.error(
-				message=f"账号配置中的 JSON 格式无效：{e}",
-				exc_info=True
+				message=f'账号配置中的 JSON 格式无效：{e}',
+				exc_info=True,
 			)
 			return []
 
 		except Exception as e:
 			logger.error(
-				message=f"账号配置格式不正确：{e}",
-				exc_info=True
+				message=f'账号配置格式不正确：{e}',
+				exc_info=True,
 			)
 			return []
 
 		# 不是数组格式
 		if not isinstance(accounts_data, list):
-			logger.error("账号配置必须使用数组格式 [{}]")
+			logger.error('账号配置必须使用数组格式 [{}]')
 			return []
 
 		# 验证账号数据格式
 		for i, account in enumerate(accounts_data):
 			# 账号不是字典格式
 			if not isinstance(account, dict):
-				logger.error(f"账号 {i + 1} 配置格式不正确")
+				logger.error(f'账号 {i + 1} 配置格式不正确')
 				return []
 
 			# 缺少必需字段
 			if 'cookies' not in account or 'api_user' not in account:
-				logger.error(f"账号 {i + 1} 缺少必需字段 (cookies, api_user)")
+				logger.error(f'账号 {i + 1} 缺少必需字段 (cookies, api_user)')
 				return []
 
 			# name 字段为空字符串
 			if 'name' in account and not account['name']:
-				logger.error(f"账号 {i + 1} 的名称字段不能为空")
+				logger.error(f'账号 {i + 1} 的名称字段不能为空')
 				return []
 
 		return accounts_data
@@ -325,7 +330,7 @@ class CheckinService:
 			'- name 字段为账号显示名称（可选）',
 			'- cookies 为登录后的 cookie 字符串',
 			'- api_user 为 API 用户标识',
-		])
+		])  # fmt: skip
 
 	def _load_balance_hash(self) -> str | None:
 		"""加载余额 hash"""
@@ -335,10 +340,10 @@ class CheckinService:
 					return f.read().strip()
 
 		except (OSError, IOError) as e:
-			logger.warning(f"加载余额哈希失败：{e}")
+			logger.warning(f'加载余额哈希失败：{e}')
 
 		except Exception as e:
-			logger.warning(f"加载余额哈希时发生意外错误：{e}")
+			logger.warning(f'加载余额哈希时发生意外错误：{e}')
 
 		return None
 
@@ -351,14 +356,14 @@ class CheckinService:
 				f.write(balance_hash)
 
 		except (OSError, IOError) as e:
-			logger.warning(f"保存余额哈希失败：{e}")
+			logger.warning(f'保存余额哈希失败：{e}')
 
 		except Exception as e:
-			logger.warning(f"保存余额哈希时发生意外错误：{e}")
+			logger.warning(f'保存余额哈希时发生意外错误：{e}')
 
 	async def _get_waf_cookies_with_playwright(self, account_name: str) -> dict[str, str] | None:
 		"""使用 Playwright 获取 WAF cookies（无痕模式）"""
-		logger.processing("正在启动浏览器获取 WAF cookies...", account_name)
+		logger.processing('正在启动浏览器获取 WAF cookies...', account_name)
 
 		browser = None
 		context = None
@@ -369,7 +374,7 @@ class CheckinService:
 				is_ci = any(
 					os.getenv(env) == 'true'
 					for env in (self.Config.Env.CI, self.Config.Env.GITHUB_ACTIONS)
-				)
+				)  # fmt: skip
 
 				# 使用标准无痕模式，避免临时目录的潜在问题
 				# CI 环境使用 headless 模式，本地开发可以看到浏览器界面
@@ -385,7 +390,7 @@ class CheckinService:
 
 				page = await context.new_page()
 
-				logger.processing("步骤 1: 访问登录页面获取初始 cookies...", account_name)
+				logger.processing('步骤 1: 访问登录页面获取初始 cookies...', account_name)
 
 				await page.goto(self.Config.URLs.LOGIN, wait_until='networkidle')
 
@@ -403,23 +408,23 @@ class CheckinService:
 					if cookie_name in self.Config.WAF.COOKIE_NAMES and cookie_value is not None:
 						waf_cookies[cookie_name] = cookie_value
 
-				logger.info(f"步骤 1 后获得 {len(waf_cookies)} 个 WAF cookies", account_name)
+				logger.info(f'步骤 1 后获得 {len(waf_cookies)} 个 WAF cookies', account_name)
 
 				missing_cookies = [c for c in self.Config.WAF.COOKIE_NAMES if c not in waf_cookies]
 
 				if missing_cookies:
-					logger.error(f"缺少 WAF cookies: {missing_cookies}", account_name)
+					logger.error(f'缺少 WAF cookies: {missing_cookies}', account_name)
 					return None
 
-				logger.success("成功获取所有 WAF cookies", account_name)
+				logger.success('成功获取所有 WAF cookies', account_name)
 
 				return waf_cookies
 
 		except Exception as e:
 			logger.error(
-				message=f"获取 WAF cookies 时发生错误：{e}",
+				message=f'获取 WAF cookies 时发生错误：{e}',
 				account_name=account_name,
-				exc_info=True
+				exc_info=True,
 			)
 			return None
 
@@ -442,14 +447,14 @@ class CheckinService:
 			response = await client.get(
 				url=self.Config.URLs.USER_INFO,
 				headers=headers,
-				timeout=30
+				timeout=30,
 			)
 
 			# HTTP 请求失败
 			if response.status_code != 200:
 				return {
 					'success': False,
-					'error': f'获取用户信息失败：HTTP {response.status_code}'
+					'error': f'获取用户信息失败：HTTP {response.status_code}',
 				}
 
 			# JSON 解析失败
@@ -458,14 +463,14 @@ class CheckinService:
 			except json.JSONDecodeError:
 				return {
 					'success': False,
-					'error': '获取用户信息失败：无效的 JSON 响应'
+					'error': '获取用户信息失败：无效的 JSON 响应',
 				}
 
 			# API 响应失败
 			if not data.get('success'):
 				return {
 					'success': False,
-					'error': data.get('message', '获取用户信息失败：API 错误')
+					'error': data.get('message', '获取用户信息失败：API 错误'),
 				}
 
 			# 成功获取用户信息
@@ -476,31 +481,35 @@ class CheckinService:
 				'success': True,
 				'quota': quota,
 				'used_quota': used_quota,
-				'display': self._get_safe_balance_display(quota=quota, used=used_quota)
+				'display': self._get_safe_balance_display(quota=quota, used=used_quota),
 			}
 
 		except httpx.TimeoutException:
 			return {
 				'success': False,
-				'error': '获取用户信息失败：请求超时'
+				'error': '获取用户信息失败：请求超时',
 			}
 
 		except httpx.RequestError:
 			return {
 				'success': False,
-				'error': '获取用户信息失败：网络错误'
+				'error': '获取用户信息失败：网络错误',
 			}
 
 		except Exception as e:
 			return {
 				'success': False,
-				'error': f'获取用户信息失败：{str(e)[:50]}...'
+				'error': f'获取用户信息失败：{str(e)[:50]}...',
 			}
 
-	async def _check_in_account(self, account_info: dict[str, Any], account_index: int) -> tuple[bool, dict[str, Any] | None]:
+	async def _check_in_account(
+		self,
+		account_info: dict[str, Any],
+		account_index: int,
+	) -> tuple[bool, dict[str, Any] | None]:
 		"""为单个账号执行签到操作"""
 		account_name = self._get_safe_account_name(account_info, account_index)
-		logger.processing(f"开始处理 {account_name}")
+		logger.processing(f'开始处理 {account_name}')
 
 		# 解析账号配置
 		cookies_data = account_info.get('cookies', {})
@@ -508,19 +517,19 @@ class CheckinService:
 
 		# 未找到 API 用户标识符
 		if not api_user:
-			logger.error("未找到 API 用户标识符", account_name)
+			logger.error('未找到 API 用户标识符', account_name)
 			return False, None
 
 		# 解析用户 cookies
 		user_cookies = self._parse_cookies(cookies_data)
 		if not user_cookies:
-			logger.error("配置格式无效", account_name)
+			logger.error('配置格式无效', account_name)
 			return False, None
 
 		# 步骤1：获取 WAF cookies
 		waf_cookies = await self._get_waf_cookies_with_playwright(account_name)
 		if not waf_cookies:
-			logger.error("无法获取 WAF cookies", account_name)
+			logger.error('无法获取 WAF cookies', account_name)
 			return False, None
 
 		# 步骤2：使用 httpx 进行 API 请求
@@ -552,9 +561,9 @@ class CheckinService:
 					logger.warning(user_info.get('error', '未知错误'), account_name)
 
 				logger.debug(
-					message="执行签到",
-					tag="网络",
-					account_name=account_name
+					message='执行签到',
+					tag='网络',
+					account_name=account_name,
 				)
 
 				# 更新签到请求头
@@ -562,52 +571,52 @@ class CheckinService:
 				checkin_headers.update({
 					'Content-Type': 'application/json',
 					'X-Requested-With': 'XMLHttpRequest'
-				})
+				})  # fmt: skip
 
 				response = await client.post(
 					url=self.Config.URLs.CHECKIN,
 					headers=checkin_headers,
-					timeout=30
+					timeout=30,
 				)
 
 				logger.debug(
-					message=f"响应状态码 {response.status_code}",
-					tag="响应",
-					account_name=account_name
+					message=f'响应状态码 {response.status_code}',
+					tag='响应',
+					account_name=account_name,
 				)
 
 				# HTTP 请求失败
 				if response.status_code != 200:
-					logger.error(f"签到失败 - HTTP {response.status_code}", account_name)
+					logger.error(f'签到失败 - HTTP {response.status_code}', account_name)
 					return False, user_info
 
 				# 处理响应结果
 				try:
 					result = response.json()
 					if result.get('ret') == 1 or result.get('code') == 0 or result.get('success'):
-						logger.success("签到成功!", account_name)
+						logger.success('签到成功!', account_name)
 						return True, user_info
 
 					# 签到失败
 					error_msg = result.get('msg', result.get('message', '未知错误'))
-					logger.error(f"签到失败 - {error_msg}", account_name)
+					logger.error(f'签到失败 - {error_msg}', account_name)
 					return False, user_info
 
 				except json.JSONDecodeError:
 					# 如果不是 JSON 响应，检查是否包含成功标识
 					if 'success' in response.text.lower():
-						logger.success("签到成功!", account_name)
+						logger.success('签到成功!', account_name)
 						return True, user_info
 
 					# 签到失败
-					logger.error("签到失败 - 无效响应格式", account_name)
+					logger.error('签到失败 - 无效响应格式', account_name)
 					return False, user_info
 
 			except Exception as e:
 				logger.error(
-					message=f"签到过程中发生错误 - {str(e)[:50]}...",
+					message=f'签到过程中发生错误 - {str(e)[:50]}...',
 					account_name=account_name,
-					exc_info=True
+					exc_info=True,
 				)
 				return False, None
 
@@ -645,7 +654,7 @@ class CheckinService:
 		balance_json = json.dumps(
 			obj=simple_balances,
 			sort_keys=True,
-			separators=(',', ':')
+			separators=(',', ':'),
 		)
 		return hashlib.sha256(balance_json.encode('utf-8')).hexdigest()[:16]
 
@@ -742,13 +751,13 @@ class CheckinService:
 		success_count: int,
 		total_count: int,
 		current_balances: dict[str, dict[str, float]],
-		accounts: list[dict[str, Any]]
+		accounts: list[dict[str, Any]],
 	):
 		"""生成 GitHub Actions Step Summary"""
 		# 检查是否在 GitHub Actions 环境中运行
 		summary_file = os.getenv(self.Config.Env.GITHUB_STEP_SUMMARY)
 		if not summary_file:
-			logger.debug("未检测到 GitHub Actions 环境，跳过 summary 生成", tag="Summary")
+			logger.debug('未检测到 GitHub Actions 环境，跳过 summary 生成', tag='Summary')
 			return
 
 		try:
@@ -763,16 +772,16 @@ class CheckinService:
 					# 成功获取余额的账号
 					account_result = AccountResult(
 						name=account_name,
-						status="success",
-						quota=current_balances[account_key]["quota"],
-						used=current_balances[account_key]["used"]
+						status='success',
+						quota=current_balances[account_key]['quota'],
+						used=current_balances[account_key]['used'],
 					)
 				else:
 					# 失败的账号
 					account_result = AccountResult(
 						name=account_name,
-						status="failed",
-						error="签到失败"
+						status='failed',
+						error='签到失败',
 					)
 
 				all_account_results.append(account_result)
@@ -853,7 +862,7 @@ class CheckinService:
 				f.write(summary_content)
 				f.write('\n')
 
-			logger.info("GitHub Actions Step Summary 生成成功", tag="Summary")
+			logger.info('GitHub Actions Step Summary 生成成功', tag='Summary')
 
 		except Exception as e:
-			logger.warning(f"生成 GitHub Actions Step Summary 失败：{e}", tag="Summary")
+			logger.warning(f'生成 GitHub Actions Step Summary 失败：{e}', tag='Summary')

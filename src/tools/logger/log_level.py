@@ -3,10 +3,11 @@ from enum import Enum
 
 class LogLevel(Enum):
 	"""日志级别枚举 - 参考常见的日志级别设置"""
-	DEBUG = ("DEBUG", "调试")
-	INFO = ("INFO", "信息")
-	WARNING = ("WARNING", "警告")
-	ERROR = ("ERROR", "错误")
+
+	DEBUG = ('DEBUG', '调试')
+	INFO = ('INFO', '信息')
+	WARNING = ('WARNING', '警告')
+	ERROR = ('ERROR', '错误')
 
 	def __init__(self, value: str, tag: str):
 		"""

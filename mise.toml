@@ -19,6 +19,14 @@ playwright-version = "mise exec -- python -c 'import importlib.metadata; print(i
 # 运行签到脚本（使用 pyproject.toml 中定义的入口点）
 checkin = "mise exec -- autocheck-anyrouter"
 
+# 开发环境一键配置
+setup = { depends = ["install-dev", "install-browsers"] }
+
 # 测试相关
 test = "mise exec -- pytest tests/"
 test-cov = "mise exec -- pytest tests/ --cov=src --cov-report=html"
+
+# 代码格式化和检查
+fmt = "mise exec -- python -m ruff format src tests"
+lint = "mise exec -- python -m ruff check src tests"
+fix = "mise exec -- python -m ruff check --fix src tests"

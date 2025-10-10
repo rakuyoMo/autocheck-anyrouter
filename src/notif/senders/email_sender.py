@@ -74,10 +74,27 @@ class EmailSender:
 		"""
 		# 常见 HTML 标签列表
 		html_tags = [
-			r'<html', r'<head', r'<body', r'<div', r'<span', r'<p>',
-			r'<br', r'<a\s', r'<img', r'<table', r'<tr', r'<td',
-			r'<ul', r'<ol', r'<li', r'<h[1-6]', r'<strong', r'<em',
-			r'<b>', r'<i>', r'<u>'
+			r'<html',
+			r'<head',
+			r'<body',
+			r'<div',
+			r'<span',
+			r'<p>',
+			r'<br',
+			r'<a\s',
+			r'<img',
+			r'<table',
+			r'<tr',
+			r'<td',
+			r'<ul',
+			r'<ol',
+			r'<li',
+			r'<h[1-6]',
+			r'<strong',
+			r'<em',
+			r'<b>',
+			r'<i>',
+			r'<u>',
 		]
 
 		# 如果内容包含任何 HTML 标签，返回 html

@@ -7,40 +7,65 @@ from .log_level import LogLevel
 class Logger:
 	"""日志工具类，用于统一格式化输出日志"""
 
-	def debug(self, message: str, tag: str | None = None, account_name: str | None = None, show_timestamp: bool = False):
+	def debug(
+		self,
+		message: str,
+		tag: str | None = None,
+		account_name: str | None = None,
+		show_timestamp: bool = False,
+	):
 		"""输出调试级别日志"""
 		formatted_message = self._format_message(
 			level=LogLevel.DEBUG,
 			message=message,
 			tag=tag,
 			account_name=account_name,
-			show_timestamp=show_timestamp
+			show_timestamp=show_timestamp,
 		)
 		self._print(formatted_message)
 
-	def info(self, message: str, tag: str | None = None, account_name: str | None = None, show_timestamp: bool = False):
+	def info(
+		self,
+		message: str,
+		tag: str | None = None,
+		account_name: str | None = None,
+		show_timestamp: bool = False,
+	):
 		"""输出信息级别日志"""
 		formatted_message = self._format_message(
 			level=LogLevel.INFO,
 			message=message,
 			tag=tag,
 			account_name=account_name,
-			show_timestamp=show_timestamp
+			show_timestamp=show_timestamp,
 		)
 		self._print(formatted_message)
 
-	def warning(self, message: str, tag: str | None = None, account_name: str | None = None, show_timestamp: bool = False):
+	def warning(
+		self,
+		message: str,
+		tag: str | None = None,
+		account_name: str | None = None,
+		show_timestamp: bool = False,
+	):
 		"""输出警告级别日志"""
 		formatted_message = self._format_message(
 			level=LogLevel.WARNING,
 			message=message,
 			tag=tag,
 			account_name=account_name,
-			show_timestamp=show_timestamp
+			show_timestamp=show_timestamp,
 		)
 		self._print(formatted_message)
 
-	def error(self, message: str, tag: str | None = None, account_name: str | None = None, show_timestamp: bool = False, exc_info: bool = False):
+	def error(
+		self,
+		message: str,
+		tag: str | None = None,
+		account_name: str | None = None,
+		show_timestamp: bool = False,
+		exc_info: bool = False,
+	):
 		"""
 		输出错误级别日志
 
@@ -56,19 +81,20 @@ class Logger:
 			message=message,
 			tag=tag,
 			account_name=account_name,
-			show_timestamp=show_timestamp
+			show_timestamp=show_timestamp,
 		)
 		self._print(formatted_message)
 
 		# 如果需要输出异常堆栈信息
 		if exc_info:
 			import sys
+
 			exc_type, exc_value, exc_traceback = sys.exc_info()
 			if exc_type is not None:
 				trace_lines = traceback.format_exception(
 					exc_type,
 					exc_value,
-					exc_traceback
+					exc_traceback,
 				)
 				# 输出堆栈信息（每行作为独立的日志输出）
 				for line in trace_lines:
@@ -79,27 +105,27 @@ class Logger:
 		"""输出成功级别日志 - 便捷方法，使用 INFO 级别和成功标签"""
 		self.info(
 			message=message,
-			tag="成功",
+			tag='成功',
 			account_name=account_name,
-			show_timestamp=show_timestamp
+			show_timestamp=show_timestamp,
 		)
 
 	def processing(self, message: str, account_name: str | None = None, show_timestamp: bool = False):
 		"""输出处理中日志 - 便捷方法，使用 INFO 级别和处理中标签"""
 		self.info(
 			message=message,
-			tag="处理中",
+			tag='处理中',
 			account_name=account_name,
-			show_timestamp=show_timestamp
+			show_timestamp=show_timestamp,
 		)
 
 	def notify(self, message: str, account_name: str | None = None, show_timestamp: bool = False):
 		"""输出通知相关日志 - 便捷方法，使用 INFO 级别和通知标签"""
 		self.info(
 			message=message,
-			tag="通知",
+			tag='通知',
 			account_name=account_name,
-			show_timestamp=show_timestamp
+			show_timestamp=show_timestamp,
 		)
 
 	def print_banner(self, title: str, width: int = 60, show_timestamp: bool = False):
@@ -115,7 +141,7 @@ class Logger:
 
 		# 如果需要显示时间戳，在开头添加
 		if show_timestamp:
-			self._print(f"[{self._timestamp()}]")
+			self._print(f'[{self._timestamp()}]')
 
 		self._print(border)
 		self._print(title)
@@ -131,7 +157,7 @@ class Logger:
 		"""
 		# 如果需要显示时间戳，在开头添加
 		if show_timestamp and messages:
-			self._print(f"[{self._timestamp()}]")
+			self._print(f'[{self._timestamp()}]')
 
 		for message in messages:
 			self._print(message)
@@ -147,7 +173,7 @@ class Logger:
 
 	def _timestamp(self) -> str:
 		"""获取格式化的时间戳"""
-		return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 	def _format_message(
 		self,
@@ -155,7 +181,7 @@ class Logger:
 		message: str,
 		tag: str | None = None,
 		account_name: str | None = None,
-		show_timestamp: bool = False
+		show_timestamp: bool = False,
 	) -> str:
 		"""
 		格式化日志消息

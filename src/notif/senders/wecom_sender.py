@@ -34,13 +34,15 @@ class WeComSender:
 			data = {
 				'msgtype': markdown_style,
 				markdown_style: {
-					'content': f'**{title}**\n{content}'
-				}
+					'content': f'**{title}**\n{content}',
+				},
 			}
 		else:
 			data = {
 				'msgtype': 'text',
-				'text': {'content': f'{title}\n{content}'}
+				'text': {
+					'content': f'{title}\n{content}',
+				},
 			}
 
 		async with httpx.AsyncClient(timeout=30.0) as client:

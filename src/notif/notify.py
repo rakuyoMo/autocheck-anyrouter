@@ -50,35 +50,35 @@ class NotificationKit:
 		"""
 		# 检查是否有可用的通知处理器
 		if not self._handlers:
-			logger.warning("没有可用的通知处理器，跳过通知提醒")
+			logger.warning('没有可用的通知处理器，跳过通知提醒')
 			return
 
 		for handler in self._handlers:
 			# 检查配置是否存在
 			if not handler.is_available():
-				logger.info("未配置，跳过推送", handler.name)
+				logger.info('未配置，跳过推送', handler.name)
 				continue
 
 			try:
 				# 渲染模板
 				rendered_content = self._render_content(
-					config=handler.config, 
-					content=content
+					config=handler.config,
+					content=content,
 				)
 
 				# 发送消息
 				await handler.send_func(
 					title=title,
-					content=rendered_content
+					content=rendered_content,
 				)
 
-				logger.success("消息推送成功！", handler.name)
+				logger.success('消息推送成功！', handler.name)
 
 			except Exception as e:
 				logger.error(
-					message=f"消息推送失败！原因：{str(e)}",
+					message=f'消息推送失败！原因：{str(e)}',
 					tag=handler.name,
-					exc_info=True
+					exc_info=True,
 				)
 
 	def _register_handlers(self) -> list[NotificationHandler]:
@@ -97,7 +97,7 @@ class NotificationKit:
 				NotificationHandler(
 					name='邮箱',
 					config=self.email_config,
-					send_func=sender.send
+					send_func=sender.send,
 				)
 			)
 
@@ -108,7 +108,7 @@ class NotificationKit:
 				NotificationHandler(
 					name='PushPlus',
 					config=self.pushplus_config,
-					send_func=sender.send
+					send_func=sender.send,
 				)
 			)
 
@@ -119,7 +119,7 @@ class NotificationKit:
 				NotificationHandler(
 					name='Server 酱',
 					config=self.serverpush_config,
-					send_func=sender.send
+					send_func=sender.send,
 				)
 			)
 
@@ -130,7 +130,7 @@ class NotificationKit:
 				NotificationHandler(
 					name='钉钉',
 					config=self.dingtalk_config,
-					send_func=sender.send
+					send_func=sender.send,
 				)
 			)
 
@@ -141,7 +141,7 @@ class NotificationKit:
 				NotificationHandler(
 					name='飞书',
 					config=self.feishu_config,
-					send_func=sender.send
+					send_func=sender.send,
 				)
 			)
 
@@ -152,7 +152,7 @@ class NotificationKit:
 				NotificationHandler(
 					name='企业微信',
 					config=self.wecom_config,
-					send_func=sender.send
+					send_func=sender.send,
 				)
 			)
 
@@ -171,8 +171,8 @@ class NotificationKit:
 		"""
 		if isinstance(content, NotificationData) and config.template:
 			return self._render_template(
-				template=config.template, 
-				data=content
+				template=config.template,
+				data=content,
 			)
 		return str(content)
 
@@ -193,14 +193,11 @@ class NotificationKit:
 			context_data = {
 				'timestamp': data.timestamp,
 				'stats': data.stats,  # dataclass 对象，支持 {{ stats.success_count }}
-
 				# 提供分组的账号列表（AccountResult 对象）
 				'success_accounts': success_accounts,
 				'failed_accounts': failed_accounts,
-
 				# 保留完整列表供需要的模板使用
 				'accounts': data.accounts,  # AccountResult 对象列表
-
 				# 便利变量：布尔标志
 				'has_success': len(success_accounts) > 0,
 				'has_failed': len(failed_accounts) > 0,
@@ -224,15 +221,15 @@ class NotificationKit:
 
 		except Exception as e:
 			logger.error(
-				message=f"模板渲染失败：{e}",
-				exc_info=True
+				message=f'模板渲染失败：{e}',
+				exc_info=True,
 			)
 
 			# 如果模板渲染失败，返回简单格式
 			return f'{data.timestamp}\\n\\n' + '\\n\\n'.join([
 				f'[{"成功" if account.status == "success" else "失败"}] {account.name}'
 				for account in data.accounts
-			])
+			])  # fmt: skip
 
 	def _load_default_config(self, platform: str) -> dict[str, Any] | None:
 		"""加载默认配置文件"""
@@ -242,7 +239,7 @@ class NotificationKit:
 				with open(config_file, 'r', encoding='utf-8') as f:
 					return json.load(f)
 			except Exception as e:
-				logger.warning(f"加载默认配置文件 {config_file} 失败：{e}")
+				logger.warning(f'加载默认配置文件 {config_file} 失败：{e}')
 		return None
 
 	def _parse_env_config(self, env_value: str) -> Union[str, dict[str, Any]]:
@@ -281,7 +278,7 @@ class NotificationKit:
 			to=parsed['to'],
 			smtp_server=parsed.get('smtp_server'),
 			platform_settings=parsed.get('platform_settings'),
-			template=template
+			template=template,
 		)
 
 	def _load_webhook_config(self, platform: str, notif_config_key: str) -> WebhookConfig | None:
@@ -307,7 +304,7 @@ class NotificationKit:
 			return WebhookConfig(
 				webhook=parsed['webhook'],
 				platform_settings=parsed.get('platform_settings'),
-				template=template
+				template=template,
 			)
 
 		# 纯字符串，当做 webhook URL，使用默认模板
@@ -315,7 +312,7 @@ class NotificationKit:
 		return WebhookConfig(
 			webhook=parsed,
 			platform_settings=default_config.get('platform_settings') if default_config else None,
-			template=default_config.get('template') if default_config else None
+			template=default_config.get('template') if default_config else None,
 		)
 
 	def _load_dingtalk_config(self) -> WebhookConfig | None:
@@ -350,7 +347,7 @@ class NotificationKit:
 			return PushPlusConfig(
 				token=parsed['token'],
 				platform_settings=parsed.get('platform_settings'),
-				template=template
+				template=template,
 			)
 
 		# 纯字符串，当做 token，使用默认模板
@@ -358,7 +355,7 @@ class NotificationKit:
 		return PushPlusConfig(
 			token=parsed,
 			platform_settings=default_config.get('platform_settings') if default_config else None,
-			template=default_config.get('template') if default_config else None
+			template=default_config.get('template') if default_config else None,
 		)
 
 	def _load_serverpush_config(self) -> ServerPushConfig | None:
@@ -384,7 +381,7 @@ class NotificationKit:
 			return ServerPushConfig(
 				send_key=parsed['send_key'],
 				platform_settings=parsed.get('platform_settings'),
-				template=template
+				template=template,
 			)
 
 		# 纯字符串，当做 send_key，使用默认模板
@@ -392,5 +389,5 @@ class NotificationKit:
 		return ServerPushConfig(
 			send_key=parsed,
 			platform_settings=default_config.get('platform_settings') if default_config else None,
-			template=default_config.get('template') if default_config else None
+			template=default_config.get('template') if default_config else None,
 		)

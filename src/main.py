@@ -12,13 +12,13 @@ def run_main():
 		asyncio.run(service.run())
 
 	except KeyboardInterrupt:
-		logger.warning("程序被用户中断")
+		logger.warning('程序被用户中断')
 		sys.exit(1)
 
 	except Exception as e:
 		logger.error(
-			message=f"程序执行过程中发生错误：{e}",
-			exc_info=True
+			message=f'程序执行过程中发生错误：{e}',
+			exc_info=True,
 		)
 		sys.exit(1)
 

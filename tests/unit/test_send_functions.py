@@ -21,7 +21,7 @@ class TestEmailSender:
 			to='recipient@example.com',
 			smtp_server=None,
 			platform_settings=None,
-			template=None
+			template=None,
 		)
 
 		mock_server = MagicMock()
@@ -49,7 +49,7 @@ class TestPushPlusSender:
 		config = PushPlusConfig(
 			token='test_token',
 			platform_settings=None,
-			template=None
+			template=None,
 		)
 
 		mock_client_instance = AsyncMock()
@@ -76,7 +76,7 @@ class TestServerPushSender:
 		config = ServerPushConfig(
 			send_key='test_key',
 			platform_settings=None,
-			template=None
+			template=None,
 		)
 
 		mock_client_instance = AsyncMock()
@@ -103,7 +103,7 @@ class TestDingTalkSender:
 		config = WebhookConfig(
 			webhook='https://example.com/webhook',
 			platform_settings=None,
-			template=None
+			template=None,
 		)
 
 		mock_client_instance = AsyncMock()
@@ -125,7 +125,7 @@ class TestFeishuSender:
 			(True, 'red'),
 			(True, 'blue'),
 			(False, None),
-		]
+		],
 	)
 	@pytest.mark.asyncio
 	@patch('httpx.AsyncClient')
@@ -133,7 +133,7 @@ class TestFeishuSender:
 		self,
 		mock_client: MagicMock,
 		use_card: bool,
-		color_theme: str | None
+		color_theme: str | None,
 	):
 		"""测试飞书的卡片模式和普通模式"""
 		from src.notif.models import WebhookConfig
@@ -147,7 +147,7 @@ class TestFeishuSender:
 		config = WebhookConfig(
 			webhook='https://example.com/webhook',
 			platform_settings=platform_settings,
-			template=None
+			template=None,
 		)
 
 		mock_client_instance = AsyncMock()
@@ -184,7 +184,7 @@ class TestWeComSender:
 			('markdown_v2', 'markdown_v2'),
 			(None, 'text'),
 			('invalid', 'text'),
-		]
+		],
 	)
 	@pytest.mark.asyncio
 	@patch('httpx.AsyncClient')
@@ -192,7 +192,7 @@ class TestWeComSender:
 		self,
 		mock_client: MagicMock,
 		markdown_style: str | None,
-		expected_msgtype: str
+		expected_msgtype: str,
 	):
 		"""测试企业微信的 markdown_style 配置"""
 		from src.notif.models import WebhookConfig
@@ -201,8 +201,10 @@ class TestWeComSender:
 		# 构造配置
 		config = WebhookConfig(
 			webhook='https://example.com/webhook',
-			platform_settings={'markdown_style': markdown_style},
-			template=None
+			platform_settings={
+				'markdown_style': markdown_style,
+			},
+			template=None,
 		)
 
 		mock_client_instance = AsyncMock()

@@ -6,7 +6,6 @@ import pytest
 from core.models import AccountResult, NotificationData, NotificationStats
 from notif.notify import NotificationKit
 
-
 project_root = Path(__file__).parent.parent.parent
 
 
@@ -28,11 +27,11 @@ class TestTemplateRendering:
 					status='success',
 					quota=25.0,
 					used=5.0,
-					error=None
-				)
+					error=None,
+				),
 			],
 			stats=NotificationStats(success_count=1, failed_count=0, total_count=1),
-			timestamp='2024-01-01 12:00:00'
+			timestamp='2024-01-01 12:00:00',
 		)
 
 	@pytest.fixture
@@ -45,11 +44,11 @@ class TestTemplateRendering:
 					status='failed',
 					quota=None,
 					used=None,
-					error='Connection timeout'
+					error='Connection timeout',
 				)
 			],
 			stats=NotificationStats(success_count=0, failed_count=1, total_count=1),
-			timestamp='2024-01-01 12:00:00'
+			timestamp='2024-01-01 12:00:00',
 		)
 
 	@pytest.fixture
@@ -59,24 +58,27 @@ class TestTemplateRendering:
 			accounts=[
 				AccountResult(name='Account-1', status='success', quota=25.0, used=5.0, error=None),
 				AccountResult(name='Account-2', status='success', quota=30.0, used=10.0, error=None),
-				AccountResult(name='Account-3', status='failed', quota=None, used=None, error='Authentication failed')
+				AccountResult(name='Account-3', status='failed', quota=None, used=None, error='Authentication failed'),
 			],
 			stats=NotificationStats(success_count=2, failed_count=1, total_count=3),
-			timestamp='2024-01-01 12:00:00'
+			timestamp='2024-01-01 12:00:00',
 		)
 
-	@pytest.mark.parametrize('platform,template_file', [
-		('dingtalk', 'dingtalk.json'),
-		('email', 'email.json'),
-		('pushplus', 'pushplus.json'),
-		('serverpush', 'serverpush.json'),
-	])
+	@pytest.mark.parametrize(
+		'platform,template_file',
+		[
+			('dingtalk', 'dingtalk.json'),
+			('email', 'email.json'),
+			('pushplus', 'pushplus.json'),
+			('serverpush', 'serverpush.json'),
+		],
+	)
 	def test_default_template_single_success(
 		self,
 		notification_kit: NotificationKit,
 		single_success_data: NotificationData,
 		platform: str,
-		template_file: str
+		template_file: str,
 	):
 		"""测试默认模板渲染单账号成功场景"""
 		config_path = project_root / 'src' / 'notif' / 'configs' / template_file
@@ -96,7 +98,7 @@ class TestTemplateRendering:
 	def test_wecom_default_template_single_success(
 		self,
 		notification_kit: NotificationKit,
-		single_success_data: NotificationData
+		single_success_data: NotificationData,
 	):
 		"""测试企业微信默认模板渲染单账号成功场景（Markdown 格式）"""
 		config_path = project_root / 'src' / 'notif' / 'configs' / 'wecom.json'
@@ -116,7 +118,7 @@ class TestTemplateRendering:
 	def test_feishu_default_template_single_success(
 		self,
 		notification_kit: NotificationKit,
-		single_success_data: NotificationData
+		single_success_data: NotificationData,
 	):
 		"""测试飞书默认模板渲染单账号成功场景（Markdown 格式）"""
 		config_path = project_root / 'src' / 'notif' / 'configs' / 'feishu.json'
@@ -133,15 +135,18 @@ class TestTemplateRendering:
 		assert '**[FAIL] Failed:** 0/1' in result
 		assert '**[SUCCESS] All accounts check-in successful!**' in result
 
-	@pytest.mark.parametrize('platform,template_file', [
-		('dingtalk', 'dingtalk.json'),
-	])
+	@pytest.mark.parametrize(
+		'platform,template_file',
+		[
+			('dingtalk', 'dingtalk.json'),
+		],
+	)
 	def test_default_template_single_failure(
 		self,
 		notification_kit: NotificationKit,
 		single_failure_data: NotificationData,
 		platform: str,
-		template_file: str
+		template_file: str,
 	):
 		"""测试默认模板渲染单账号失败场景"""
 		config_path = project_root / 'src' / 'notif' / 'configs' / template_file
@@ -160,7 +165,7 @@ class TestTemplateRendering:
 	def test_wecom_default_template_single_failure(
 		self,
 		notification_kit: NotificationKit,
-		single_failure_data: NotificationData
+		single_failure_data: NotificationData,
 	):
 		"""测试企业微信默认模板渲染单账号失败场景（Markdown 格式）"""
 		config_path = project_root / 'src' / 'notif' / 'configs' / 'wecom.json'
@@ -176,15 +181,18 @@ class TestTemplateRendering:
 		assert '**[FAIL] Failed:** 1/1' in result
 		assert '**[ERROR] All accounts check-in failed**' in result
 
-	@pytest.mark.parametrize('platform,template_file', [
-		('dingtalk', 'dingtalk.json'),
-	])
+	@pytest.mark.parametrize(
+		'platform,template_file',
+		[
+			('dingtalk', 'dingtalk.json'),
+		],
+	)
 	def test_default_template_multiple_mixed(
 		self,
 		notification_kit: NotificationKit,
 		multiple_mixed_data: NotificationData,
 		platform: str,
-		template_file: str
+		template_file: str,
 	):
 		"""测试默认模板渲染多账号混合场景"""
 		config_path = project_root / 'src' / 'notif' / 'configs' / template_file
@@ -207,7 +215,7 @@ class TestTemplateRendering:
 	def test_wecom_default_template_multiple_mixed(
 		self,
 		notification_kit: NotificationKit,
-		multiple_mixed_data: NotificationData
+		multiple_mixed_data: NotificationData,
 	):
 		"""测试企业微信默认模板渲染多账号混合场景（Markdown 格式）"""
 		config_path = project_root / 'src' / 'notif' / 'configs' / 'wecom.json'
@@ -230,7 +238,7 @@ class TestTemplateRendering:
 	def test_custom_template_with_variables(
 		self,
 		notification_kit: NotificationKit,
-		single_success_data: NotificationData
+		single_success_data: NotificationData,
 	):
 		"""测试自定义模板的变量访问"""
 		template = '{{ timestamp }} - {% for account in accounts %}{{ account.name }}: {{ account.status }}{% endfor %} - 成功: {{ stats.success_count }}/{{ stats.total_count }}'
@@ -249,7 +257,7 @@ class TestTemplateRendering:
 		data_all_success = NotificationData(
 			accounts=[AccountResult(name='A1', status='success', quota=25.0, used=5.0, error=None)],
 			stats=NotificationStats(success_count=1, failed_count=0, total_count=1),
-			timestamp='2024-01-01 12:00:00'
+			timestamp='2024-01-01 12:00:00',
 		)
 		result = notification_kit._render_template(template, data_all_success)
 		assert 'ALL SUCCESS' in result
@@ -258,7 +266,7 @@ class TestTemplateRendering:
 		data_all_failed = NotificationData(
 			accounts=[AccountResult(name='A1', status='failed', quota=None, used=None, error='Error')],
 			stats=NotificationStats(success_count=0, failed_count=1, total_count=1),
-			timestamp='2024-01-01 12:00:00'
+			timestamp='2024-01-01 12:00:00',
 		)
 		result = notification_kit._render_template(template, data_all_failed)
 		assert 'ALL FAILED' in result
@@ -267,10 +275,10 @@ class TestTemplateRendering:
 		data_partial = NotificationData(
 			accounts=[
 				AccountResult(name='A1', status='success', quota=25.0, used=5.0, error=None),
-				AccountResult(name='A2', status='failed', quota=None, used=None, error='Error')
+				AccountResult(name='A2', status='failed', quota=None, used=None, error='Error'),
 			],
 			stats=NotificationStats(success_count=1, failed_count=1, total_count=2),
-			timestamp='2024-01-01 12:00:00'
+			timestamp='2024-01-01 12:00:00',
 		)
 		result = notification_kit._render_template(template, data_partial)
 		assert 'PARTIAL' in result
@@ -278,7 +286,7 @@ class TestTemplateRendering:
 	def test_invalid_template_fallback(
 		self,
 		notification_kit: NotificationKit,
-		single_success_data: NotificationData
+		single_success_data: NotificationData,
 	):
 		"""测试无效模板语法时的回退处理"""
 		# 使用会触发解析错误的模板语法

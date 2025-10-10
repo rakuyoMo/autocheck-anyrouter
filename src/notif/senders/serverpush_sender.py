@@ -26,12 +26,12 @@ class ServerPushSender:
 		"""
 		data = {
 			'title': title,
-			'desp': content
+			'desp': content,
 		}
 		async with httpx.AsyncClient(timeout=30.0) as client:
 			response = await client.post(
 				f'https://sctapi.ftqq.com/{self.config.send_key}.send',
-				json=data
+				json=data,
 			)
 
 			# 检查响应状态码

@@ -17,31 +17,27 @@ class TestIntegration:
 	@pytest.fixture
 	def test_notification_data(self):
 		"""创建测试用的通知数据"""
-		accounts=[
+		accounts = [
 			AccountResult(
 				name='测试账号',
 				status='success',
 				quota=25.0,
 				used=5.0,
-				error=None
-			)
+				error=None,
+			),
 		]
 		return NotificationData(
 			accounts=accounts,
 			stats=NotificationStats(
 				success_count=len(accounts),
 				failed_count=0,
-				total_count=len(accounts)
+				total_count=len(accounts),
 			),
-			timestamp='2024-01-01 12:00:00'
+			timestamp='2024-01-01 12:00:00',
 		)
 
 	@pytest.mark.asyncio
-	async def test_real_notification_with_env_config(
-		self,
-		notification_kit_from_env,
-		test_notification_data
-	):
+	async def test_real_notification_with_env_config(self, notification_kit_from_env, test_notification_data):
 		"""
 		真实接口测试 - 需要在 .env.test 文件中配置相应平台
 
@@ -55,7 +51,7 @@ class TestIntegration:
 		# 尝试发送通知（发送到所有已配置的平台）
 		await notification_kit_from_env.push_message(
 			title='集成测试消息',
-			content=test_notification_data
+			content=test_notification_data,
 		)
 
 		# 如果没有抛出异常，则测试通过

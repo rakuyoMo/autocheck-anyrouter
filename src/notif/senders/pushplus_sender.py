@@ -28,7 +28,7 @@ class PushPlusSender:
 			'token': self.config.token,
 			'title': title,
 			'content': content,
-			'template': 'html'
+			'template': 'html',
 		}
 		async with httpx.AsyncClient(timeout=30.0) as client:
 			response = await client.post('http://www.pushplus.plus/send', json=data)
