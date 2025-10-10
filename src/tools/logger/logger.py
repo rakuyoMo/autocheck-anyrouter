@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime
 
 from .log_level import LogLevel
@@ -39,8 +40,17 @@ class Logger:
 		)
 		self._print(formatted_message)
 
-	def error(self, message: str, tag: str | None = None, account_name: str | None = None, show_timestamp: bool = False):
-		"""输出错误级别日志"""
+	def error(self, message: str, tag: str | None = None, account_name: str | None = None, show_timestamp: bool = False, exc_info: bool = False):
+		"""
+		输出错误级别日志
+
+		Args:
+			message: 错误消息
+			tag: 可选的自定义标签
+			account_name: 可选的账号名称
+			show_timestamp: 是否显示时间戳
+			exc_info: 是否输出异常堆栈信息（类似 Python logging 的 exc_info 参数）
+		"""
 		formatted_message = self._format_message(
 			level=LogLevel.ERROR,
 			message=message,
@@ -49,6 +59,21 @@ class Logger:
 			show_timestamp=show_timestamp
 		)
 		self._print(formatted_message)
+
+		# 如果需要输出异常堆栈信息
+		if exc_info:
+			import sys
+			exc_type, exc_value, exc_traceback = sys.exc_info()
+			if exc_type is not None:
+				trace_lines = traceback.format_exception(
+					exc_type,
+					exc_value,
+					exc_traceback
+				)
+				# 输出堆栈信息（每行作为独立的日志输出）
+				for line in trace_lines:
+					# 移除末尾的换行符并输出
+					self._print(f'  {line.rstrip()}')
 
 	def success(self, message: str, account_name: str | None = None, show_timestamp: bool = False):
 		"""输出成功级别日志 - 便捷方法，使用 INFO 级别和成功标签"""

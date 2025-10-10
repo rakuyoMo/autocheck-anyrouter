@@ -75,7 +75,11 @@ class NotificationKit:
 				logger.success("消息推送成功！", handler.name)
 
 			except Exception as e:
-				logger.error(f"消息推送失败！原因：{str(e)}", handler.name)
+				logger.error(
+					message=f"消息推送失败！原因：{str(e)}",
+					tag=handler.name,
+					exc_info=True
+				)
 
 	def _register_handlers(self) -> list[NotificationHandler]:
 		"""
@@ -219,7 +223,10 @@ class NotificationKit:
 			return rendered_result
 
 		except Exception as e:
-			logger.error(f"模板渲染失败：{e}")
+			logger.error(
+				message=f"模板渲染失败：{e}",
+				exc_info=True
+			)
 
 			# 如果模板渲染失败，返回简单格式
 			return f'{data.timestamp}\\n\\n' + '\\n\\n'.join([

@@ -156,7 +156,11 @@ class CheckinService:
 				# 日志使用脱敏名称，通知使用完整名称
 				safe_account_name = self._get_safe_account_name(account, i)
 				full_account_name = self._get_full_account_name(account, i)
-				logger.error(f"处理异常：{e}", safe_account_name)
+				logger.error(
+					message=f"处理异常：{e}",
+					account_name=safe_account_name,
+					exc_info=True
+				)
 				need_notify = True  # 异常也需要通知
 
 				# 创建失败的账号结果（通知使用完整名称）
@@ -258,11 +262,17 @@ class CheckinService:
 		try:
 			accounts_data = json.loads(accounts_str)
 		except json.JSONDecodeError as e:
-			logger.error(f"账号配置中的 JSON 格式无效：{e}")
+			logger.error(
+				message=f"账号配置中的 JSON 格式无效：{e}",
+				exc_info=True
+			)
 			return []
 
 		except Exception as e:
-			logger.error(f"账号配置格式不正确：{e}")
+			logger.error(
+				message=f"账号配置格式不正确：{e}",
+				exc_info=True
+			)
 			return []
 
 		# 不是数组格式
@@ -406,7 +416,11 @@ class CheckinService:
 				return waf_cookies
 
 		except Exception as e:
-			logger.error(f"获取 WAF cookies 时发生错误：{e}", account_name)
+			logger.error(
+				message=f"获取 WAF cookies 时发生错误：{e}",
+				account_name=account_name,
+				exc_info=True
+			)
 			return None
 
 		finally:
@@ -590,7 +604,11 @@ class CheckinService:
 					return False, user_info
 
 			except Exception as e:
-				logger.error(f"签到过程中发生错误 - {str(e)[:50]}...", account_name)
+				logger.error(
+					message=f"签到过程中发生错误 - {str(e)[:50]}...",
+					account_name=account_name,
+					exc_info=True
+				)
 				return False, None
 
 	@staticmethod

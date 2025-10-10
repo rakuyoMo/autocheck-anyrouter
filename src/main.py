@@ -16,7 +16,10 @@ def run_main():
 		sys.exit(1)
 
 	except Exception as e:
-		logger.error(f"程序执行过程中发生错误：{e}")
+		logger.error(
+			message=f"程序执行过程中发生错误：{e}",
+			exc_info=True
+		)
 		sys.exit(1)
 
 
