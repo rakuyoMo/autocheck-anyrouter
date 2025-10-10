@@ -20,6 +20,9 @@ class WeComSender:
 		Args:
 			title: 消息标题
 			content: 消息内容
+
+		Raises:
+			Exception: 当 HTTP 响应状态码不是 2xx 时抛出异常
 		"""
 		# 检查 markdown_style 配置（确保 platform_settings 不为 None）
 		platform_settings = self.config.platform_settings or {}
@@ -41,4 +44,10 @@ class WeComSender:
 			}
 
 		async with httpx.AsyncClient(timeout=30.0) as client:
-			await client.post(self.config.webhook, json=data)
+			response = await client.post(self.config.webhook, json=data)
+
+			# 检查响应状态码
+			if not response.is_success:
+				raise Exception(
+					f'企业微信推送失败，HTTP 状态码：{response.status_code}，响应内容：{response.text[:200]}'
+				)

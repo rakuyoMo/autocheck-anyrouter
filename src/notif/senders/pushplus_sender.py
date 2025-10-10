@@ -20,6 +20,9 @@ class PushPlusSender:
 		Args:
 			title: 消息标题
 			content: 消息内容
+
+		Raises:
+			Exception: 当 HTTP 响应状态码不是 2xx 时抛出异常
 		"""
 		data = {
 			'token': self.config.token,
@@ -28,4 +31,10 @@ class PushPlusSender:
 			'template': 'html'
 		}
 		async with httpx.AsyncClient(timeout=30.0) as client:
-			await client.post('http://www.pushplus.plus/send', json=data)
+			response = await client.post('http://www.pushplus.plus/send', json=data)
+
+			# 检查响应状态码
+			if not response.is_success:
+				raise Exception(
+					f'PushPlus 推送失败，HTTP 状态码：{response.status_code}，响应内容：{response.text[:200]}'
+				)
