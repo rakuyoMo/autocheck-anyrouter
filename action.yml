@@ -1,5 +1,5 @@
-name: 'AutoCheck AnyRouter'
-description: '自动签到 AnyRouter 服务'
+name: 'Auto Checkin AnyRouter'
+description: 'AnyRouter 自动签到服务，支持多种通知方式和自定义配置'
 author: 'rakuyo'
 
 branding:

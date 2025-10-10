@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "autocheck-anyrouter"
-version = "0.1.0"
-description = "Any Router 自动签到工具，支持多种通知方式和自定义配置"
+version = "1.0.0"
+description = "AnyRouter 自动签到工具，支持多种通知方式和自定义配置"
 requires-python = ">=3.11"
 dependencies = [
   "httpx[http2]==0.28.1",
