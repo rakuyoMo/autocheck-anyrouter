@@ -43,3 +43,8 @@ unfixable = ["E101", "E402", "E501", "F841", "E731"]
 quote-style = "single"
 indent-style = "tab"
 docstring-code-format = true
+
+[tool.pyright]
+include = ["src", "tests"]
+extraPaths = ["src"]
+typeCheckingMode = "basic"

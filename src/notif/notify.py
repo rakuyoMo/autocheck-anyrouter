@@ -9,14 +9,13 @@ from typing import Any, Literal, Union
 import httpx
 import stencil
 
+from core.models.notification_data import NotificationData
 from notif.models import (
 	EmailConfig,
-	WebhookConfig,
 	PushPlusConfig,
 	ServerPushConfig,
+	WebhookConfig,
 )
-
-from core.models.notification_data import NotificationData
 from tools.logger import logger
 
 

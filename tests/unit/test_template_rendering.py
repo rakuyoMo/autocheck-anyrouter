@@ -3,10 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from src.core.models.account_result import AccountResult
-from src.core.models.notification_data import NotificationData
-from src.core.models.notification_stats import NotificationStats
-from src.notif.notify import NotificationKit
+from core.models import AccountResult, NotificationData, NotificationStats
+from notif.notify import NotificationKit
 
 
 project_root = Path(__file__).parent.parent.parent

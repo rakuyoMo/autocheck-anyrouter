@@ -2,9 +2,7 @@ import pytest
 
 from collections.abc import Callable
 
-from src.core.models.account_result import AccountResult
-from src.core.models.notification_data import NotificationData
-from src.core.models.notification_stats import NotificationStats
+from core.models import AccountResult, NotificationData, NotificationStats
 
 
 class TestNotificationDataModel:

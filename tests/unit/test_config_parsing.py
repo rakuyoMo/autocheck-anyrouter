@@ -3,6 +3,8 @@ import os
 
 import pytest
 
+from notif.notify import NotificationKit
+
 
 class TestConfigParsing:
 	"""测试配置解析功能"""
@@ -14,7 +16,6 @@ class TestConfigParsing:
 			if 'NOTIF_CONFIG' in key:
 				monkeypatch.delenv(key, raising=False)
 
-		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
 
 		assert kit.email_config is None
@@ -52,7 +53,6 @@ class TestConfigParsing:
 
 		monkeypatch.setenv('WECOM_NOTIF_CONFIG', json.dumps(config))
 
-		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
 
 		assert kit.wecom_config is not None
@@ -91,7 +91,6 @@ class TestConfigParsing:
 
 		monkeypatch.setenv('PUSHPLUS_NOTIF_CONFIG', json.dumps(config))
 
-		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
 
 		assert kit.pushplus_config is not None
@@ -127,7 +126,6 @@ class TestConfigParsing:
 
 		monkeypatch.setenv('SERVERPUSH_NOTIF_CONFIG', json.dumps(config))
 
-		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
 
 		assert kit.serverpush_config is not None
@@ -173,7 +171,6 @@ class TestConfigParsing:
 
 		monkeypatch.setenv('EMAIL_NOTIF_CONFIG', json.dumps(config))
 
-		from src.notif.notify import NotificationKit
 		kit = NotificationKit()
 
 		assert kit.email_config is not None
