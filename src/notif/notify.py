@@ -1,4 +1,4 @@
-import json
+import json5
 import os
 from pathlib import Path
 from typing import Any, Union
@@ -233,21 +233,21 @@ class NotificationKit:
 
 	def _load_default_config(self, platform: str) -> dict[str, Any] | None:
 		"""加载默认配置文件"""
-		config_file = self.config_dir / f'{platform}.json'
+		config_file = self.config_dir / f'{platform}.json5'
 		if config_file.exists():
 			try:
 				with open(config_file, 'r', encoding='utf-8') as f:
-					return json.load(f)
+					return json5.load(f)
 			except Exception as e:
 				logger.warning(f'加载默认配置文件 {config_file} 失败：{e}')
 		return None
 
-	def _parse_env_config(self, env_value: str) -> Union[str, dict[str, Any]]:
+	def _parse_env_config(self, env_value: str) -> Any:
 		"""解析环境变量配置"""
 		try:
 			# 尝试解析为 JSON
-			return json.loads(env_value)
-		except json.JSONDecodeError:
+			return json5.loads(env_value)
+		except Exception:
 			# 如果不是 JSON，就当做纯字符串（Token 或 Webhook URL）
 			return env_value
 
@@ -262,8 +262,12 @@ class NotificationKit:
 		if not isinstance(parsed, dict):
 			return None
 
-		# 缺少必需字段
-		if 'user' not in parsed or 'pass' not in parsed or 'to' not in parsed:
+		# 缺少必需字段或字段值为空
+		if 'user' not in parsed or not parsed['user']:
+			return None
+		if 'pass' not in parsed or not parsed['pass']:
+			return None
+		if 'to' not in parsed or not parsed['to']:
 			return None
 
 		# 如果 template 为 None，则使用默认模板
@@ -291,8 +295,8 @@ class NotificationKit:
 
 		# 字典格式配置
 		if isinstance(parsed, dict):
-			# 缺少必需字段
-			if 'webhook' not in parsed:
+			# 缺少必需字段或字段值为空
+			if 'webhook' not in parsed or not parsed['webhook']:
 				return None
 
 			# 如果 template 为 None，则使用默认模板
@@ -334,8 +338,8 @@ class NotificationKit:
 
 		# 字典格式配置
 		if isinstance(parsed, dict):
-			# 缺少必需字段
-			if 'token' not in parsed:
+			# 缺少必需字段或字段值为空
+			if 'token' not in parsed or not parsed['token']:
 				return None
 
 			# 如果 template 为 None，则使用默认模板
@@ -368,8 +372,8 @@ class NotificationKit:
 
 		# 字典格式配置
 		if isinstance(parsed, dict):
-			# 缺少必需字段
-			if 'send_key' not in parsed:
+			# 缺少必需字段或字段值为空
+			if 'send_key' not in parsed or not parsed['send_key']:
 				return None
 
 			# 如果 template 为 None，则使用默认模板
