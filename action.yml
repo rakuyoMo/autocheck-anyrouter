@@ -29,6 +29,10 @@ inputs:
   wecom-notif-config:
     description: '企业微信通知配置'
     required: false
+  show-sensitive-info:
+    description: '是否显示敏感信息'
+    required: false
+    default: false
 
 runs:
   using: 'composite'
@@ -68,4 +72,5 @@ runs:
         SERVERPUSH_NOTIF_CONFIG: ${{ inputs.serverpush-notif-config }}
         FEISHU_NOTIF_CONFIG: ${{ inputs.feishu-notif-config }}
         WECOM_NOTIF_CONFIG: ${{ inputs.wecom-notif-config }}
+        SHOW_SENSITIVE_INFO: ${{ inputs.show-sensitive-info }}
       run: mise run checkin
