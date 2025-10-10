@@ -86,6 +86,8 @@ jobs:
         with:
           # 从环境变量加载账号信息
           accounts: ${{ secrets.ANYROUTER_ACCOUNTS }}
+          # 可选：是否显示敏感信息，默认为 `false`
+          show-sensitive-info: false
           # 可选：配置通知方式
           dingtalk-notif-config: ${{ secrets.DINGTALK_NOTIF_CONFIG }}
           email-notif-config: ${{ secrets.EMAIL_NOTIF_CONFIG }}

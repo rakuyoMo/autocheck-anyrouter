@@ -10,10 +10,12 @@ jobs:
     environment: production
     env:
       PYTHONIOENCODING: utf-8
-      # 账号配置
-      ANYROUTER_ACCOUNTS: ${{ secrets.ANYROUTER_ACCOUNTS }}
       # 仓库可见性，用于隐私控制
       REPO_VISIBILITY: ${{ github.event.repository.visibility }}
+      # 账号配置
+      ANYROUTER_ACCOUNTS: ${{ secrets.ANYROUTER_ACCOUNTS }}
+      # 是否显示敏感信息
+      SHOW_SENSITIVE_INFO: ${{ secrets.SHOW_SENSITIVE_INFO }}
       # 通知配置
       DINGTALK_NOTIF_CONFIG: ${{ secrets.DINGTALK_NOTIF_CONFIG }}
       EMAIL_NOTIF_CONFIG: ${{ secrets.EMAIL_NOTIF_CONFIG }}

@@ -10,7 +10,10 @@ inputs:
   accounts:
     description: 'AnyRouter 账号信息'
     required: true
-  # 通知配置
+  show-sensitive-info:
+    description: '是否显示敏感信息'
+    required: false
+    default: false
   dingtalk-notif-config:
     description: '钉钉通知配置'
     required: false
@@ -29,10 +32,6 @@ inputs:
   wecom-notif-config:
     description: '企业微信通知配置'
     required: false
-  show-sensitive-info:
-    description: '是否显示敏感信息'
-    required: false
-    default: false
 
 runs:
   using: 'composite'
@@ -61,10 +60,12 @@ runs:
     - name: 🚀 执行签到任务
       shell: bash
       env:
-        # 账号配置
-        ANYROUTER_ACCOUNTS: ${{ inputs.accounts }}
         # 仓库可见性，用于隐私控制
         REPO_VISIBILITY: ${{ github.event.repository.visibility }}
+        # 账号配置
+        ANYROUTER_ACCOUNTS: ${{ inputs.accounts }}
+        # 是否显示脱敏信息
+        SHOW_SENSITIVE_INFO: ${{ inputs.show-sensitive-info }}
         # 通知配置
         DINGTALK_NOTIF_CONFIG: ${{ inputs.dingtalk-notif-config }}
         EMAIL_NOTIF_CONFIG: ${{ inputs.email-notif-config }}
@@ -72,5 +73,4 @@ runs:
         SERVERPUSH_NOTIF_CONFIG: ${{ inputs.serverpush-notif-config }}
         FEISHU_NOTIF_CONFIG: ${{ inputs.feishu-notif-config }}
         WECOM_NOTIF_CONFIG: ${{ inputs.wecom-notif-config }}
-        SHOW_SENSITIVE_INFO: ${{ inputs.show-sensitive-info }}
       run: mise run checkin
