@@ -50,7 +50,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: balance_hash.txt
-        key: balance-hash-${{ github.sha }}
+        key: balance-hash
         restore-keys: |
           balance-hash-
 
