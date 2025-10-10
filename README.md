@@ -1,1 +1,266 @@
 # autocheck-anyrouter
+
+> 基于 Python 的 AnyRouter 多账号自动签到工具，支持多种通知方式和智能隐私保护 </br>
+> 🩷 本项目基于 [anyrouter-check-in](https://github.com/millylee/anyrouter-check-in) 实现核心签到功能，特别感谢 [Milly](https://github.com/millylee) 的付出与开源精神！
+
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/rakuyoMo/autocheck-anyrouter)](https://github.com/rakuyoMo/autocheck-anyrouter/releases)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/rakuyoMo/autocheck-anyrouter/.github%2Fworkflows%2Fcheckin.yml?branch=main)](https://github.com/rakuyoMo/autocheck-anyrouter/actions)
+[![License](https://img.shields.io/badge/license-BSD--2--Clause-green.svg)](LICENSE)
+
+## 📋 功能特性
+
+### 核心功能
+- [x] 单个/多账号自动签到
+- [x] 多平台通知，并且支持通过 Stencil 模板自定义通知内容
+- [x] 隐私保护和账号信息脱敏
+- [x] 同时支持 Fork 定时运行、Composite Action 调用两种方式
+
+### 隐私保护
+
+工具支持智能隐私保护：
+
+> 隐私保护不影响通知内容，仅作用于 GitHub Actions Step Summary 以及 GitHub Action 的日志。
+
+- **公开仓库**：自动脱敏账号名称和余额信息
+- **私有仓库**：显示完整信息
+- **手动控制**：通过 `ACTIONS_RUNNER_DEBUG` 或 `SHOW_SENSITIVE_INFO` 环境变量控制强制展示
+
+## 🚀 使用方式
+
+### 方式一：Fork 后定时签到
+
+1. **Fork 本仓库**
+  - 点击右上角 "Fork" 按钮
+
+2. **获取账号信息**
+  - 访问 [AnyRouter](https://anyrouter.top/register?aff=sL91) 并登录
+  - 打开开发者工具 (F12)
+  - 获取 `session` cookie 和 `New-Api-User` 请求头值
+
+3. **配置环境变量**
+  - 进入 fork 后仓库的 `Settings` > `Environments` > `Environment secrets`
+  - 创建名为 `production` 的环境
+  - 参考 [账号配置](#账号配置) 添加环境变量
+
+4. **启用 Actions**
+  - 进入 `Actions` 选项卡
+  - 启用 Actions，工作流将每 6 小时自动运行一次
+
+> ⚠️ 关于签到时间的特别说明：
+> - Github Action 可能会[出现延迟](https://docs.github.com/zh/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)，所以本定时只能满足 “当天一定会签到”，无法精准控制签到时间。
+> - AnyRouter 主站的签到逻辑似乎是 “本次签到后 24 小时，可再次签到”，似乎并非 “0 点后可再次签到”。
+
+签到成功后将在 Summary 面板展示签到结果：
+
+<details>
+<summary>脱敏示例（公开仓库默认展示）</summary>
+
+![签到成功脱敏示例](/assets/check-in-success-desensitization.png)
+
+</details>
+
+<details>
+<summary>非脱敏示例（私有仓库或开启调试模式）</summary>
+
+![签到成功示例](/assets/check-in-success.png)
+
+</details>
+
+### 方式二：在自有仓库中使用 Composite Action
+
+先参照 [方式一](#方式一fork-后定时签到) 中的内容配置环境变量。然后在您的仓库中创建 `.github/workflows/checkin.yml` 文件：
+
+```yaml
+name: AnyRouter 自动签到
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # 每隔 6 小时执行一次，或其他您需要的时间
+  workflow_dispatch:
+
+jobs:
+  checkin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 执行签到
+        uses: rakuyoMo/autocheck-anyrouter@v1
+        with:
+          # 从环境变量加载账号信息
+          accounts: ${{ secrets.ANYROUTER_ACCOUNTS }}
+          # 可选：配置通知方式
+          dingtalk-notif-config: ${{ secrets.DINGTALK_NOTIF_CONFIG }}
+          email-notif-config: ${{ secrets.EMAIL_NOTIF_CONFIG }}
+          # ... 其他通知配置
+```
+
+## ⚙️ 配置说明
+
+### 账号配置
+
+- `name`（可选）：账号显示名称
+- `cookies`：登录后的 session cookie
+- `api_user`：API 用户标识
+
+配置格式：
+```json5
+[
+  {
+    "name": "账号1",
+    "cookies": {
+      "session": "..."
+    },
+    "api_user": "12345"
+  },
+  {
+    "cookies": {
+      "session": "..."
+    },
+    "api_user": "67890"
+  }
+]
+```
+
+### 通知配置
+
+本系统支持多平台通知：
+- [x] 邮箱：`EMAIL_NOTIF_CONFIG`
+- [x] 钉钉机器人：`DINGTALK_NOTIF_CONFIG`
+- [x] 飞书机器人：`FEISHU_NOTIF_CONFIG`
+- [x] 企业微信：`WECOM_NOTIF_CONFIG`
+- [x] PushPlus：`PUSHPLUS_NOTIF_CONFIG`
+- [x] Server 酱：`SERVERPUSH_NOTIF_CONFIG`
+
+除了邮箱外，其余平台的配置字段均有两种用法：
+- 设置为纯字符串：代表 WebHook、Key 或者 Token，此时将使用 [默认配置](/src/notif/configs) 发送通知。
+- 设置为 JSON：高级配置，此时可设置模板样式（`template`），或者一些平台配置（`platform_settings`）。具体请查 [默认配置](/src/notif/configs) 和 [.env.test.example](.env.test.example) 中的配置示例。
+
+您可以在 `Environment secrets` 中添加相应的配置。如下图所示：
+![环境变量配置示例](assets/github-env-notif-config-example.png)
+
+通知默认只在以下情况时触发，且暂不支持通过环境变量控制触发时机：
+- 首次运行时
+- 余额发生变化时
+- 某个账号签到失败时
+
+### 自定义通知模板
+
+支持使用 [Stencil](https://stencil.pyllyukko.com/) 模板语法自定义通知内容：
+
+**可用变量**：
+- `timestamp`: 执行时间
+- `stats`: 统计数据（success_count, failed_count, total_count）
+- `accounts`: 账号列表（name, status, quota, used, error）
+- `success_accounts`: 成功账号列表
+- `failed_accounts`: 失败账号列表
+
+**重要说明**：
+
+由于 Stencil 模板引擎的限制，请注意以下事项：
+- ❌ 不支持比较操作符（`==`、`!=`、`<`、`>` 等）
+- ❌ 不支持在循环中使用条件判断，例如 `{% if account.status == "success" %}`
+
+推荐使用预过滤的便利变量（如 `success_accounts`、`failed_accounts`）来替代循环内的条件判断。
+
+**模板示例**（以企业微信支持的 markdown 语法为例）：
+> 请注意，虽然本系统使用 json5 解析 json 字符串，但是为了避免消息平台方的问题，建议您在设置 `template` 字段时，**不要使用多行字符串**，而是将每个换行符替换为 `\\n`。
+
+```stencil
+{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}
+
+### **详细信息**
+- **执行时间**：{{ timestamp }}
+- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}
+- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}
+
+{% if has_success %}
+### 成功账号
+| 账号 | 已用（$） | 剩余（$） |
+| :----- | :---- | :---- |
+{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|
+{% endfor %}
+{% endif %}
+{% if has_failed %}
+### 失败账号
+| 账号 | 错误原因 |
+| :----- | :----- |
+{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|
+{% endfor %}
+{% endif %}
+```
+
+## ⚠️ 注意事项
+
+- 部分账号签到失败的时候，Action 整体依然会展示成功，具体的错误将在日志与通知中体现
+- 遇到 401 错误时请重新获取 cookies，理论 1 个月失效，详见 [anyrouter-check-in #6](https://github.com/millylee/anyrouter-check-in/issues/6)
+
+## 🤝 贡献指南
+
+欢迎提交 Issue 和 Pull Request！
+
+### 项目架构
+
+```
+src/
+├── core/                   # 核心业务逻辑
+│   ├── checkin_service.py  # 签到服务主逻辑
+│   └── models/             # 数据模型
+├── notif/                  # 通知系统
+│   ├── notify.py           # 通知统一入口
+│   ├── models/             # 通知配置模型
+│   ├── senders/            # 各种通知发送器
+│   └── configs/            # 默认模板配置
+├── tools/                  # 工具模块
+│   └── logger/             # 日志系统
+└── main.py                 # 程序入口
+```
+
+### 开发环境设置
+
+#### 环境准备
+
+```bash
+# 1. 安装 mise（如果尚未安装）
+curl https://mise.run | sh
+
+# 2. 克隆并进入项目目录
+git clone <your_fork_url>
+cd <project_name>
+
+# 3. 安装 Python 和配置开发环境
+mise install          # 安装 Python 3.11
+mise run setup        # 安装依赖 + Playwright 浏览器
+```
+
+#### 常用开发命令
+
+```bash
+# 运行测试
+mise run test        # 运行所有测试
+mise run test-cov    # 运行测试并生成覆盖率报告
+
+# 代码规范
+mise run fmt         # 代码格式化
+mise run lint        # 代码检查
+mise run fix         # 代码检查并自动修复
+```
+
+#### 添加新的通知平台
+
+1. 在 `src/notif/senders/` 下创建新的发送器类
+2. 在 `src/notif/models/` 下创建对应的配置模型
+3. 在 `src/notif/notify.py` 中注册新的通知方式
+4. 在 `tests/unit/test_send_functions.py` 中添加对应的测试用例
+
+## 📄 许可证
+
+本项目采用 BSD 2-Clause 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+## 🙏 致谢
+
+- [anyrouter-check-in](https://github.com/millylee/anyrouter-check-in) - 原始项目和灵感来源
+- [Playwright](https://playwright.dev/) - 强大的浏览器自动化工具
+- [Stencil](https://stencil.pyllyukko.com/) - 简洁的模板引擎
+- 所有贡献者和用户的支持
+
+---
+
+**⭐ 如果这个项目对您有帮助，请帮忙点个 Star！**
