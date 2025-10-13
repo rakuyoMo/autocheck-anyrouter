@@ -1,0 +1,145 @@
+name: PR 代码检查
+
+on:
+  pull_request:
+    branches:
+      - '**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      PYTHONIOENCODING: utf-8
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: 🔧 安装 Mise
+        uses: jdx/mise-action@v3
+        with:
+          cache_key: "{{default}}-${{ hashFiles('pyproject.toml') }}"
+
+      - name: ⚙️ 安装依赖
+        run: mise run install-dev
+
+      - name: 📝 设置配置常量
+        run: |
+          # 覆盖率配置
+          echo "COVERAGE_THRESHOLD=59" >> $GITHUB_ENV
+          echo "COVERAGE_DETAIL_FILE_COUNT=10" >> $GITHUB_ENV
+
+      - name: 🔄 初始化检查状态
+        run: |
+          # 初始化所有检查状态为 pending，只有明确成功或失败时才更新
+          echo "FORMAT_STATUS=pending" >> $GITHUB_ENV
+          echo "LINT_STATUS=pending" >> $GITHUB_ENV
+          echo "TYPE_STATUS=pending" >> $GITHUB_ENV
+          echo "COVERAGE_STATUS=pending" >> $GITHUB_ENV
+
+      - name: 🎨 Ruff 格式化检查
+        id: format-check
+        if: always()
+        continue-on-error: true
+        uses: chartboost/ruff-action@v1
+        with:
+          args: format --check
+
+      - name: 🔍 Ruff 代码规范检查
+        id: lint-check
+        if: always()
+        continue-on-error: true
+        uses: chartboost/ruff-action@v1
+        with:
+          args: check
+
+      - name: 🔎 类型检查
+        id: type-check
+        if: always()
+        continue-on-error: true
+        uses: jakebailey/pyright-action@v2
+        with:
+          annotate: all
+
+      - name: 📝 保存静态检查结果
+        if: always()
+        run: |
+          # 定义处理检查结果的函数
+          save_check_result() {
+              local outcome=$1
+              local status_var=$2
+
+              if [ "$outcome" == "success" ]; then
+                  echo "${status_var}=success" >> $GITHUB_ENV
+              elif [ "$outcome" == "failure" ]; then
+                  echo "${status_var}=failure" >> $GITHUB_ENV
+                  echo "STATIC_CHECK_FAILED=true" >> $GITHUB_ENV
+              fi
+              # pending 状态保持不变，不做处理
+          }
+
+          # 保存各检查结果
+          save_check_result "${{ steps.format-check.outcome }}" "FORMAT_STATUS"
+          save_check_result "${{ steps.lint-check.outcome }}" "LINT_STATUS"
+          save_check_result "${{ steps.type-check.outcome }}" "TYPE_STATUS"
+
+      - name: 🧪 运行测试并生成覆盖率
+        id: test-run
+        if: env.STATIC_CHECK_FAILED != 'true'
+        continue-on-error: true
+        run: |
+          # 运行测试，捕获退出码和输出
+          set +e
+          OUTPUT=$(mise run test-cov --cov-report=json 2>&1)
+          TEST_EXIT_CODE=$?
+          set -e
+
+          # 尝试读取覆盖率数据
+          if [ -f "coverage.json" ]; then
+              COVERAGE_PERCENT=$(python3 -c "import json; data=json.load(open('coverage.json')); print(f\"{data['totals']['percent_covered']:.2f}\")")
+              echo "COVERAGE_PERCENT=$COVERAGE_PERCENT" >> $GITHUB_ENV
+          fi
+
+          # 根据测试结果设置状态
+          if [ $TEST_EXIT_CODE -eq 0 ]; then
+              # 测试全部通过，检查覆盖率
+              if python3 -c "import sys; sys.exit(0 if float('$COVERAGE_PERCENT') >= $COVERAGE_THRESHOLD else 1)"; then
+                  echo "COVERAGE_STATUS=success" >> $GITHUB_ENV
+              else
+                  echo "COVERAGE_STATUS=failure" >> $GITHUB_ENV
+                  exit 1
+              fi
+          else
+              # 测试失败，保存错误信息
+              echo "COVERAGE_STATUS=failure" >> $GITHUB_ENV
+              echo "$OUTPUT" > test-errors.txt
+              exit 1
+          fi
+
+      - name: 📊 生成覆盖率详细信息
+        if: steps.test-run.outcome != 'skipped'
+        run: python3 .github/scripts/generate_coverage_detail.py
+
+      - name: 💬 发布检查报告到 PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { postPRComment } = require('./.github/scripts/post_pr_comment.js');
+            await postPRComment(github, context);
+
+      - name: ✅ 检查最终状态
+        if: always()
+        run: |
+          if [ "$FORMAT_STATUS" == "failure" ] || [ "$LINT_STATUS" == "failure" ] || [ "$TYPE_STATUS" == "failure" ] || [ "$COVERAGE_STATUS" == "failure" ]; then
+              exit 1
+          fi
