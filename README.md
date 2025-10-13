@@ -236,13 +236,15 @@ mise run setup        # 安装依赖 + Playwright 浏览器
 
 ```bash
 # 运行测试
-mise run test        # 运行所有测试
-mise run test-cov    # 运行测试并生成覆盖率报告
+mise run test                        # 运行所有测试
+mise run test-cov                    # 运行测试并生成覆盖率（终端输出）
+mise run test-cov --cov-report=html  # 生成 HTML 覆盖率报告
 
 # 代码规范
-mise run fmt         # 代码格式化
-mise run lint        # 代码检查
-mise run fix         # 代码检查并自动修复
+mise run fmt              # 代码格式化
+mise run fmt --check      # 检查代码格式（不修改文件）
+mise run lint             # 代码检查
+mise run lint --fix       # 代码检查并自动修复
 ```
 
 #### 添加新的通知平台
