@@ -270,6 +270,17 @@ class NotificationKit:
 		if 'to' not in parsed or not parsed['to']:
 			return None
 
+		# 向后兼容：处理根目录下的 default_msg_type
+		platform_settings = parsed.get('platform_settings')
+		if 'default_msg_type' in parsed and parsed['default_msg_type']:
+			logger.warning('建议将 default_msg_type 配置移至 platform_settings 字段下')
+			# 将根目录的 default_msg_type 移入 platform_settings
+			if platform_settings is None:
+				platform_settings = {}
+			# 只有当 platform_settings 中没有 default_msg_type 时才使用根目录的值
+			if 'default_msg_type' not in platform_settings:
+				platform_settings['default_msg_type'] = parsed['default_msg_type']
+
 		# 如果 template 为 None，则使用默认模板
 		template = parsed.get('template')
 		if template is None:
@@ -281,7 +292,7 @@ class NotificationKit:
 			password=parsed['pass'],
 			to=parsed['to'],
 			smtp_server=parsed.get('smtp_server'),
-			platform_settings=parsed.get('platform_settings'),
+			platform_settings=platform_settings,
 			template=template,
 		)
 
