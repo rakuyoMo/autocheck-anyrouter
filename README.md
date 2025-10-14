@@ -199,13 +199,15 @@ jobs:
 
 ```json
 {
-    "webhook":"https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=your_key",
-    "platform_settings":{
-        "markdown_style": "markdown_v2"
-    },
-    "template":"{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}\\n\\n### **详细信息**\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}\\n\\n{% if has_success %}\\n### 成功账号\\n| 账号 | 已用（$） | 剩余（$） |\\n| :----- | :---- | :---- |\\n{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|\\n{% endfor %}{% endif %}{% if has_failed %}\\n### 失败账号\\n| 账号 | 错误原因 |\\n| :----- | :----- |\\n{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|\\n{% endfor %}{% endif %}"
+  "webhook":"https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=your_key", 
+  "platform_settings":{
+    "markdown_style": "markdown_v2"
+  }, 
+  "template":"{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}\\n\\n### 详细信息\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}{% if has_success %}\\n### 成功账号\\n| 账号 | 已用（$） | 剩余（$） |\\n| :----- | :---- | :---- |\\n{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|\\n{% endfor %}{% endif %}{% if has_failed %}\\n### 失败账号\\n| 账号 | 错误原因 |\\n| :----- | :----- |\\n{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|\\n{% endfor %}{% endif %}"
 }
 ```
+
+![WECOM_NOTIF_CONFIG](/assets/notif_example/wecom.png)
 
 </details>
 
@@ -214,13 +216,15 @@ jobs:
 
 ```json
 {
-  "webhook": "https://oapi.dingtalk.com/robot/send?access_token=your_token",
+  "webhook": "https://oapi.dingtalk.com/robot/send?access_token=your_token", 
   "platform_settings": {
-    "message_type": "markdown",
-  },
-  "template": "{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}\\n\\n### **详细信息**\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}\\n{% if has_success %}\\n### 成功账号\\n{% for account in success_accounts %}- {{ account.name }}\\n 已用：${{ account.used }} | 剩余：${{ account.quota }}\\n{% endfor %}{% endif %}{% if has_failed %}\\n### 失败账号\\n{% for account in failed_accounts %}- {{ account.name }}\\n  错误：{{ account.error }}\\n{% endfor %}{% endif %}"
+    "message_type": "markdown"
+  }, 
+  "template": "{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}\\n<br>\\n### 详细信息\\n\\n- **执行时间**：{{ timestamp }}\\n\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}\\n<br>\\n{% if has_success %}\\n\\n### 成功账号\\n\\n{% for account in success_accounts %}\\n\\n- {{ account.name }}\\n<br>已用：${{ account.used }} | 剩余：${{ account.quota }}{% endfor %}{% endif %}\\n<br>\\n{% if has_failed %}\\n\\n### 失败账号\\n\\n{% for account in failed_accounts %}\\n\\n- {{ account.name }}\\n<br>	错误：{{ account.error }}{% endfor %}{% endif %}"
 }
 ```
+
+![DINGTALK_NOTIF_CONFIG](/assets/notif_example/dingtalk.png)
 
 </details>
 
