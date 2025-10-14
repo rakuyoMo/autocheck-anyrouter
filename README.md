@@ -240,6 +240,9 @@ jobs:
 
 欢迎提交 Issue 和 Pull Request！
 
+<details>
+<summary>点击查看项目架构说明</summary>
+
 ### 项目架构
 
 ```
@@ -326,6 +329,8 @@ mise run lint --fix       # 代码检查并自动修复
 2. 在 `src/notif/models/` 下创建对应的配置模型
 3. 在 `src/notif/notify.py` 中注册新的通知方式
 4. 在 `tests/unit/test_send_functions.py` 中添加对应的测试用例
+
+</details>
 
 ## 📄 许可证
 
