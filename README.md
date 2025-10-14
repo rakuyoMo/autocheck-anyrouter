@@ -231,6 +231,25 @@ jobs:
 
 </details>
 
+<details>
+<summary>Gmail 邮箱</summary>
+
+```json5
+{
+  "user": "your_email", 
+  "pass": "your_pass_word", 
+  "to": "your_email", 
+  "platform_settings": { 
+    "message_type": "", // 不设置以自动识别
+  },
+  "template": "{% if all_success %}<h2>✅ 所有账号全部签到成功！</h2>{% else %}{% if partial_success %}<h2>⚠️ 部分账号签到成功</h2>{% else %}<h2>❌ 所有账号签到失败</h2>{% endif %}{% endif %}<h3>详细信息</h3><ul><li><strong>执行时间</strong>：{{ timestamp }}</li><li><strong>成功比例</strong>：{{ stats.success_count }}/{{ stats.total_count }}</li><li><strong>失败比例</strong>：{{ stats.failed_count }}/{{ stats.total_count }}</li></ul>{% if has_success %}<h3>成功账号</h3><table border=\"1\" cellpadding=\"5\" cellspacing=\"0\"><tr><th>账号</th><th>已用（$）</th><th>剩余（$）</th></tr>{% for account in success_accounts %}<tr><td>{{ account.name }}</td><td>{{ account.used }}</td><td>{{ account.quota }}</td></tr>{% endfor %}</table>{% endif %}{% if has_failed %}<h3>失败账号</h3><table border=\"1\" cellpadding=\"5\" cellspacing=\"0\"><tr><th>账号</th><th>错误原因</th></tr>{% for account in failed_accounts %}<tr><td>{{ account.name }}</td><td>{{ account.error }}</td></tr>{% endfor %}</table>{% endif %}"
+}
+```
+
+![EMAIL_NOTIF_CONFIG](/assets/notif_example/email.png)
+
+</details>
+
 ## ⚠️ 注意事项
 
 - 部分账号签到失败的时候，Action 整体依然会展示成功，具体的错误将在日志与通知中体现
@@ -239,6 +258,9 @@ jobs:
 ## 🤝 贡献指南
 
 欢迎提交 Issue 和 Pull Request！
+
+<details>
+<summary>点击查看项目架构说明</summary>
 
 ### 项目架构
 
@@ -326,6 +348,8 @@ mise run lint --fix       # 代码检查并自动修复
 2. 在 `src/notif/models/` 下创建对应的配置模型
 3. 在 `src/notif/notify.py` 中注册新的通知方式
 4. 在 `tests/unit/test_send_functions.py` 中添加对应的测试用例
+
+</details>
 
 ## 📄 许可证
 
