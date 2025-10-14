@@ -79,13 +79,14 @@ jobs:
           files: pytest.xml
           check_name: 测试结果
 
-      - name: 📊 发布覆盖率评论
-        if: github.event_name == 'pull_request'
-        uses: py-cov-action/python-coverage-comment-action@v3
+      - name: 📊 上传覆盖率到 Codecov
+        if: always()
+        uses: codecov/codecov-action@v5
         with:
-          GITHUB_TOKEN: ${{ github.token }}
-          MINIMUM_GREEN: 80
-          MINIMUM_ORANGE: 60
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          fail_ci_if_error: false
+          verbose: true
 
       - name: ✅ 检查测试结果
         if: steps.pytest.outputs.exit_code != '0'

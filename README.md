@@ -5,7 +5,7 @@
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/rakuyoMo/autocheck-anyrouter)](https://github.com/rakuyoMo/autocheck-anyrouter/releases)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/rakuyoMo/autocheck-anyrouter/ci.yml?branch=main)](https://github.com/rakuyoMo/autocheck-anyrouter/actions)
-![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/rakuyoMo/autocheck-anyrouter/python-coverage-comment-action-data/endpoint.json)
+[![codecov](https://codecov.io/gh/rakuyoMo/autocheck-anyrouter/branch/main/graph/badge.svg)](https://codecov.io/gh/rakuyoMo/autocheck-anyrouter)
 [![License](https://img.shields.io/badge/license-BSD--2--Clause-green.svg)](LICENSE)
 
 ## 📋 功能特性
