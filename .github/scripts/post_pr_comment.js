@@ -50,6 +50,7 @@ async function postPRComment(github, context) {
 
 	if (staticCheckFailed) {
 		comment += '❌ **失败** - 请修复以下问题：\n\n';
+		comment += '> 💡 **提示**：要查看详细的错误注释，请在 Files Changed 标签页右上角点击 ✨ "Try the new experience"，然后在侧边栏中查看错误和警告列表。\n\n';
 	} else {
 		comment += '✅ **通过**\n\n';
 	}
@@ -59,7 +60,6 @@ async function postPRComment(github, context) {
 		comment += '- ✅ 代码格式化\n';
 	} else if (formatStatus === 'failure') {
 		comment += '- ❌ 代码格式化\n';
-		comment += '  > 详细的格式化问题请查看 Files Changed 标签页中的注释\n';
 	} else {
 		comment += '- ⏭️ 代码格式化（跳过）\n';
 	}
@@ -69,7 +69,6 @@ async function postPRComment(github, context) {
 		comment += '- ✅ 代码规范检查\n';
 	} else if (lintStatus === 'failure') {
 		comment += '- ❌ 代码规范检查\n';
-		comment += '  > 详细的规范问题请查看 Files Changed 标签页中的注释\n';
 	} else {
 		comment += '- ⏭️ 代码规范检查（跳过）\n';
 	}
@@ -79,7 +78,6 @@ async function postPRComment(github, context) {
 		comment += '- ✅ 类型检查\n';
 	} else if (typeStatus === 'failure') {
 		comment += '- ❌ 类型检查\n';
-		comment += '  > 详细的类型错误请查看 Files Changed 标签页中的注释\n';
 	} else {
 		comment += '- ⏭️ 类型检查（跳过）\n';
 	}
