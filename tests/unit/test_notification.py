@@ -54,15 +54,47 @@ async def test_notificationkit_handler_skip_and_error(clean_notification_env):
 	assert mock_error.call_count >= 1
 
 
-def test_pushplus_config_parsing(clean_notification_env, monkeypatch):
-	"""验证 PushPlus 配置解析分支。"""
-	monkeypatch.setenv('PUSHPLUS_NOTIF_CONFIG', '{"token": "dict-token"}')
+def test_notification_config_parsing(clean_notification_env, monkeypatch):
+	"""验证各平台的配置解析（字典、字符串格式、向后兼容）。"""
 	kit = NotificationKit()
+
+	# PushPlus：字典格式
+	monkeypatch.setenv('PUSHPLUS_NOTIF_CONFIG', '{"token": "dict-token"}')
 	config_dict = kit._load_pushplus_config()
 	assert config_dict is not None
 	assert config_dict.token == 'dict-token'
 
+	# PushPlus：字符串格式
 	monkeypatch.setenv('PUSHPLUS_NOTIF_CONFIG', 'string-token')
 	config_str = kit._load_pushplus_config()
 	assert config_str is not None
 	assert config_str.token == 'string-token'
+
+	# Email：platform_settings 中的配置解析
+	monkeypatch.setenv(
+		'EMAIL_NOTIF_CONFIG',
+		'{"user": "test@example.com", "pass": "test_pass", "to": "recipient@example.com", "platform_settings": {"default_msg_type": "html"}}',
+	)
+	email_config = kit._load_email_config()
+	assert email_config is not None
+	assert email_config.user == 'test@example.com'
+	assert email_config.platform_settings is not None
+	assert email_config.platform_settings['default_msg_type'] == 'html'
+
+	# Email：向后兼容（根目录下的 default_msg_type）
+	monkeypatch.setenv(
+		'EMAIL_NOTIF_CONFIG',
+		'{"user": "test@example.com", "pass": "test_pass", "to": "recipient@example.com", "default_msg_type": "text"}',
+	)
+	with patch('notif.notify.logger.warning') as mock_warning:
+		email_config_compat = kit._load_email_config()
+
+		# 验证警告被触发
+		assert mock_warning.call_count >= 1
+		assert '建议将 default_msg_type 配置移至 platform_settings 字段下' in str(mock_warning.call_args_list)
+
+		# 验证 default_msg_type 被移到 platform_settings 中
+		assert email_config_compat is not None
+		assert email_config_compat.platform_settings is not None
+		assert email_config_compat.platform_settings['default_msg_type'] == 'text'
+
