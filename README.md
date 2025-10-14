@@ -4,7 +4,8 @@
 > 🩷 本项目基于 [anyrouter-check-in](https://github.com/millylee/anyrouter-check-in) 实现核心签到功能，特别感谢 [Milly](https://github.com/millylee) 的付出与开源精神！
 
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/rakuyoMo/autocheck-anyrouter)](https://github.com/rakuyoMo/autocheck-anyrouter/releases)
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/rakuyoMo/autocheck-anyrouter/.github%2Fworkflows%2Fcheckin.yml?branch=main)](https://github.com/rakuyoMo/autocheck-anyrouter/actions)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/rakuyoMo/autocheck-anyrouter/ci.yml?branch=main)](https://github.com/rakuyoMo/autocheck-anyrouter/actions)
+![Coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/rakuyoMo/autocheck-anyrouter/python-coverage-comment-action-data/endpoint.json)
 [![License](https://img.shields.io/badge/license-BSD--2--Clause-green.svg)](LICENSE)
 
 ## 📋 功能特性
