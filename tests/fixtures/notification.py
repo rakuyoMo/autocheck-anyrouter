@@ -1,4 +1,3 @@
-import sys
 from collections.abc import Callable
 from pathlib import Path
 
@@ -14,10 +13,12 @@ project_root = Path(__file__).parent.parent.parent
 @pytest.fixture
 def load_platform_template() -> Callable:
 	"""加载平台模板配置的工厂函数"""
+
 	def _load(platform: str) -> dict:
 		config_path = project_root / 'src' / 'notif' / 'configs' / f'{platform}.json5'
 		with open(config_path) as f:
 			return json5.load(f)
+
 	return _load
 
 

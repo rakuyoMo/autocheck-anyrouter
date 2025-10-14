@@ -1,8 +1,8 @@
-import json5
 import os
 from pathlib import Path
 from typing import Any, Union
 
+import json5
 import stencil
 
 from core.models.notification_data import NotificationData

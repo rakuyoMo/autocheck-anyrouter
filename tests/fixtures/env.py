@@ -25,21 +25,20 @@ def clean_notification_env(monkeypatch: pytest.MonkeyPatch):
 @pytest.fixture
 def accounts_env(monkeypatch):
 	"""设置账号环境变量的工厂函数"""
+
 	def _set_accounts(accounts_list: list[dict] | None = None):
 		if accounts_list is None:
-			accounts_list = [{
-				'name': '测试账号',
-				'cookies': 'test=value',
-				'api_user': 'user123'
-			}]
+			accounts_list = [{'name': '测试账号', 'cookies': 'test=value', 'api_user': 'user123'}]
 		accounts_json = json.dumps(accounts_list)
 		monkeypatch.setenv('ANYROUTER_ACCOUNTS', accounts_json)
+
 	return _set_accounts
 
 
 @pytest.fixture
 def config_env_setter(monkeypatch: pytest.MonkeyPatch) -> Callable:
 	"""设置配置环境变量的工厂函数"""
+
 	def _set_config(platform: str, config: dict[str, Any] | str):
 		"""
 		设置平台配置环境变量

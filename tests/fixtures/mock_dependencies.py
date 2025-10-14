@@ -9,9 +9,7 @@ class MockDependencies:
 	"""统一的 CheckinService 依赖 Mock 对象"""
 
 	def __init__(self):
-		self.check_in_account = AsyncMock(
-			return_value=(True, {'success': True, 'quota': 25.0, 'used_quota': 5.0})
-		)
+		self.check_in_account = AsyncMock(return_value=(True, {'success': True, 'quota': 25.0, 'used_quota': 5.0}))
 		self.load_balance_hash = MagicMock(return_value='same_hash')
 		self.generate_balance_hash = MagicMock(return_value='same_hash')
 		self.save_balance_hash = MagicMock()

@@ -46,15 +46,14 @@ class TestRealNotifications:
 		"""
 		# 配置多种格式
 		config_env_setter('dingtalk', 'https://mock.webhook')  # 字符串格式
-		config_env_setter('wecom', {  # JSON 格式带自定义模板
-			'webhook': 'https://mock.webhook',
-			'template': '测试账号：{{ stats.success_count }}/{{ stats.total_count }}'
-		})
-		config_env_setter('email', {
-			'user': 'test@example.com',
-			'pass': 'test_pass',
-			'to': 'recipient@example.com'
-		})
+		config_env_setter(
+			'wecom',
+			{  # JSON 格式带自定义模板
+				'webhook': 'https://mock.webhook',
+				'template': '测试账号：{{ stats.success_count }}/{{ stats.total_count }}',
+			},
+		)
+		config_env_setter('email', {'user': 'test@example.com', 'pass': 'test_pass', 'to': 'recipient@example.com'})
 
 		kit = NotificationKit()
 

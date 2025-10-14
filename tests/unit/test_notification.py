@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from notif.models import NotificationHandler
 from notif.notify import NotificationKit
@@ -23,10 +24,12 @@ async def test_notificationkit_handler_skip_and_error(clean_notification_env):
 	"""验证处理器跳过与异常分支。"""
 	kit = NotificationKit()
 
-	data = create_notification_data([
-		create_account_result_data(name='账号 A', quota=25.0, used=5.0),
-		create_account_result_data(name='账号 B', status='failed', error='超时'),
-	])
+	data = create_notification_data(
+		[
+			create_account_result_data(name='账号 A', quota=25.0, used=5.0),
+			create_account_result_data(name='账号 B', status='failed', error='超时'),
+		]
+	)
 
 	skip_handler = NotificationHandler(name='跳过平台', config=None, send_func=AsyncMock())
 	error_config = MagicMock()
@@ -39,7 +42,11 @@ async def test_notificationkit_handler_skip_and_error(clean_notification_env):
 
 	kit._handlers = [skip_handler, error_handler]
 
-	with patch('notif.notify.logger.info') as mock_info, patch('notif.notify.logger.error') as mock_error, patch('notif.notify.stencil.Template') as mock_template:
+	with (
+		patch('notif.notify.logger.info') as mock_info,
+		patch('notif.notify.logger.error') as mock_error,
+		patch('notif.notify.stencil.Template') as mock_template,
+	):
 		mock_template.side_effect = ValueError('模板错误')
 		await kit.push_message('标题', data)
 
