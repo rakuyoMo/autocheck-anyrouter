@@ -55,6 +55,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      checks: write  # 发布测试结果需要此权限
     env:
       PYTHONIOENCODING: utf-8
     steps:
