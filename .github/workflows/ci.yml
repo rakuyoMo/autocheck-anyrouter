@@ -1,0 +1,94 @@
+name: 代码质量检查
+
+on:
+  pull_request:
+    branches:
+      - '**'
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ========================================
+  # Job 1: 静态检查
+  # ========================================
+  lint:
+    name: 静态代码检查
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      PYTHONIOENCODING: utf-8
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🚀 设置开发环境
+        uses: ./.github/actions/setup-environment
+
+      - name: 🎨 Ruff 格式化检查
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: format --check
+
+      - name: 🔍 Ruff 代码规范检查
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: check
+
+      - name: 🔎 类型检查
+        uses: jakebailey/pyright-action@v2
+        with:
+          annotate: all
+
+  # ========================================
+  # Job 2: 测试和覆盖率
+  # ========================================
+  test:
+    name: 测试和覆盖率
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write  # 发布测试结果需要此权限
+    env:
+      PYTHONIOENCODING: utf-8
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🚀 设置开发环境
+        uses: ./.github/actions/setup-environment
+
+      - name: 🧪 运行测试并生成覆盖率
+        id: pytest
+        continue-on-error: true
+        run: |
+          mise exec -- pytest tests/ --cov=src --cov-report=term --cov-report=xml --junitxml=pytest.xml
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: 📊 发布测试结果摘要
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: pytest.xml
+          check_name: 测试结果
+
+      - name: 📊 发布覆盖率评论
+        if: github.event_name == 'pull_request'
+        uses: py-cov-action/python-coverage-comment-action@v3
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
+          MINIMUM_GREEN: 80
+          MINIMUM_ORANGE: 60
+
+      - name: ✅ 检查测试结果
+        if: steps.pytest.outputs.exit_code != '0'
+        run: |
+          echo "❌ 测试失败"
+          exit 1

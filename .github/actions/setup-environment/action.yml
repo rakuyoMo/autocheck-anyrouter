@@ -1,0 +1,14 @@
+name: '设置开发环境'
+description: '安装 Mise 和项目依赖'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 🔧 安装 Mise
+      uses: jdx/mise-action@v3
+      with:
+        cache_key: "{{default}}-${{ hashFiles('pyproject.toml') }}"
+
+    - name: ⚙️ 安装依赖
+      shell: bash
+      run: mise run install-dev
