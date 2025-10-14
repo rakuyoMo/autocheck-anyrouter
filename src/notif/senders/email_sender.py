@@ -1,6 +1,5 @@
 import re
 import smtplib
-from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from notif.models import EmailConfig
@@ -27,13 +26,10 @@ class EmailSender:
 		# 智能确定消息类型：配置优先，没配置则自动检测
 		msg_type = self._determine_msg_type(content)
 
-		msg = MIMEMultipart()
+		msg = MIMEText(content, msg_type, 'utf-8')
 		msg['From'] = f'AnyRouter Assistant <{self.config.user}>'
 		msg['To'] = self.config.to
 		msg['Subject'] = title
-
-		body = MIMEText(content, msg_type, 'utf-8')
-		msg.attach(body)
 
 		# 如果有自定义 SMTP 服务器，使用它；否则从邮箱地址推断
 		if self.config.smtp_server:
@@ -53,14 +49,30 @@ class EmailSender:
 			content: 消息内容
 
 		Returns:
-			消息类型字符串（'text' 或 'html'）
+			消息类型字符串（'plain' 或 'html'）
 		"""
 		# 1. 配置优先
-		if self.config.default_msg_type:
-			return self.config.default_msg_type
+		if self.config.platform_settings and 'default_msg_type' in self.config.platform_settings:
+			return self._normalize_msg_type(self.config.platform_settings['default_msg_type'])
 
 		# 2. 自动检测
 		return self._detect_msg_type(content)
+
+	def _normalize_msg_type(self, msg_type: str) -> str:
+		"""
+		规范化消息类型，向后兼容
+
+		Args:
+			msg_type: 原始消息类型
+
+		Returns:
+			规范化后的消息类型（'plain' 或 'html'）
+		"""
+		# 向后兼容：'text' 转为 'plain'
+		if msg_type == 'text':
+			print("警告：消息类型 'text' 已弃用，请使用 'plain' 代替")
+			return 'plain'
+		return msg_type
 
 	def _detect_msg_type(self, content: str) -> str:
 		"""
@@ -70,7 +82,7 @@ class EmailSender:
 			content: 消息内容
 
 		Returns:
-			消息类型字符串（'text' 或 'html'）
+			消息类型字符串（'plain' 或 'html'）
 		"""
 		# 常见 HTML 标签列表
 		html_tags = [
@@ -102,5 +114,5 @@ class EmailSender:
 			if re.search(tag, content, re.IGNORECASE):
 				return 'html'
 
-		# 否则返回 text
-		return 'text'
+		# 否则返回 plain
+		return 'plain'

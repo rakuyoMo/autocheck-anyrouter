@@ -13,7 +13,11 @@
   "smtp_server": "",
 
   // 【可选】平台特定设置
-  "platform_settings": {},
+  "platform_settings": {
+    // 默认消息类型（'plain' 或 'html'）
+    // 如不指定，会根据内容自动检测
+    "default_msg_type": "",
+  },
 
   // 【可选】自定义通知模板（为空则使用下方默认模板）
   "template": "{# 邮箱通知模板 #}{% if timestamp %}[TIME] Execution time: {{ timestamp }}\n\n{% endif %}{% if success_accounts %}{% for account in success_accounts %}[BALANCE] {{ account.name }}\n:money: Current balance: ${{ account.quota }}, Used: ${{ account.used }}\n{% endfor %}{% endif %}{% if failed_accounts %}{% for account in failed_accounts %}[FAIL] {{ account.name }} exception: {{ account.error }}\n{% endfor %}{% endif %}\n[STATS] Check-in result statistics:\n[SUCCESS] Success: {{ stats.success_count }}/{{ stats.total_count }}\n[FAIL] Failed: {{ stats.failed_count }}/{{ stats.total_count }}\n{% if all_success %}[SUCCESS] All accounts check-in successful!{% else %}{% if partial_success %}[WARN] Some accounts check-in successful{% else %}[ERROR] All accounts check-in failed{% endif %}{% endif %}",

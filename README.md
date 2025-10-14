@@ -190,8 +190,12 @@ jobs:
 {% endif %}
 ```
 
+#### 自定义样式示例
+
+下面展示一些不同渠道的自定义样式配置：
+
 <details>
-<summary>填入 `WECOM_NOTIF_CONFIG` 时的示例</summary>
+<summary>企业微信（`WECOM_NOTIF_CONFIG`）</summary>
 
 ```json
 {
