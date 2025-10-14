@@ -50,7 +50,7 @@ jobs:
         id: format-check
         if: always()
         continue-on-error: true
-        uses: chartboost/ruff-action@v1
+        uses: astral-sh/ruff-action@v3
         with:
           args: format --check
 
@@ -58,7 +58,7 @@ jobs:
         id: lint-check
         if: always()
         continue-on-error: true
-        uses: chartboost/ruff-action@v1
+        uses: astral-sh/ruff-action@v3
         with:
           args: check
 
