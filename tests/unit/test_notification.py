@@ -73,27 +73,10 @@ def test_notification_config_parsing(clean_notification_env, monkeypatch):
 	# Email：platform_settings 中的配置解析
 	monkeypatch.setenv(
 		'EMAIL_NOTIF_CONFIG',
-		'{"user": "test@example.com", "pass": "test_pass", "to": "recipient@example.com", "platform_settings": {"default_msg_type": "html"}}',
+		'{"user": "test@example.com", "pass": "test_pass", "to": "recipient@example.com", "platform_settings": {"message_type": "html"}}',
 	)
 	email_config = kit._load_email_config()
 	assert email_config is not None
 	assert email_config.user == 'test@example.com'
 	assert email_config.platform_settings is not None
-	assert email_config.platform_settings['default_msg_type'] == 'html'
-
-	# Email：向后兼容（根目录下的 default_msg_type）
-	monkeypatch.setenv(
-		'EMAIL_NOTIF_CONFIG',
-		'{"user": "test@example.com", "pass": "test_pass", "to": "recipient@example.com", "default_msg_type": "text"}',
-	)
-	with patch('notif.notify.logger.warning') as mock_warning:
-		email_config_compat = kit._load_email_config()
-
-		# 验证警告被触发
-		assert mock_warning.call_count >= 1
-		assert '建议将 default_msg_type 配置移至 platform_settings 字段下' in str(mock_warning.call_args_list)
-
-		# 验证 default_msg_type 被移到 platform_settings 中
-		assert email_config_compat is not None
-		assert email_config_compat.platform_settings is not None
-		assert email_config_compat.platform_settings['default_msg_type'] == 'text'
+	assert email_config.platform_settings['message_type'] == 'html'

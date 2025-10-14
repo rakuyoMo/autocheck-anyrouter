@@ -52,8 +52,8 @@ class EmailSender:
 			消息类型字符串（'plain' 或 'html'）
 		"""
 		# 1. 配置优先（如果配置了非空值）
-		if self.config.platform_settings and 'default_msg_type' in self.config.platform_settings:
-			msg_type = self.config.platform_settings['default_msg_type']
+		if self.config.platform_settings and 'message_type' in self.config.platform_settings:
+			msg_type = self.config.platform_settings['message_type']
 			# 如果配置值不为空，则使用配置
 			if msg_type:
 				return self._normalize_msg_type(msg_type)

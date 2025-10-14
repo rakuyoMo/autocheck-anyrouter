@@ -33,8 +33,8 @@ def test_normalize_msg_type(email_config):
 
 def test_determine_msg_type(email_config):
 	"""验证消息类型确定逻辑（配置优先 + 自动检测）。"""
-	# 1. 配置优先：配置了 default_msg_type 时，即使内容是纯文本也使用配置的类型
-	email_config.platform_settings = {'default_msg_type': 'html'}
+	# 1. 配置优先：配置了 message_type 时，即使内容是纯文本也使用配置的类型
+	email_config.platform_settings = {'message_type': 'html'}
 	sender = EmailSender(email_config)
 	assert sender._determine_msg_type('This is plain text') == 'html'
 
