@@ -49,3 +49,19 @@ docstring-code-format = true
 include = ["src", "tests"]
 extraPaths = ["src"]
 typeCheckingMode = "basic"
+
+[tool.coverage.run]
+relative_files = true
+source = ["src"]
+omit = ["tests/*", "**/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+  "@abstractmethod"
+]

@@ -232,17 +232,50 @@ mise install          # 安装 Python 3.11
 mise run setup        # 安装依赖 + Playwright 浏览器
 ```
 
-#### 常用开发命令
+#### 测试说明
+
+项目采用 pytest 作为测试框架。测试分为以下几类：
+
+- **单元测试** (`tests/unit/`)：测试独立模块的功能
+- **集成测试** (`tests/integration/`)：测试模块间的协作和端到端流程
+- **测试夹具** (`tests/fixtures/`)：提供可复用的测试数据和 Mock 对象
+- **测试工具** (`tests/tools/`)：数据构造器等辅助工具
+
+**常用测试命令**：
 
 ```bash
-# 运行测试
-mise run test        # 运行所有测试
-mise run test-cov    # 运行测试并生成覆盖率报告
+# 运行所有测试
+mise run test
 
-# 代码规范
-mise run fmt         # 代码格式化
-mise run lint        # 代码检查
-mise run fix         # 代码检查并自动修复
+# 运行测试并生成覆盖率报告
+mise run test-cov                    # 终端输出
+mise run test-cov --cov-report=html  # 生成 HTML 报告
+
+# 运行特定类型的测试
+mise exec -- python3 -m pytest tests/unit        # 仅运行单元测试
+mise exec -- python3 -m pytest tests/integration # 仅运行集成测试
+
+# 运行单个测试文件
+mise exec -- python3 -m pytest tests/unit/test_notification.py -v
+```
+
+**真实集成测试**：
+
+部分集成测试会实际调用通知平台接口（需要在 `.env.test` 文件中配置真实的通知平台信息）。默认情况下这些测试会被跳过，使用以下命令启用：
+
+```bash
+# 启用真实集成测试
+ENABLE_REAL_TEST=true
+mise run test
+```
+
+#### 代码规范
+
+```bash
+mise run fmt              # 代码格式化
+mise run fmt --check      # 检查代码格式（不修改文件）
+mise run lint             # 代码检查
+mise run lint --fix       # 代码检查并自动修复
 ```
 
 #### 添加新的通知平台
