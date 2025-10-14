@@ -209,6 +209,21 @@ jobs:
 
 </details>
 
+<details>
+<summary>钉钉（`DINGTALK_NOTIF_CONFIG`）</summary>
+
+```json
+{
+  "webhook": "https://oapi.dingtalk.com/robot/send?access_token=your_token",
+  "platform_settings": {
+    "message_type": "markdown",
+  },
+  "template": "{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}\\n\\n### **详细信息**\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}\\n{% if has_success %}\\n### 成功账号\\n{% for account in success_accounts %}- {{ account.name }}\\n 已用：${{ account.used }} | 剩余：${{ account.quota }}\\n{% endfor %}{% endif %}{% if has_failed %}\\n### 失败账号\\n{% for account in failed_accounts %}- {{ account.name }}\\n  错误：{{ account.error }}\\n{% endfor %}{% endif %}"
+}
+```
+
+</details>
+
 ## ⚠️ 注意事项
 
 - 部分账号签到失败的时候，Action 整体依然会展示成功，具体的错误将在日志与通知中体现
