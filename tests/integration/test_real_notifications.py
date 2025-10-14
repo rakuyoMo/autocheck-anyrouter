@@ -14,7 +14,7 @@ class TestRealNotifications:
 	async def test_real_notification_with_env_config(
 		self,
 		notification_kit: NotificationKit,
-		single_success_data: NotificationData,
+		multiple_mixed_data: NotificationData,
 	):
 		"""
 		真实接口测试 - 需要在 .env.test 文件中配置相应平台
@@ -29,7 +29,7 @@ class TestRealNotifications:
 		# 尝试发送通知（发送到所有已配置的平台）
 		await notification_kit.push_message(
 			title='集成测试消息',
-			content=single_success_data,
+			content=multiple_mixed_data,
 		)
 
 	@pytest.mark.asyncio
