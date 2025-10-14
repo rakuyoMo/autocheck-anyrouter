@@ -97,4 +97,3 @@ def test_notification_config_parsing(clean_notification_env, monkeypatch):
 		assert email_config_compat is not None
 		assert email_config_compat.platform_settings is not None
 		assert email_config_compat.platform_settings['default_msg_type'] == 'text'
-
