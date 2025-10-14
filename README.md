@@ -154,22 +154,24 @@ jobs:
 - `accounts`: 账号列表（name, status, quota, used, error）
 - `success_accounts`: 成功账号列表
 - `failed_accounts`: 失败账号列表
+- `has_success`: 有成功的账号
+- `has_failed`: 有失败的账号
 
 **重要说明**：
-
 由于 Stencil 模板引擎的限制，请注意以下事项：
 - ❌ 不支持比较操作符（`==`、`!=`、`<`、`>` 等）
 - ❌ 不支持在循环中使用条件判断，例如 `{% if account.status == "success" %}`
 
-推荐使用预过滤的便利变量（如 `success_accounts`、`failed_accounts`）来替代循环内的条件判断。
+推荐使用预过滤的便利变量（如 `has_success`、`has_failed`）来替代循环内的条件判断。
 
-**模板示例**（以企业微信支持的 markdown 语法为例）：
+**模板示例**：
 > 请注意，虽然本系统使用 json5 解析 json 字符串，但是为了避免消息平台方的问题，建议您在设置 `template` 字段时，**不要使用多行字符串**，而是将每个换行符替换为 `\\n`。
 
+以企业微信支持的 markdown 语法为例：
 ```stencil
 {% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}
 
-### **详细信息**
+### 详细信息
 - **执行时间**：{{ timestamp }}
 - **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}
 - **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}
@@ -178,34 +180,54 @@ jobs:
 ### 成功账号
 | 账号 | 已用（$） | 剩余（$） |
 | :----- | :---- | :---- |
-{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|
+{% for account in success_accounts %}
+|{{ account.name }}|{{ account.used }}|{{ account.quota }}|
 {% endfor %}
 {% endif %}
+
 {% if has_failed %}
 ### 失败账号
 | 账号 | 错误原因 |
 | :----- | :----- |
-{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|
+{% for account in failed_accounts %}
+|{{ account.name }}|{{ account.error }}|
 {% endfor %}
 {% endif %}
 ```
 
-#### 自定义样式示例
-
-下面展示一些不同渠道的自定义样式配置：
+下面展示一些不同平台的自定义样式配置：
 
 <details>
-<summary>企业微信（`WECOM_NOTIF_CONFIG`）</summary>
+<summary>企业微信</summary>
 
 ```json
 {
-    "webhook":"https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=your_key",
-    "platform_settings":{
-        "markdown_style": "markdown_v2"
-    },
-    "template":"{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}\\n\\n### **详细信息**\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}\\n\\n{% if has_success %}\\n### 成功账号\\n| 账号 | 已用（$） | 剩余（$） |\\n| :----- | :---- | :---- |\\n{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|\\n{% endfor %}{% endif %}{% if has_failed %}\\n### 失败账号\\n| 账号 | 错误原因 |\\n| :----- | :----- |\\n{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|\\n{% endfor %}{% endif %}"
+  "webhook":"https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=your_key", 
+  "platform_settings":{
+    "markdown_style": "markdown_v2"
+  }, 
+  "template":"{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}\\n\\n### 详细信息\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}{% if has_success %}\\n### 成功账号\\n| 账号 | 已用（$） | 剩余（$） |\\n| :----- | :---- | :---- |\\n{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|\\n{% endfor %}{% endif %}{% if has_failed %}\\n### 失败账号\\n| 账号 | 错误原因 |\\n| :----- | :----- |\\n{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|\\n{% endfor %}{% endif %}"
 }
 ```
+
+![WECOM_NOTIF_CONFIG](/assets/notif_example/wecom.png)
+
+</details>
+
+<details>
+<summary>钉钉</summary>
+
+```json
+{
+  "webhook": "https://oapi.dingtalk.com/robot/send?access_token=your_token", 
+  "platform_settings": {
+    "message_type": "markdown"
+  }, 
+  "template": "{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}\\n<br>\\n### 详细信息\\n\\n- **执行时间**：{{ timestamp }}\\n\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}\\n<br>\\n{% if has_success %}\\n\\n### 成功账号\\n\\n{% for account in success_accounts %}\\n\\n- {{ account.name }}\\n<br>已用：${{ account.used }} | 剩余：${{ account.quota }}{% endfor %}{% endif %}\\n<br>\\n{% if has_failed %}\\n\\n### 失败账号\\n\\n{% for account in failed_accounts %}\\n\\n- {{ account.name }}\\n<br>	错误：{{ account.error }}{% endfor %}{% endif %}"
+}
+```
+
+![DINGTALK_NOTIF_CONFIG](/assets/notif_example/dingtalk.png)
 
 </details>
 

@@ -24,12 +24,25 @@ class DingTalkSender:
 		Raises:
 			Exception: 当 HTTP 响应状态码不是 2xx 时抛出异常
 		"""
+		# 获取消息类型
+		platform_settings = self.config.platform_settings
+		message_type = platform_settings.get('message_type', '') if platform_settings else ''
+
+		# 根据消息类型构造消息体
+		if message_type == 'markdown':
+			msgtype = 'markdown'
+			message_body = {'title': title, 'text': content}
+		else:
+			# 其他情况都使用纯文本
+			msgtype = 'text'
+			message_body = {'content': f'{title}\n{content}'}
+
+		# 统一构造最终数据
 		data = {
-			'msgtype': 'text',
-			'text': {
-				'content': f'{title}\n{content}',
-			},
+			'msgtype': msgtype,
+			msgtype: message_body,
 		}
+
 		async with httpx.AsyncClient(timeout=30.0) as client:
 			response = await client.post(self.config.webhook, json=data)
 
