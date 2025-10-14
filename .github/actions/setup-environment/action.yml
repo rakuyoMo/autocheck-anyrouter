@@ -1,12 +1,9 @@
 name: '设置开发环境'
-description: '检出代码、安装 Mise 和依赖'
+description: '安装 Mise 和项目依赖'
 
 runs:
   using: 'composite'
   steps:
-    - name: 📥 检出代码
-      uses: actions/checkout@v4
-
     - name: 🔧 安装 Mise
       uses: jdx/mise-action@v3
       with:
