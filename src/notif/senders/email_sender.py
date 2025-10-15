@@ -3,6 +3,7 @@ import smtplib
 from email.mime.text import MIMEText
 
 from notif.models import EmailConfig
+from tools.logger import logger
 
 
 class EmailSender:
@@ -74,7 +75,7 @@ class EmailSender:
 		"""
 		# 向后兼容：'text' 转为 'plain'
 		if msg_type == 'text':
-			print("警告：消息类型 'text' 已弃用，请使用 'plain' 代替")
+			logger.warning("消息类型 'text' 已弃用，请使用 'plain' 代替")
 			return 'plain'
 		return msg_type
 

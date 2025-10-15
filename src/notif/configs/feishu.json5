@@ -9,8 +9,10 @@
     // 是否使用卡片模式（默认 true）
     "use_card": true,
 
-    // 卡片颜色主题：blue | green | red | orange | purple | grey（默认 blue）
-    "color_theme": "blue",
+    // 卡片颜色主题：卡片模式时生效
+    // 支持静态颜色（blue/green/red/orange/purple/grey）或 stencil 动态模板
+    // 留空则默认根据签到结果自动选择（全部成功=绿色，部分成功=橙色，全部失败=红色）
+    "color_theme": "",
   },
 
   // 【可选】自定义通知模板（为空则使用下方默认模板）

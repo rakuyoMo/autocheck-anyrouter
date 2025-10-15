@@ -1,6 +1,8 @@
 import httpx
+import stencil
 
 from notif.models import WebhookConfig
+from tools.logger import logger
 
 
 class FeishuSender:
@@ -28,7 +30,20 @@ class FeishuSender:
 		# 检查是否使用卡片模式（确保 platform_settings 不为 None）
 		platform_settings = self.config.platform_settings or {}
 		use_card = platform_settings.get('use_card', True)
-		color_theme = platform_settings.get('color_theme', 'blue')
+
+		# 动态渲染 color_theme（如果包含模板语法）
+		# 默认根据签到结果自动选择颜色（全部成功=绿色，部分成功=橙色，全部失败=红色）
+		default_color_theme = '{% if all_success %}green{% else %}{% if partial_success %}orange{% else %}red{% endif %}{% endif %}'
+		color_theme = platform_settings.get('color_theme') or default_color_theme
+		if context_data and ('{%' in color_theme or '{{' in color_theme):
+			try:
+				template_obj = stencil.Template(color_theme)
+				context = stencil.Context(context_data)
+				rendered = template_obj.render(context)
+				if rendered:
+					color_theme = rendered.strip()
+			except Exception as e:
+				logger.warning(f'渲染 color_theme 失败（{e}），使用原始值：{color_theme}')
 
 		if use_card:
 			data = {

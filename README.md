@@ -134,7 +134,10 @@ jobs:
 
 除了邮箱外，其余平台的配置字段均有两种用法：
 - 设置为纯字符串：代表 WebHook、Key 或者 Token，此时将使用 [默认配置](/src/notif/configs) 发送通知。
-- 设置为 JSON：高级配置，此时可设置模板样式（`template`），或者一些平台配置（`platform_settings`）。具体请查 [默认配置](/src/notif/configs) 和 [.env.test.example](.env.test.example) 中的配置示例。
+- 设置为 JSON：高级配置，此时可设置模板样式（`template`），或者一些平台配置（`platform_settings`）。具体可查看：
+  - [默认配置](/src/notif/configs)
+  - [.env.test.example](.env.test.example) 中的简单示例
+  - [自定义通知模板](#自定义通知模板)，展示自定义模板的使用方法，并展示了一些配置后的示例效果
 
 您可以在 `Environment secrets` 中添加相应的配置。如下图所示：
 ![环境变量配置示例](assets/github-env-notif-config-example.png)

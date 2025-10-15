@@ -11,6 +11,7 @@
 #### Add
 * 添加 CHANGELOG.md 项目变更日志文件。
 * 增加邮箱的配置示例。[#9](https://github.com/rakuyoMo/autocheck-anyrouter/pull/9)
+* 飞书通知支持动态卡片颜色，可根据签到结果自动调整卡片主题色（绿色/橙色/红色）。
 
 #### Change
 * 重命名邮箱的配置字段：`default_msg_type` > `message_type`。[#9](https://github.com/rakuyoMo/autocheck-anyrouter/pull/9)
