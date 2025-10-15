@@ -209,10 +209,10 @@ jobs:
 
 ```json
 {
-  "webhook":"https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=your_key", 
+  "webhook":"https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=your_key",
   "platform_settings":{
     "markdown_style": "markdown_v2"
-  }, 
+  },
   "template":"{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}\\n\\n### 详细信息\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}{% if has_success %}\\n### 成功账号\\n| 账号 | 已用（$） | 剩余（$） |\\n| :----- | :---- | :---- |\\n{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|\\n{% endfor %}{% endif %}{% if has_failed %}\\n### 失败账号\\n| 账号 | 错误原因 |\\n| :----- | :----- |\\n{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|\\n{% endfor %}{% endif %}"
 }
 ```
@@ -226,10 +226,10 @@ jobs:
 
 ```json
 {
-  "webhook": "https://oapi.dingtalk.com/robot/send?access_token=your_token", 
+  "webhook": "https://oapi.dingtalk.com/robot/send?access_token=your_token",
   "platform_settings": {
     "message_type": "markdown"
-  }, 
+  },
   "template": "{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}\\n<br>\\n### 详细信息\\n\\n- **执行时间**：{{ timestamp }}\\n\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}\\n<br>\\n{% if has_success %}\\n\\n### 成功账号\\n\\n{% for account in success_accounts %}\\n\\n- {{ account.name }}\\n<br>已用：${{ account.used }} | 剩余：${{ account.quota }}{% endfor %}{% endif %}\\n<br>\\n{% if has_failed %}\\n\\n### 失败账号\\n\\n{% for account in failed_accounts %}\\n\\n- {{ account.name }}\\n<br>	错误：{{ account.error }}{% endfor %}{% endif %}"
 }
 ```
@@ -243,11 +243,11 @@ jobs:
 
 ```json
 {
-  "webhook": "https://open.feishu.cn/open-apis/bot/v2/hook/00b512c4-28e1-4d81-9e6d-9e0696a52b03", 
+  "webhook": "https://open.feishu.cn/open-apis/bot/v2/hook/your_key",
   "platform_settings": {
     "message_type": "card_v2", 
-    "color_theme": ""
-  }, 
+    "color_theme": "" // 不设置以实现 “根据签到状态自动设置颜色”
+  },
   "template": "{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}\\n<br>\\n##### 详细信息\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}{% if has_success %}\\n\\n<br>\\n##### 成功账号\\n| 账号 | 已用（$） | 剩余（$） |\\n| :----- | :---- | :---- |\\n{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|\\n{% endfor %}{% endif %}{% if has_failed %}\\n<br>\\n##### 失败账号\\n| 账号 | 错误原因 |\\n| :----- | :----- |\\n{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|\\n{% endfor %}{% endif %}"
 }
 ```
@@ -261,11 +261,11 @@ jobs:
 
 ```json5
 {
-  "user": "your_email", 
-  "pass": "your_pass_word", 
-  "to": "your_email", 
-  "platform_settings": { 
-    "message_type": "", // 不设置以自动识别
+  "user": "your_email",
+  "pass": "your_pass_word",
+  "to": "your_email",
+  "platform_settings": {
+    "message_type": "", // 不设置以实现 “html 自动识别”
   },
   "template": "{% if all_success %}<h2>✅ 所有账号全部签到成功！</h2>{% else %}{% if partial_success %}<h2>⚠️ 部分账号签到成功</h2>{% else %}<h2>❌ 所有账号签到失败</h2>{% endif %}{% endif %}<h3>详细信息</h3><ul><li><strong>执行时间</strong>：{{ timestamp }}</li><li><strong>成功比例</strong>：{{ stats.success_count }}/{{ stats.total_count }}</li><li><strong>失败比例</strong>：{{ stats.failed_count }}/{{ stats.total_count }}</li></ul>{% if has_success %}<h3>成功账号</h3><table border=\"1\" cellpadding=\"5\" cellspacing=\"0\"><tr><th>账号</th><th>已用（$）</th><th>剩余（$）</th></tr>{% for account in success_accounts %}<tr><td>{{ account.name }}</td><td>{{ account.used }}</td><td>{{ account.quota }}</td></tr>{% endfor %}</table>{% endif %}{% if has_failed %}<h3>失败账号</h3><table border=\"1\" cellpadding=\"5\" cellspacing=\"0\"><tr><th>账号</th><th>错误原因</th></tr>{% for account in failed_accounts %}<tr><td>{{ account.name }}</td><td>{{ account.error }}</td></tr>{% endfor %}</table>{% endif %}"
 }
