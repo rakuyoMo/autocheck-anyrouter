@@ -134,10 +134,13 @@ jobs:
 
 除了邮箱外，其余平台的配置字段均有两种用法：
 - 设置为纯字符串：代表 WebHook、Key 或者 Token，此时将使用 [默认配置](/src/notif/configs) 发送通知。
-- 设置为 JSON：高级配置，此时可设置模板样式（`template`），或者一些平台配置（`platform_settings`）。具体请查 [默认配置](/src/notif/configs) 和 [.env.test.example](.env.test.example) 中的配置示例。
+- 设置为 JSON：高级配置，此时可设置模板样式（`template`），或者一些平台配置（`platform_settings`）。具体可查看：
+  - [默认配置](/src/notif/configs)
+  - [.env.test.example](.env.test.example) 中的简单示例
+  - [自定义通知模板](#自定义通知模板)，展示自定义模板的使用方法，并展示了一些配置后的示例效果
 
 您可以在 `Environment secrets` 中添加相应的配置。如下图所示：
-![环境变量配置示例](assets/github-env-notif-config-example.png)
+<img src="/assets/github-env-notif-config-example.png" alt="环境变量配置示例" width="500" style="max-width: 100%;" />
 
 通知默认只在以下情况时触发，且暂不支持通过环境变量控制触发时机：
 - 首次运行时
@@ -197,8 +200,12 @@ jobs:
 
 下面展示一些不同平台的自定义样式配置：
 
+> 小技巧：<br>
+> 1. 在部分平台可以使用 `\\n<br>\\n` 实现连换两行，即两行中间增加一个空行。<br>
+> 2. 对于 `\\n<br>\\n` 无效的平台，可以尝试使用 `\\n<br>`
+
 <details>
-<summary>企业微信</summary>
+<summary>企业微信（markdown 2.0）</summary>
 
 ```json
 {
@@ -210,7 +217,7 @@ jobs:
 }
 ```
 
-![WECOM_NOTIF_CONFIG](/assets/notif_example/wecom.png)
+<img src="/assets/notif_example/wecom.png" alt="WECOM_NOTIF_CONFIG" width="400" style="max-width: 100%;" />
 
 </details>
 
@@ -227,7 +234,25 @@ jobs:
 }
 ```
 
-![DINGTALK_NOTIF_CONFIG](/assets/notif_example/dingtalk.png)
+<img src="/assets/notif_example/dingtalk.png" alt="DINGTALK_NOTIF_CONFIG" width="400" style="max-width: 100%;" />
+
+</details>
+
+<details>
+<summary>飞书（卡片 json 2.0）</summary>
+
+```json
+{
+  "webhook": "https://open.feishu.cn/open-apis/bot/v2/hook/00b512c4-28e1-4d81-9e6d-9e0696a52b03", 
+  "platform_settings": {
+    "message_type": "card_v2", 
+    "color_theme": ""
+  }, 
+  "template": "{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}\\n<br>\\n##### 详细信息\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}{% if has_success %}\\n\\n<br>\\n##### 成功账号\\n| 账号 | 已用（$） | 剩余（$） |\\n| :----- | :---- | :---- |\\n{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|\\n{% endfor %}{% endif %}{% if has_failed %}\\n<br>\\n##### 失败账号\\n| 账号 | 错误原因 |\\n| :----- | :----- |\\n{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|\\n{% endfor %}{% endif %}"
+}
+```
+
+<img src="/assets/notif_example/feishu.png" alt="FEISHU_NOTIF_CONFIG" width="400" style="max-width: 100%;" />
 
 </details>
 
@@ -246,7 +271,7 @@ jobs:
 }
 ```
 
-![EMAIL_NOTIF_CONFIG](/assets/notif_example/email.png)
+<img src="/assets/notif_example/email.png" alt="EMAIL_NOTIF_CONFIG" width="400" style="max-width: 100%;" />
 
 </details>
 

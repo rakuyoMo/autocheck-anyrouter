@@ -3,6 +3,7 @@ import smtplib
 from email.mime.text import MIMEText
 
 from notif.models import EmailConfig
+from tools.logger import logger
 
 
 class EmailSender:
@@ -15,13 +16,14 @@ class EmailSender:
 		"""
 		self.config = config
 
-	async def send(self, title: str, content: str):
+	async def send(self, title: str, content: str, context_data: dict | None = None):
 		"""
 		发送邮件
 
 		Args:
 			title: 邮件标题
 			content: 邮件内容
+			context_data: 模板渲染的上下文数据
 		"""
 		# 智能确定消息类型：配置优先，没配置则自动检测
 		msg_type = self._determine_msg_type(content)
@@ -73,7 +75,7 @@ class EmailSender:
 		"""
 		# 向后兼容：'text' 转为 'plain'
 		if msg_type == 'text':
-			print("警告：消息类型 'text' 已弃用，请使用 'plain' 代替")
+			logger.warning("消息类型 'text' 已弃用，请使用 'plain' 代替")
 			return 'plain'
 		return msg_type
 

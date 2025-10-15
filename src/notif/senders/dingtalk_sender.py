@@ -13,13 +13,14 @@ class DingTalkSender:
 		"""
 		self.config = config
 
-	async def send(self, title: str, content: str):
+	async def send(self, title: str, content: str, context_data: dict | None = None):
 		"""
 		发送钉钉消息
 
 		Args:
 			title: 消息标题
 			content: 消息内容
+			context_data: 模板渲染的上下文数据
 
 		Raises:
 			Exception: 当 HTTP 响应状态码不是 2xx 时抛出异常

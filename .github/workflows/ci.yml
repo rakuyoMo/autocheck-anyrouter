@@ -35,7 +35,7 @@ jobs:
       - name: 🎨 Ruff 格式化检查
         uses: astral-sh/ruff-action@v3
         with:
-          args: format --check
+          args: format --check --preview
 
       - name: 🔍 Ruff 代码规范检查
         uses: astral-sh/ruff-action@v3

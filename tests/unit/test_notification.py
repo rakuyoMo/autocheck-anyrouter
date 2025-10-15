@@ -24,12 +24,10 @@ async def test_notificationkit_handler_skip_and_error(clean_notification_env):
 	"""验证处理器跳过与异常分支。"""
 	kit = NotificationKit()
 
-	data = create_notification_data(
-		[
-			create_account_result_data(name='账号 A', quota=25.0, used=5.0),
-			create_account_result_data(name='账号 B', status='failed', error='超时'),
-		]
-	)
+	data = create_notification_data([
+		create_account_result_data(name='账号 A', quota=25.0, used=5.0),
+		create_account_result_data(name='账号 B', status='failed', error='超时'),
+	])
 
 	skip_handler = NotificationHandler(name='跳过平台', config=None, send_func=AsyncMock())
 	error_config = MagicMock()
