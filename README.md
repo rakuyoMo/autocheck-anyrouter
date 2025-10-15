@@ -8,7 +8,7 @@
 [![codecov](https://codecov.io/gh/rakuyoMo/autocheck-anyrouter/branch/main/graph/badge.svg)](https://codecov.io/gh/rakuyoMo/autocheck-anyrouter)
 [![License](https://img.shields.io/badge/license-BSD--2--Clause-green.svg)](LICENSE)
 
-## 📋 功能特性
+## 功能特性
 
 ### 核心功能
 - [x] 单个/多账号自动签到
@@ -26,7 +26,7 @@
 - **私有仓库**：显示完整信息
 - **手动控制**：通过 `ACTIONS_RUNNER_DEBUG` 或 `SHOW_SENSITIVE_INFO` 环境变量控制强制展示
 
-## 🚀 使用方式
+## 使用方式
 
 ### 方式一：Fork 后定时签到
 
@@ -95,7 +95,7 @@ jobs:
           # ... 其他通知配置
 ```
 
-## ⚙️ 配置说明
+## 配置说明
 
 ### 账号配置
 
@@ -275,12 +275,12 @@ jobs:
 
 </details>
 
-## ⚠️ 注意事项
+## 注意事项
 
 - 部分账号签到失败的时候，Action 整体依然会展示成功，具体的错误将在日志与通知中体现
 - 遇到 401 错误时请重新获取 cookies，理论 1 个月失效，详见 [anyrouter-check-in #6](https://github.com/millylee/anyrouter-check-in/issues/6)
 
-## 🤝 贡献指南
+## 贡献指南
 
 欢迎提交 Issue 和 Pull Request！
 
@@ -376,11 +376,11 @@ mise run lint --fix       # 代码检查并自动修复
 
 </details>
 
-## 📄 许可证
+## 许可证
 
 本项目采用 BSD 2-Clause 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
-## 🙏 致谢
+## 致谢
 
 - [anyrouter-check-in](https://github.com/millylee/anyrouter-check-in) - 原始项目和灵感来源
 - [Playwright](https://playwright.dev/) - 强大的浏览器自动化工具
