@@ -58,6 +58,20 @@ async def test_feishu_dynamic_color_theme(feishu_config):
 		)
 		assert mock_client.post.call_args.kwargs['json']['card']['header']['template'] == 'red'
 
+		# 场景 4: v2.0 卡片 + 动态颜色
+		feishu_config.platform_settings['message_type'] = 'card_v2'
+		sender = FeishuSender(feishu_config)
+		await sender.send(
+			title='测试',
+			content='内容',
+			context_data={'all_success': True, 'partial_success': False},
+		)
+		json_data = mock_client.post.call_args.kwargs['json']
+		assert json_data['card']['schema'] == '2.0'
+		assert json_data['card']['header']['template'] == 'green'
+		assert 'body' in json_data['card']
+		assert 'elements' in json_data['card']['body']
+
 
 @pytest.mark.asyncio
 async def test_feishu_static_color_and_text_mode(feishu_config):

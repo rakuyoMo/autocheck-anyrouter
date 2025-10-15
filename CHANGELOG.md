@@ -12,6 +12,7 @@
 * 添加 CHANGELOG.md 项目变更日志文件。
 * 增加邮箱的配置示例。[#9](https://github.com/rakuyoMo/autocheck-anyrouter/pull/9)
 * 飞书通知支持动态卡片颜色，可根据签到结果自动调整卡片主题色（绿色/橙色/红色）。
+* 飞书通知新增支持 v2.0 卡片格式（`message_type: "card_v2"`）。
 
 #### Change
 * 统一飞书和钉钉的配置字段：将飞书的 `use_card` 改为 `message_type`，与钉钉保持一致。

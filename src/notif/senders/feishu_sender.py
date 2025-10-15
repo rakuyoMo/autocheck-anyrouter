@@ -45,15 +45,22 @@ class FeishuSender:
 			except Exception as e:
 				logger.warning(f'渲染 color_theme 失败（{e}），使用原始值：{color_theme}')
 
-		if message_type == 'card':
-			data = {
-				'msg_type': 'interactive',
-				'card': {
-					'elements': [{'tag': 'markdown', 'content': content, 'text_align': 'left'}],
-					'header': {'template': color_theme, 'title': {'content': title, 'tag': 'plain_text'}},
-				},
-			}
+		if message_type in ['card', 'card_v2']:
+			# 构造通用的 header 和 elements
+			header = {'template': color_theme, 'title': {'content': title, 'tag': 'plain_text'}}
+			elements = [{'tag': 'markdown', 'content': content, 'text_align': 'left'}]
+
+			# 根据版本构造卡片数据
+			if message_type == 'card_v2':
+				# v2.0 卡片：schema + header + body.elements
+				card_data = {'schema': '2.0', 'header': header, 'body': {'elements': elements}}
+			else:
+				# v1.0 卡片：header + elements
+				card_data = {'elements': elements, 'header': header}
+
+			data = {'msg_type': 'interactive', 'card': card_data}
 		else:
+			# 其他情况使用纯文本模式
 			data = {'msg_type': 'text', 'text': {'content': f'{title}\n{content}'}}
 
 		async with httpx.AsyncClient(timeout=30.0) as client:

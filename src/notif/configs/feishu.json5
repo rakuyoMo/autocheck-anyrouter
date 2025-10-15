@@ -6,10 +6,10 @@
 
   // 【可选】平台特定设置
   "platform_settings": {
-    // 消息类型：card（卡片模式）| 其他（纯文本）
+    // 消息类型：card（卡片 json 1.0）| card_v2（卡片 json 2.0）| 其他（纯文本）
     "message_type": "card",
 
-    // 卡片颜色主题：卡片模式时生效
+    // 卡片颜色主题：`message_type` 为 `card` 或 `card_v2` 时生效
     // 支持静态颜色（blue/green/red/orange/purple/grey）或 stencil 动态模板
     // 留空则默认根据签到结果自动选择（全部成功=绿色，部分成功=橙色，全部失败=红色）
     "color_theme": "",
