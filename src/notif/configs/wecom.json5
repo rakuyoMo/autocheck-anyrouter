@@ -5,9 +5,9 @@
 
   // 【可选】平台特定设置
   "platform_settings": {
-    // Markdown 样式：markdown | markdown_v2 | null（纯文本）
+    // 消息类型：markdown | markdown_v2 | null（纯文本）
     // 默认："markdown"
-    "markdown_style": "markdown",
+    "message_type": "markdown",
   },
 
   // 【可选】自定义通知模板（为空则使用下方默认模板）

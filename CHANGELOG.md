@@ -8,6 +8,9 @@
 
 ## [Unreleased]
 
+#### Change
+* 统一企业微信配置字段：将 `markdown_style` 改为 `message_type`，与其他通知平台保持一致。
+
 ---
 
 ## [1.2.0] (2025-10-15)

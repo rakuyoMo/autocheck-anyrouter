@@ -25,16 +25,16 @@ class WeComSender:
 		Raises:
 			Exception: 当 HTTP 响应状态码不是 2xx 时抛出异常
 		"""
-		# 检查 markdown_style 配置（确保 platform_settings 不为 None）
+		# 检查 message_type 配置（确保 platform_settings 不为 None）
 		platform_settings = self.config.platform_settings or {}
-		markdown_style = platform_settings.get('markdown_style', 'markdown')
+		message_type = platform_settings.get('message_type', 'markdown')
 
-		# 根据 markdown_style 选择消息格式
-		# 如果 markdown_style 包含 'markdown'，则直接作为消息类型；否则使用 text 模式
-		if markdown_style and 'markdown' in str(markdown_style):
+		# 根据 message_type 选择消息格式
+		# 如果 message_type 包含 'markdown'，则直接作为消息类型；否则使用 text 模式
+		if message_type and 'markdown' in str(message_type):
 			data = {
-				'msgtype': markdown_style,
-				markdown_style: {
+				'msgtype': message_type,
+				message_type: {
 					'content': f'**{title}**\n{content}',
 				},
 			}
