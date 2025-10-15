@@ -151,4 +151,3 @@ async def test_feishu_template_fallback():
 		)
 		json_data = mock_client.post.call_args.kwargs['json']
 		assert json_data['card']['header']['template'] == '{% if all_success %}green{% endif %}'
-

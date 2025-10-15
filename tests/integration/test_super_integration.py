@@ -78,12 +78,10 @@ class TestSuperIntegration:
 	@pytest.mark.asyncio
 	async def test_checkin_success_flow_with_summary(self, accounts_env, config_env_setter, tmp_path):
 		"""验证首次运行的成功流程会生成总结并发送通知。"""
-		accounts_env(
-			[
-				{'name': '测试账号 A', 'cookies': 'session=a', 'api_user': 'user_a'},
-				{'name': '测试账号 B', 'cookies': 'session=b', 'api_user': 'user_b'},
-			]
-		)
+		accounts_env([
+			{'name': '测试账号 A', 'cookies': 'session=a', 'api_user': 'user_a'},
+			{'name': '测试账号 B', 'cookies': 'session=b', 'api_user': 'user_b'},
+		])
 
 		config_env_setter('dingtalk', 'https://mock.dingtalk')
 		config_env_setter(
@@ -197,13 +195,11 @@ class TestSuperIntegration:
 	@pytest.mark.asyncio
 	async def test_checkin_with_http_errors(self, accounts_env, config_env_setter, tmp_path):
 		"""验证部分失败及 HTTP 异常路径。"""
-		accounts_env(
-			[
-				{'name': '成功账号', 'cookies': 'session=ok', 'api_user': 'user_ok'},
-				{'name': '401 账号', 'cookies': 'session=401', 'api_user': 'user_401'},
-				{'name': '500 账号', 'cookies': 'session=500', 'api_user': 'user_500'},
-			]
-		)
+		accounts_env([
+			{'name': '成功账号', 'cookies': 'session=ok', 'api_user': 'user_ok'},
+			{'name': '401 账号', 'cookies': 'session=401', 'api_user': 'user_401'},
+			{'name': '500 账号', 'cookies': 'session=500', 'api_user': 'user_500'},
+		])
 		config_env_setter('wecom', 'https://mock.wecom')
 		service = CheckinService()
 		service.balance_hash_file = tmp_path / 'partial_hash.txt'
@@ -241,12 +237,10 @@ class TestSuperIntegration:
 		assert exc_info.value.code == 0
 		assert call_state['get'] >= 3
 
-		accounts_env(
-			[
-				{'name': '超时账号', 'cookies': 'session=timeout', 'api_user': 'user_timeout'},
-				{'name': 'JSON 错误账号', 'cookies': 'session=json', 'api_user': 'user_json'},
-			]
-		)
+		accounts_env([
+			{'name': '超时账号', 'cookies': 'session=timeout', 'api_user': 'user_timeout'},
+			{'name': 'JSON 错误账号', 'cookies': 'session=json', 'api_user': 'user_json'},
+		])
 		service_timeout = CheckinService()
 		service_timeout.balance_hash_file = tmp_path / 'timeout_hash.txt'
 
@@ -277,13 +271,11 @@ class TestSuperIntegration:
 
 		assert exc_info.value.code == 1
 
-		accounts_env(
-			[
-				{'name': '非 200', 'cookies': 'session=non200', 'api_user': 'user1'},
-				{'name': '纯文本成功', 'cookies': 'session=text', 'api_user': 'user2'},
-				{'name': '异常账号', 'cookies': 'session=exception', 'api_user': 'user3'},
-			]
-		)
+		accounts_env([
+			{'name': '非 200', 'cookies': 'session=non200', 'api_user': 'user1'},
+			{'name': '纯文本成功', 'cookies': 'session=text', 'api_user': 'user2'},
+			{'name': '异常账号', 'cookies': 'session=exception', 'api_user': 'user3'},
+		])
 		service_checkin = CheckinService()
 		service_checkin.balance_hash_file = tmp_path / 'checkin_hash.txt'
 
@@ -345,11 +337,9 @@ class TestSuperIntegration:
 	@pytest.mark.asyncio
 	async def test_privacy_mode_and_account_naming(self, accounts_env, tmp_path):
 		"""验证 WAF 异常与隐私模式。"""
-		accounts_env(
-			[
-				{'name': 'WAF 账号', 'cookies': 'session=waf', 'api_user': 'user_waf'},
-			]
-		)
+		accounts_env([
+			{'name': 'WAF 账号', 'cookies': 'session=waf', 'api_user': 'user_waf'},
+		])
 		service = CheckinService()
 		service.balance_hash_file = tmp_path / 'waf_hash.txt'
 
@@ -363,12 +353,10 @@ class TestSuperIntegration:
 
 		assert exc_info.value.code == 1
 
-		accounts_env(
-			[
-				{'name': '自定义名称', 'cookies': 'session=ok', 'api_user': 'user_ok'},
-				{'cookies': 'session=fail', 'api_user': 'user_fail'},
-			]
-		)
+		accounts_env([
+			{'name': '自定义名称', 'cookies': 'session=ok', 'api_user': 'user_ok'},
+			{'cookies': 'session=fail', 'api_user': 'user_fail'},
+		])
 		summary_public = tmp_path / 'summary_public.md'
 		service_public = CheckinService()
 		service_public.balance_hash_file = tmp_path / 'hash_public.txt'
@@ -468,12 +456,10 @@ class TestSuperIntegration:
 			},
 		)
 
-		notif_data = create_notification_data(
-			[
-				create_account_result(name='成功账号', quota=25.0, used=5.0),
-				create_account_result(name='失败账号', status='failed', error='连接超时'),
-			]
-		)
+		notif_data = create_notification_data([
+			create_account_result(name='成功账号', quota=25.0, used=5.0),
+			create_account_result(name='失败账号', status='failed', error='连接超时'),
+		])
 
 		kit = NotificationKit()
 
@@ -497,11 +483,9 @@ class TestSuperIntegration:
 	@pytest.mark.asyncio
 	async def test_checkin_exception_sends_notification(self, accounts_env, tmp_path):
 		"""验证账号执行异常时的通知路径。"""
-		accounts_env(
-			[
-				{'name': '异常账号', 'cookies': 'session=error', 'api_user': 'user_error'},
-			]
-		)
+		accounts_env([
+			{'name': '异常账号', 'cookies': 'session=error', 'api_user': 'user_error'},
+		])
 		service = CheckinService()
 		service.balance_hash_file = tmp_path / 'exception_hash.txt'
 
@@ -517,32 +501,26 @@ class TestSuperIntegration:
 
 	def test_notification_data_computed_properties(self, create_account_result, create_notification_data):
 		"""验证 NotificationData 的便利属性。"""
-		all_success = create_notification_data(
-			[
-				create_account_result(name='账号 1', quota=25.0, used=5.0),
-				create_account_result(name='账号 2', quota=30.0, used=10.0),
-			]
-		)
+		all_success = create_notification_data([
+			create_account_result(name='账号 1', quota=25.0, used=5.0),
+			create_account_result(name='账号 2', quota=30.0, used=10.0),
+		])
 		assert all_success.all_success is True
 		assert all_success.all_failed is False
 		assert all_success.partial_success is False
 
-		all_failed = create_notification_data(
-			[
-				create_account_result(name='账号 1', status='failed', error='错误 1'),
-				create_account_result(name='账号 2', status='failed', error='错误 2'),
-			]
-		)
+		all_failed = create_notification_data([
+			create_account_result(name='账号 1', status='failed', error='错误 1'),
+			create_account_result(name='账号 2', status='failed', error='错误 2'),
+		])
 		assert all_failed.all_success is False
 		assert all_failed.all_failed is True
 		assert all_failed.partial_success is False
 
-		mixed = create_notification_data(
-			[
-				create_account_result(name='账号 1', quota=25.0, used=5.0),
-				create_account_result(name='账号 2', status='failed', error='错误'),
-			]
-		)
+		mixed = create_notification_data([
+			create_account_result(name='账号 1', quota=25.0, used=5.0),
+			create_account_result(name='账号 2', status='failed', error='错误'),
+		])
 		assert mixed.all_success is False
 		assert mixed.all_failed is False
 		assert mixed.partial_success is True

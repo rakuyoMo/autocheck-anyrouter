@@ -33,7 +33,9 @@ class FeishuSender:
 
 		# 动态渲染 color_theme（如果包含模板语法）
 		# 默认根据签到结果自动选择颜色（全部成功=绿色，部分成功=橙色，全部失败=红色）
-		default_color_theme = '{% if all_success %}green{% else %}{% if partial_success %}orange{% else %}red{% endif %}{% endif %}'
+		default_color_theme = (
+			'{% if all_success %}green{% else %}{% if partial_success %}orange{% else %}red{% endif %}{% endif %}'
+		)
 		color_theme = platform_settings.get('color_theme') or default_color_theme
 		if context_data and ('{%' in color_theme or '{{' in color_theme):
 			try:
