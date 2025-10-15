@@ -207,7 +207,7 @@ jobs:
 <details>
 <summary>企业微信（markdown 2.0）</summary>
 
-```json
+```jsonc
 {
   "webhook":"https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=your_key",
   "platform_settings":{
@@ -224,7 +224,7 @@ jobs:
 <details>
 <summary>钉钉</summary>
 
-```json
+```jsonc
 {
   "webhook": "https://oapi.dingtalk.com/robot/send?access_token=your_token",
   "platform_settings": {
@@ -241,7 +241,7 @@ jobs:
 <details>
 <summary>飞书（卡片 json 2.0）</summary>
 
-```json
+```jsonc
 {
   "webhook": "https://open.feishu.cn/open-apis/bot/v2/hook/your_key",
   "platform_settings": {
@@ -259,13 +259,13 @@ jobs:
 <details>
 <summary>Gmail 邮箱</summary>
 
-```json5
+```jsonc
 {
   "user": "your_email",
   "pass": "your_pass_word",
   "to": "your_email",
   "platform_settings": {
-    "message_type": "", // 不设置以实现 “html 自动识别”
+    "message_type": "" // 不设置以实现 “html 自动识别”
   },
   "template": "{% if all_success %}<h2>✅ 所有账号全部签到成功！</h2>{% else %}{% if partial_success %}<h2>⚠️ 部分账号签到成功</h2>{% else %}<h2>❌ 所有账号签到失败</h2>{% endif %}{% endif %}<h3>详细信息</h3><ul><li><strong>执行时间</strong>：{{ timestamp }}</li><li><strong>成功比例</strong>：{{ stats.success_count }}/{{ stats.total_count }}</li><li><strong>失败比例</strong>：{{ stats.failed_count }}/{{ stats.total_count }}</li></ul>{% if has_success %}<h3>成功账号</h3><table border=\"1\" cellpadding=\"5\" cellspacing=\"0\"><tr><th>账号</th><th>已用（$）</th><th>剩余（$）</th></tr>{% for account in success_accounts %}<tr><td>{{ account.name }}</td><td>{{ account.used }}</td><td>{{ account.quota }}</td></tr>{% endfor %}</table>{% endif %}{% if has_failed %}<h3>失败账号</h3><table border=\"1\" cellpadding=\"5\" cellspacing=\"0\"><tr><th>账号</th><th>错误原因</th></tr>{% for account in failed_accounts %}<tr><td>{{ account.name }}</td><td>{{ account.error }}</td></tr>{% endfor %}</table>{% endif %}"
 }
