@@ -18,6 +18,7 @@
 * 统一飞书和钉钉的配置字段：将飞书的 `use_card` 改为 `message_type`，与钉钉保持一致。
 * 重命名邮箱的配置字段：`default_msg_type` > `message_type`。[#9](https://github.com/rakuyoMo/autocheck-anyrouter/pull/9)
 * 优化邮件消息类型检测逻辑，支持空配置时自动识别。[#9](https://github.com/rakuyoMo/autocheck-anyrouter/pull/9)
+* 更新 ruff 版本至 0.14.0。
 * 默认折叠项目架构说明。
 
 ---
