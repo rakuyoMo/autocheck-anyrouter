@@ -243,7 +243,7 @@ jobs:
 
 ```json
 {
-  "webhook": "https://open.feishu.cn/open-apis/bot/v2/hook/00b512c4-28e1-4d81-9e6d-9e0696a52b03", 
+  "webhook": "https://open.feishu.cn/open-apis/bot/v2/hook/your_key",
   "platform_settings": {
     "message_type": "card_v2", 
     "color_theme": ""
