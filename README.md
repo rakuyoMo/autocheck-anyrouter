@@ -140,7 +140,7 @@ jobs:
   - [自定义通知模板](#自定义通知模板)，展示自定义模板的使用方法，并展示了一些配置后的示例效果
 
 您可以在 `Environment secrets` 中添加相应的配置。如下图所示：
-![环境变量配置示例](assets/github-env-notif-config-example.png)
+<img src="/assets/github-env-notif-config-example.png" alt="环境变量配置示例" width="500" style="max-width: 100%;" />
 
 通知默认只在以下情况时触发，且暂不支持通过环境变量控制触发时机：
 - 首次运行时
