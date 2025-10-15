@@ -171,7 +171,7 @@ jobs:
 > 请注意，虽然本系统使用 json5 解析 json 字符串，但是为了避免消息平台方的问题，建议您在设置 `template` 字段时，**不要使用多行字符串**，而是将每个换行符替换为 `\\n`。
 
 以企业微信支持的 markdown 语法为例：
-```stencil
+```jinja2
 {% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}
 
 ### 详细信息
@@ -202,7 +202,7 @@ jobs:
 
 > 小技巧：<br>
 > 1. 在部分平台可以使用 `\\n<br>\\n` 实现连换两行，即两行中间增加一个空行。<br>
-> 2. 对于 `\\n<br>\\n` 无效的平台，可以尝试使用 `\\n<br>`
+> 2. 对于 `\\n\\n` 无效的平台，可以尝试使用 `\\n<br>`
 
 <details>
 <summary>企业微信（markdown 2.0）</summary>
@@ -211,7 +211,7 @@ jobs:
 {
   "webhook":"https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=your_key",
   "platform_settings":{
-    "markdown_style": "markdown_v2"
+    "message_type": "markdown_v2"
   },
   "template":"{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}\\n\\n### 详细信息\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}{% if has_success %}\\n### 成功账号\\n| 账号 | 已用（$） | 剩余（$） |\\n| :----- | :---- | :---- |\\n{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|\\n{% endfor %}{% endif %}{% if has_failed %}\\n### 失败账号\\n| 账号 | 错误原因 |\\n| :----- | :----- |\\n{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|\\n{% endfor %}{% endif %}"
 }
