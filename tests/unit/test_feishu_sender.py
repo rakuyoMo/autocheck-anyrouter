@@ -11,7 +11,7 @@ def feishu_config():
 	"""创建基础的 FeishuSender 配置用于测试"""
 	return WebhookConfig(
 		webhook='https://open.feishu.cn/open-apis/bot/v2/hook/test_token',
-		platform_settings={'use_card': True, 'color_theme': 'blue'},
+		platform_settings={'message_type': 'card', 'color_theme': 'blue'},
 	)
 
 
@@ -84,7 +84,7 @@ async def test_feishu_static_color_and_text_mode(feishu_config):
 		assert json_data['card']['header']['template'] == 'blue'
 
 		# 测试文本模式
-		feishu_config.platform_settings['use_card'] = False
+		feishu_config.platform_settings['message_type'] = 'text'
 		sender = FeishuSender(feishu_config)
 		await sender.send(
 			title='测试标题',
@@ -101,7 +101,7 @@ async def test_feishu_template_fallback():
 	"""验证模板渲染失败时的降级行为（返回原始值）"""
 	config = WebhookConfig(
 		webhook='https://test.com',
-		platform_settings={'use_card': True, 'color_theme': '{% if invalid %}'},
+		platform_settings={'message_type': 'card', 'color_theme': '{% if invalid %}'},
 	)
 	sender = FeishuSender(config)
 
@@ -127,7 +127,7 @@ async def test_feishu_template_fallback():
 		# 无 context_data 时，即使是有效模板也返回原始值
 		config2 = WebhookConfig(
 			webhook='https://test.com',
-			platform_settings={'use_card': True, 'color_theme': '{% if all_success %}green{% endif %}'},
+			platform_settings={'message_type': 'card', 'color_theme': '{% if all_success %}green{% endif %}'},
 		)
 		sender2 = FeishuSender(config2)
 		await sender2.send(

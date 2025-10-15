@@ -6,8 +6,8 @@
 
   // 【可选】平台特定设置
   "platform_settings": {
-    // 是否使用卡片模式（默认 true）
-    "use_card": true,
+    // 消息类型：card（卡片模式）| 其他（纯文本）
+    "message_type": "card",
 
     // 卡片颜色主题：卡片模式时生效
     // 支持静态颜色（blue/green/red/orange/purple/grey）或 stencil 动态模板

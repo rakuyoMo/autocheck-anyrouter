@@ -27,9 +27,9 @@ class FeishuSender:
 		Raises:
 			Exception: 当 HTTP 响应状态码不是 2xx 时抛出异常
 		"""
-		# 检查是否使用卡片模式（确保 platform_settings 不为 None）
+		# 获取消息类型（确保 platform_settings 不为 None）
 		platform_settings = self.config.platform_settings or {}
-		use_card = platform_settings.get('use_card', True)
+		message_type = platform_settings.get('message_type', 'card')
 
 		# 动态渲染 color_theme（如果包含模板语法）
 		# 默认根据签到结果自动选择颜色（全部成功=绿色，部分成功=橙色，全部失败=红色）
@@ -45,7 +45,7 @@ class FeishuSender:
 			except Exception as e:
 				logger.warning(f'渲染 color_theme 失败（{e}），使用原始值：{color_theme}')
 
-		if use_card:
+		if message_type == 'card':
 			data = {
 				'msg_type': 'interactive',
 				'card': {
