@@ -15,13 +15,14 @@ class EmailSender:
 		"""
 		self.config = config
 
-	async def send(self, title: str, content: str):
+	async def send(self, title: str, content: str, context_data: dict | None = None):
 		"""
 		发送邮件
 
 		Args:
 			title: 邮件标题
 			content: 邮件内容
+			context_data: 模板渲染的上下文数据
 		"""
 		# 智能确定消息类型：配置优先，没配置则自动检测
 		msg_type = self._determine_msg_type(content)

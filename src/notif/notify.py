@@ -53,6 +53,11 @@ class NotificationKit:
 			logger.warning('没有可用的通知处理器，跳过通知提醒')
 			return
 
+		# 构建 context_data（如果 content 是 NotificationData）
+		context_data = None
+		if isinstance(content, NotificationData):
+			context_data = self._build_context_data(content)
+
 		for handler in self._handlers:
 			# 检查配置是否存在
 			if not handler.is_available():
@@ -64,12 +69,14 @@ class NotificationKit:
 				rendered_content = self._render_content(
 					config=handler.config,
 					content=content,
+					context_data=context_data,
 				)
 
 				# 发送消息
 				await handler.send_func(
 					title=title,
 					content=rendered_content,
+					context_data=context_data,
 				)
 
 				logger.success('消息推送成功！', handler.name)
@@ -158,27 +165,41 @@ class NotificationKit:
 
 		return handlers
 
-	def _render_content(self, config: Any, content: Union[str, NotificationData]) -> str:
+	def _render_content(
+		self,
+		config: Any,
+		content: Union[str, NotificationData],
+		context_data: dict | None,
+	) -> str:
 		"""
 		渲染消息内容（处理模板）
 
 		Args:
 			config: 配置对象（需要有 template 属性）
 			content: 原始内容
+			context_data: 模板渲染的上下文数据
 
 		Returns:
 			渲染后的内容
 		"""
-		if isinstance(content, NotificationData) and config.template:
+		# 如果有上下文数据且配置了模板，则渲染模板；否则返回字符串
+		if context_data and config.template:
 			return self._render_template(
 				template=config.template,
-				data=content,
+				context_data=context_data,
 			)
 		return str(content)
 
-	def _render_template(self, template: str, data: NotificationData) -> str:
+	def _render_template(self, template: str, context_data: dict) -> str:
 		"""
 		渲染模板
+
+		Args:
+			template: 模板字符串
+			context_data: 上下文数据
+
+		Returns:
+			渲染后的内容
 
 		注意: Stencil 模板引擎有以下限制:
 		1. 不支持比较操作符 (==, !=, <, > 等)
@@ -186,26 +207,6 @@ class NotificationKit:
 		因此我们提供分组的账号列表和对象形式的数据
 		"""
 		try:
-			# 分组账号（因为 Stencil 不支持 == 比较）
-			success_accounts = [acc for acc in data.accounts if acc.status == 'success']
-			failed_accounts = [acc for acc in data.accounts if acc.status != 'success']
-
-			context_data = {
-				'timestamp': data.timestamp,
-				'stats': data.stats,  # dataclass 对象，支持 {{ stats.success_count }}
-				# 提供分组的账号列表（AccountResult 对象）
-				'success_accounts': success_accounts,
-				'failed_accounts': failed_accounts,
-				# 保留完整列表供需要的模板使用
-				'accounts': data.accounts,  # AccountResult 对象列表
-				# 便利变量：布尔标志
-				'has_success': len(success_accounts) > 0,
-				'has_failed': len(failed_accounts) > 0,
-				'all_success': len(failed_accounts) == 0,
-				'all_failed': len(success_accounts) == 0,
-				'partial_success': len(success_accounts) > 0 and len(failed_accounts) > 0,
-			}
-
 			# 解析并渲染模板
 			template_obj = stencil.Template(template)
 			context = stencil.Context(context_data)
@@ -226,10 +227,43 @@ class NotificationKit:
 			)
 
 			# 如果模板渲染失败，返回简单格式
-			return f'{data.timestamp}\\n\\n' + '\\n\\n'.join([
+			timestamp = context_data.get('timestamp', '')
+			accounts = context_data.get('accounts', [])
+
+			return f'{timestamp}\\n\\n' + '\\n\\n'.join([
 				f'[{"成功" if account.status == "success" else "失败"}] {account.name}'
-				for account in data.accounts
+				for account in accounts
 			])  # fmt: skip
+
+	def _build_context_data(self, data: NotificationData) -> dict:
+		"""
+		构建模板渲染的上下文数据
+
+		Args:
+			data: 通知数据
+
+		Returns:
+			上下文数据字典
+		"""
+		# 分组账号（因为 Stencil 不支持 == 比较）
+		success_accounts = [acc for acc in data.accounts if acc.status == 'success']
+		failed_accounts = [acc for acc in data.accounts if acc.status != 'success']
+
+		return {
+			'timestamp': data.timestamp,
+			'stats': data.stats,  # dataclass 对象，支持 {{ stats.success_count }}
+			# 提供分组的账号列表（AccountResult 对象）
+			'success_accounts': success_accounts,
+			'failed_accounts': failed_accounts,
+			# 保留完整列表供需要的模板使用
+			'accounts': data.accounts,  # AccountResult 对象列表
+			# 便利变量：布尔标志
+			'has_success': len(success_accounts) > 0,
+			'has_failed': len(failed_accounts) > 0,
+			'all_success': len(failed_accounts) == 0,
+			'all_failed': len(success_accounts) == 0,
+			'partial_success': len(success_accounts) > 0 and len(failed_accounts) > 0,
+		}
 
 	def _load_default_config(self, platform: str) -> dict[str, Any] | None:
 		"""加载默认配置文件"""
