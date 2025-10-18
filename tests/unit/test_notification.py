@@ -114,3 +114,49 @@ def test_notification_config_parsing(clean_notification_env, monkeypatch):
 	assert template_empty_title is not None
 	assert template_empty_title.title == ''
 	assert template_empty_title.content == '内容'
+
+
+def test_build_context_data_with_stats_mismatch(clean_notification_env):
+	"""
+	验证 _build_context_data 使用 stats 而不是 accounts 列表来判断状态。
+
+	这是一个回归测试，用于验证修复 #18 的问题：
+	当部分账号成功但无余额变化时，accounts 列表中只包含失败的账号，
+	但 stats 显示有成功账号。此时状态判断应该基于 stats 而不是 accounts。
+	"""
+	from core.models import NotificationData, NotificationStats
+
+	kit = NotificationKit()
+
+	# 场景：3 个账号，2 个成功 1 个失败，但 accounts 列表中只有失败的账号
+	# 这模拟了真实场景：成功账号在无余额变化时不会被添加到 accounts 列表
+	stats = NotificationStats(
+		success_count=2,  # 实际有 2 个账号成功
+		failed_count=1,
+		total_count=3,
+	)
+
+	# accounts 列表中只有失败的账号（成功的没有被添加）
+	accounts = [
+		create_account_result_data(name='账号 C', status='failed', error='超时'),
+	]
+
+	data = NotificationData(
+		accounts=accounts,
+		stats=stats,
+		timestamp='2024-01-01 12:00:00',
+	)
+
+	# 调用 _build_context_data
+	context = kit._build_context_data(data)
+
+	# 验证状态标志基于 stats 而不是 accounts 列表
+	assert context['has_success'] is True, '应该基于 stats.success_count > 0 判断'
+	assert context['has_failed'] is True, '应该基于 stats.failed_count > 0 判断'
+	assert context['all_success'] is False, '应该基于 stats.failed_count == 0 判断'
+	assert context['all_failed'] is False, '应该基于 stats.success_count == 0 判断（修复前会错误判断为 True）'
+	assert context['partial_success'] is True, '应该基于 stats 判断为部分成功'
+
+	# 验证分组的账号列表（这些基于 accounts 列表）
+	assert len(context['success_accounts']) == 0, 'accounts 列表中没有成功的账号'
+	assert len(context['failed_accounts']) == 1, 'accounts 列表中只有 1 个失败账号'
