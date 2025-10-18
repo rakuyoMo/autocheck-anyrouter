@@ -13,12 +13,12 @@ class PushPlusSender:
 		"""
 		self.config = config
 
-	async def send(self, title: str, content: str, context_data: dict | None = None):
+	async def send(self, title: str | None, content: str, context_data: dict | None = None):
 		"""
 		发送 PushPlus 消息
 
 		Args:
-			title: 消息标题
+			title: 消息标题，None 或空字符串时不传 title 字段
 			content: 消息内容
 			context_data: 模板渲染的上下文数据
 
@@ -27,10 +27,13 @@ class PushPlusSender:
 		"""
 		data = {
 			'token': self.config.token,
-			'title': title,
 			'content': content,
 			'template': 'html',
 		}
+
+		if title:
+			data['title'] = title
+
 		async with httpx.AsyncClient(timeout=30.0) as client:
 			response = await client.post('http://www.pushplus.plus/send', json=data)
 

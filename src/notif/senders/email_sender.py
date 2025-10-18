@@ -16,15 +16,22 @@ class EmailSender:
 		"""
 		self.config = config
 
-	async def send(self, title: str, content: str, context_data: dict | None = None):
+	async def send(self, title: str | None, content: str, context_data: dict | None = None):
 		"""
 		发送邮件
 
 		Args:
-			title: 邮件标题
+			title: 邮件标题，邮件要求必须提供非空标题
 			content: 邮件内容
 			context_data: 模板渲染的上下文数据
+
+		Raises:
+			ValueError: 当 title 为 None 或空字符串时抛出
 		"""
+		# 邮件要求 Subject 必须提供
+		if not title:
+			raise ValueError('邮件推送需要提供非空的 title 参数，请在通知配置的 template.title 中设置标题')
+
 		# 智能确定消息类型：配置优先，没配置则自动检测
 		msg_type = self._determine_msg_type(content)
 
@@ -58,26 +65,14 @@ class EmailSender:
 			msg_type = self.config.platform_settings['message_type']
 			# 如果配置值不为空，则使用配置
 			if msg_type:
-				return self._normalize_msg_type(msg_type)
+				# 只接受 plain 和 html
+				if msg_type not in ['plain', 'html']:
+					logger.warning(f"无效的消息类型 '{msg_type}'，降级为 'plain'")
+					return 'plain'
+				return msg_type
 
 		# 2. 自动检测（配置为空或未配置时）
 		return self._detect_msg_type(content)
-
-	def _normalize_msg_type(self, msg_type: str) -> str:
-		"""
-		规范化消息类型，向后兼容
-
-		Args:
-			msg_type: 原始消息类型
-
-		Returns:
-			规范化后的消息类型（'plain' 或 'html'）
-		"""
-		# 向后兼容：'text' 转为 'plain'
-		if msg_type == 'text':
-			logger.warning("消息类型 'text' 已弃用，请使用 'plain' 代替")
-			return 'plain'
-		return msg_type
 
 	def _detect_msg_type(self, content: str) -> str:
 		"""

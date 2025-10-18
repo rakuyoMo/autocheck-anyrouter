@@ -15,12 +15,12 @@ class FeishuSender:
 		"""
 		self.config = config
 
-	async def send(self, title: str, content: str, context_data: dict | None = None):
+	async def send(self, title: str | None, content: str, context_data: dict | None = None):
 		"""
 		发送飞书消息
 
 		Args:
-			title: 消息标题
+			title: 消息标题，为 None 或空字符串时不展示标题
 			content: 消息内容
 			context_data: 模板渲染的上下文数据
 
@@ -29,7 +29,11 @@ class FeishuSender:
 		"""
 		# 获取消息类型（确保 platform_settings 不为 None）
 		platform_settings = self.config.platform_settings or {}
-		message_type = platform_settings.get('message_type', 'card')
+		configured_type = platform_settings.get('message_type')
+
+		# 确定消息类型：只接受 card 和 card_v2，其他情况使用 text
+		is_card = configured_type in ['card', 'card_v2']
+		message_type = configured_type if is_card else 'text'
 
 		# 动态渲染 color_theme（如果包含模板语法）
 		# 默认根据签到结果自动选择颜色（全部成功=绿色，部分成功=橙色，全部失败=红色）
@@ -47,23 +51,49 @@ class FeishuSender:
 			except Exception as e:
 				logger.warning(f'渲染 color_theme 失败（{e}），使用原始值：{color_theme}')
 
-		if message_type in ['card', 'card_v2']:
-			# 构造通用的 header 和 elements
-			header = {'template': color_theme, 'title': {'content': title, 'tag': 'plain_text'}}
-			elements = [{'tag': 'markdown', 'content': content, 'text_align': 'left'}]
-
+		# 构建请求数据
+		if is_card:
+			# 构造卡片内容元素
+			elements = {
+				'elements': [
+					{
+						'tag': 'markdown',
+						'content': content,
+						'text_align': 'left',
+					},
+				],
+			}
 			# 根据版本构造卡片数据
+			card_data: dict
 			if message_type == 'card_v2':
-				# v2.0 卡片：schema + header + body.elements
-				card_data = {'schema': '2.0', 'header': header, 'body': {'elements': elements}}
+				card_data = {
+					'schema': '2.0',
+					'body': elements,
+				}
 			else:
-				# v1.0 卡片：header + elements
-				card_data = {'elements': elements, 'header': header}
+				card_data = elements
 
-			data = {'msg_type': 'interactive', 'card': card_data}
+			# 如果有 title，则添加 header
+			if title:
+				card_data['header'] = {
+					'template': color_theme,
+					'title': {
+						'content': title,
+						'tag': 'plain_text',
+					},
+				}
+
+			data = {
+				'msg_type': 'interactive',
+				'card': card_data,
+			}
 		else:
-			# 其他情况使用纯文本模式
-			data = {'msg_type': 'text', 'text': {'content': f'{title}\n{content}'}}
+			# 纯文本模式
+			text_content = f'{title}\n{content}' if title else content
+			data = {
+				'msg_type': 'text',
+				'text': {'content': text_content},
+			}
 
 		async with httpx.AsyncClient(timeout=30.0) as client:
 			response = await client.post(self.config.webhook, json=data)

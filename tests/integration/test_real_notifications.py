@@ -27,19 +27,16 @@ class TestRealNotifications:
 			pytest.skip(f'未启用真实接口测试。请在 `.env.test` 中设置 `{enable_key}=true`')
 
 		# 尝试发送通知（发送到所有已配置的平台）
-		await notification_kit.push_message(
-			title='集成测试消息',
-			content=multiple_mixed_data,
-		)
+		await notification_kit.push_message(multiple_mixed_data)
 
 	@pytest.mark.asyncio
 	async def test_notification_system_with_real_rendering(self, config_env_setter, single_success_data):
 		"""
-		测试通知系统的真实模板渲染
+		测试通知系统的真实模板渲染（包括对象格式 template）
 
 		覆盖：
 		- NotificationKit 初始化
-		- 配置解析（字符串、JSON）
+		- 配置解析（字符串、JSON、对象格式）
 		- 默认模板加载
 		- Stencil 模板渲染
 		- 所有发送器的 send 方法
@@ -48,9 +45,12 @@ class TestRealNotifications:
 		config_env_setter('dingtalk', 'https://mock.webhook')  # 字符串格式
 		config_env_setter(
 			'wecom',
-			{  # JSON 格式带自定义模板
+			{  # JSON 格式带对象格式模板
 				'webhook': 'https://mock.webhook',
-				'template': '测试账号：{{ stats.success_count }}/{{ stats.total_count }}',
+				'template': {
+					'title': '测试标题',
+					'content': '测试账号：{{ stats.success_count }}/{{ stats.total_count }}',
+				},
 			},
 		)
 		config_env_setter('email', {'user': 'test@example.com', 'pass': 'test_pass', 'to': 'recipient@example.com'})
@@ -75,7 +75,7 @@ class TestRealNotifications:
 				mock_smtp.return_value.__enter__.return_value = mock_server
 
 				# 发送通知（真正执行渲染逻辑）
-				await kit.push_message(title='测试', content=single_success_data)
+				await kit.push_message(single_success_data)
 
 				# 验证发送器被调用
 				assert mock_client.post.call_count >= 2  # 至少 2 个平台

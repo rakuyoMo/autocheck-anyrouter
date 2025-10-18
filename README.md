@@ -149,7 +149,26 @@ jobs:
 
 ### 自定义通知模板
 
-支持使用 [Stencil](https://stencil.pyllyukko.com/) 模板语法自定义通知内容：
+支持使用 [Stencil](https://stencil.pyllyukko.com/) 模板语法自定义通知内容。模板配置支持分别自定义通知的标题和内容。
+
+**模板格式**：
+
+从 [v1.3.0](https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.3.0) 版本开始，`template` 字段支持对象格式：
+```jsonc
+{
+  "template": {
+    "title": "通知标题模板",   // 标题模板。部分平台要求必须设置标题，不强制要求的平台如果不设置，或者设置为空字符串时不展示标题
+    "content": "通知内容模板"  // 内容模板
+  }
+}
+```
+
+为保持向后兼容，旧的字符串格式仍然支持：
+```jsonc
+{
+  "template": "通知内容模板"  // 字符串格式会使用默认标题 "AnyRouter 签到提醒"
+}
+```
 
 **可用变量**：
 - `timestamp`: 执行时间
@@ -159,13 +178,25 @@ jobs:
 - `failed_accounts`: 失败账号列表
 - `has_success`: 有成功的账号
 - `has_failed`: 有失败的账号
+- `all_success`: 所有账号都成功
+- `all_failed`: 所有账号都失败
+- `partial_success`: 部分账号成功
+
+以上变量在 `title` 和 `content` 模板中**均可使用**。
 
 **重要说明**：
+
+**关于 title 的限制**：
+- ✅ **支持空 title（不展示标题）**：企业微信、飞书、PushPlus
+- ⚠️ **部分支持**：钉钉（纯文本模式支持空 title；markdown 模式需要 title，不设置会抛出错误）
+- ❌ **必须提供 title**：邮箱、Server 酱（不设置会抛出错误）
+
+**模板引擎限制**：
 由于 Stencil 模板引擎的限制，请注意以下事项：
 - ❌ 不支持比较操作符（`==`、`!=`、`<`、`>` 等）
 - ❌ 不支持在循环中使用条件判断，例如 `{% if account.status == "success" %}`
 
-推荐使用预过滤的便利变量（如 `has_success`、`has_failed`）来替代循环内的条件判断。
+推荐使用预过滤的便利变量（如 `has_success`、`has_failed`、`all_success` 等）来替代循环内的条件判断。
 
 **模板示例**：
 > 请注意，虽然本系统使用 json5 解析 json 字符串，但是为了避免消息平台方的问题，建议您在设置 `template` 字段时，**不要使用多行字符串**，而是将每个换行符替换为 `\\n`。
