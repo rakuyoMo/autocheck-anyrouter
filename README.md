@@ -172,9 +172,13 @@ jobs:
 ```
 
 **可用变量**：
+
+基础变量：
 - `timestamp`: 执行时间
 - `stats`: 统计数据（success_count, failed_count, total_count）
-- `accounts`: 账号列表（name, status, quota, used, error）
+- `accounts`: 账号列表（name, status, quota, used, balance_changed, error）
+
+账号状态分组：
 - `success_accounts`: 成功账号列表
 - `failed_accounts`: 失败账号列表
 - `has_success`: 有成功的账号
@@ -182,6 +186,14 @@ jobs:
 - `all_success`: 所有账号都成功
 - `all_failed`: 所有账号都失败
 - `partial_success`: 部分账号成功
+
+余额变化追踪（v1.3.0+）：
+- `balance_changed_accounts`: 余额发生变化的账号列表
+- `balance_unchanged_accounts`: 余额未发生变化的账号列表
+- `has_balance_changed`: 是否有账号余额发生变化
+- `has_balance_unchanged`: 是否有账号余额未发生变化
+- `all_balance_changed`: 所有账号余额都发生变化
+- `all_balance_unchanged`: 所有账号余额都未发生变化
 
 以上变量在 `title` 和 `content` 模板中**均可使用**。
 

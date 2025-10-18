@@ -287,6 +287,19 @@ class NotificationKit:
 		success_accounts = [acc for acc in data.accounts if acc.status == 'success']
 		failed_accounts = [acc for acc in data.accounts if acc.status != 'success']
 
+		# 余额变化相关分组
+		balance_changed_accounts = [
+			acc for acc in data.accounts
+			if acc.balance_changed is True
+		]
+		balance_unchanged_accounts = [
+			acc for acc in data.accounts
+			if acc.balance_changed is False
+		]
+
+		# 计算可判断余额的账号数量（排除 balance_changed=None 的账号）
+		balance_determinable_count = len(balance_changed_accounts) + len(balance_unchanged_accounts)
+
 		return {
 			'timestamp': data.timestamp,
 			'stats': data.stats,  # dataclass 对象，支持 {{ stats.success_count }}
@@ -301,6 +314,13 @@ class NotificationKit:
 			'all_success': data.stats.failed_count == 0,
 			'all_failed': data.stats.success_count == 0,
 			'partial_success': data.stats.success_count > 0 and data.stats.failed_count > 0,
+			# 余额变化相关的新变量
+			'balance_changed_accounts': balance_changed_accounts,
+			'balance_unchanged_accounts': balance_unchanged_accounts,
+			'has_balance_changed': len(balance_changed_accounts) > 0,
+			'has_balance_unchanged': len(balance_unchanged_accounts) > 0,
+			'all_balance_changed': balance_determinable_count > 0 and len(balance_unchanged_accounts) == 0,
+			'all_balance_unchanged': balance_determinable_count > 0 and len(balance_changed_accounts) == 0,
 		}
 
 	def _load_template(self, platform: str, parsed: dict) -> NotificationTemplate | None:

@@ -7,6 +7,7 @@ def create_account_result_data(
 	quota: float = 25.0,
 	used: float = 5.0,
 	error: str | None = None,
+	balance_changed: bool | None = None,
 ) -> AccountResult:
 	"""
 	创建账号结果数据的辅助函数
@@ -17,6 +18,7 @@ def create_account_result_data(
 		quota: 余额配额
 		used: 已使用配额
 		error: 错误信息
+		balance_changed: 余额是否变化（None 表示无法判断）
 
 	Returns:
 		AccountResult 实例
@@ -26,6 +28,7 @@ def create_account_result_data(
 		status=status,
 		quota=quota if status == 'success' else None,
 		used=used if status == 'success' else None,
+		balance_changed=balance_changed,
 		error=error if status != 'success' else None,
 	)
 

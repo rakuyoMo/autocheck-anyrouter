@@ -103,19 +103,20 @@ class CheckinService:
 
 		logger.info(f'找到 {len(accounts)} 个账号配置')
 
-		# 加载余额 hash
-		last_balance_hash = self._load_balance_hash()
+		# 加载余额 hash 字典
+		last_balance_hash_dict = self._load_balance_hash()
 
 		# 为每个账号执行签到
 		success_count = 0
 		total_count = len(accounts)
 		account_results: list[AccountResult] = []  # 使用结构化数据存储结果
-		current_balances = {}
+		current_balance_hash_dict = {}  # 当前余额 hash 字典
+		current_balances = {}  # 当前余额数据（仅内存中使用，用于显示）
 		need_notify = False  # 是否需要发送通知
-		balance_changed = False  # 余额是否有变化
+		has_any_balance_changed = False  # 是否有任意账号余额变化
 
 		for i, account in enumerate(accounts):
-			account_key = f'account_{i + 1}'
+			api_user = account.get('api_user', '')
 			try:
 				success, user_info = await self._check_in_account(account, i)
 				# 日志使用脱敏名称，通知使用完整名称
@@ -144,13 +145,46 @@ class CheckinService:
 				if user_info and user_info.get('success'):
 					current_quota = user_info['quota']
 					current_used = user_info['used_quota']
-					current_balances[account_key] = {'quota': current_quota, 'used': current_used}
+
+					# 生成账号标识和余额 hash
+					account_key = self._generate_account_key(api_user)
+					current_balance_hash = self._generate_balance_hash(
+						quota=current_quota,
+						used=current_used,
+					)
+					current_balance_hash_dict[account_key] = current_balance_hash
+
+					# 保存余额数据（仅内存中，用于显示）
+					current_balances[account_key] = {
+						'quota': current_quota,
+						'used': current_used,
+					}
+
+					# 判断余额是否变化
+					if last_balance_hash_dict and account_key in last_balance_hash_dict:
+						# 有历史数据，对比 hash
+						last_hash = last_balance_hash_dict[account_key]
+						if current_balance_hash != last_hash:
+							# 余额发生变化
+							account_result.balance_changed = True
+							has_any_balance_changed = True
+							should_notify_this_account = True
+							logger.notify('余额发生变化，将发送通知', safe_account_name)
+						else:
+							# 余额未变化
+							account_result.balance_changed = False
+					else:
+						# 首次运行，无历史数据
+						account_result.balance_changed = False
+						should_notify_this_account = True
 
 					# 设置账号结果的余额信息
 					account_result.quota = current_quota
 					account_result.used = current_used
+
 				elif user_info:
-					# 设置错误信息
+					# 获取余额失败，无法判断变化
+					account_result.balance_changed = None
 					account_result.error = user_info.get('error', '未知错误')
 
 				# 只有需要通知的账号才添加到结果列表
@@ -172,48 +206,27 @@ class CheckinService:
 				account_result = AccountResult(
 					name=full_account_name,
 					status='failed',
+					balance_changed=None,
 					error=f'异常: {str(e)[:50]}...',
 				)
 				account_results.append(account_result)
 
-		# 检查余额变化
-		current_balance_hash = self._generate_balance_hash(current_balances) if current_balances else None
-		if current_balance_hash:
-			if last_balance_hash is None:
-				# 首次运行
-				balance_changed = True
-				need_notify = True
-				logger.notify('检测到首次运行，将发送包含当前余额的通知')
+		# 判断是否需要发送通知
+		if last_balance_hash_dict is None:
+			# 首次运行
+			need_notify = True
+			logger.notify('检测到首次运行，将发送包含当前余额的通知')
+		elif has_any_balance_changed:
+			# 有任意账号余额发生变化
+			need_notify = True
+			logger.notify('检测到余额变化，将发送通知')
+		else:
+			# 没有任何变化
+			logger.info('未检测到余额变化')
 
-			elif current_balance_hash != last_balance_hash:
-				# 余额有变化
-				balance_changed = True
-				need_notify = True
-				logger.notify('检测到余额变化，将发送通知')
-
-			else:
-				logger.info('未检测到余额变化')
-
-		# 为有余额变化的情况添加所有成功账号到通知内容
-		if balance_changed:
-			for i, account in enumerate(accounts):
-				account_key = f'account_{i + 1}'
-				if account_key in current_balances:
-					# 通知使用完整名称
-					full_account_name = self._get_full_account_name(account, i)
-					# 检查是否已经在结果列表中（避免重复）
-					if not any(result.name == full_account_name for result in account_results):
-						account_result = AccountResult(
-							name=full_account_name,
-							status='success',
-							quota=current_balances[account_key]['quota'],
-							used=current_balances[account_key]['used'],
-						)
-						account_results.append(account_result)
-
-		# 保存当前余额 hash
-		if current_balance_hash:
-			self._save_balance_hash(current_balance_hash)
+		# 保存当前余额 hash 字典
+		if current_balance_hash_dict:
+			self._save_balance_hash(current_balance_hash_dict)
 
 		if need_notify and account_results:
 			# 构建结构化通知数据
@@ -329,28 +342,42 @@ class CheckinService:
 			'- api_user 为 API 用户标识',
 		])  # fmt: skip
 
-	def _load_balance_hash(self) -> str | None:
-		"""加载余额 hash"""
+	def _load_balance_hash(self) -> dict[str, str] | None:
+		"""加载余额 hash 字典
+
+		Returns:
+			字典格式：{api_user_hash: balance_hash}，加载失败返回 None
+		"""
 		try:
 			if self.balance_hash_file.exists():
 				with open(self.balance_hash_file, 'r', encoding='utf-8') as f:
-					return f.read().strip()
+					content = f.read().strip()
+					if not content:
+						return None
+					return json.loads(content)
 
 		except (OSError, IOError) as e:
 			logger.warning(f'加载余额哈希失败：{e}')
+
+		except json.JSONDecodeError as e:
+			logger.warning(f'余额哈希文件格式无效：{e}')
 
 		except Exception as e:
 			logger.warning(f'加载余额哈希时发生意外错误：{e}')
 
 		return None
 
-	def _save_balance_hash(self, balance_hash: str):
-		"""保存余额 hash"""
+	def _save_balance_hash(self, balance_hash_dict: dict[str, str]):
+		"""保存余额 hash 字典
+
+		Args:
+			balance_hash_dict: 字典格式 {api_user_hash: balance_hash}
+		"""
 		try:
 			# 确保父目录存在
 			self.balance_hash_file.parent.mkdir(parents=True, exist_ok=True)
 			with open(self.balance_hash_file, 'w', encoding='utf-8') as f:
-				f.write(balance_hash)
+				json.dump(balance_hash_dict, f, ensure_ascii=False, indent=2)
 
 		except (OSError, IOError) as e:
 			logger.warning(f'保存余额哈希失败：{e}')
@@ -641,19 +668,30 @@ class CheckinService:
 		return cookies_dict
 
 	@staticmethod
-	def _generate_balance_hash(balances: dict[str, dict[str, float]] | None) -> str | None:
-		"""生成余额数据的 hash"""
-		if not balances:
-			return None
+	def _generate_account_key(api_user: str) -> str:
+		"""生成账号标识的 hash
 
-		# 将包含 quota 和 used 的结构转换为简单的 quota 值用于 hash 计算
-		simple_balances = {k: v['quota'] for k, v in balances.items()} if balances else {}
-		balance_json = json.dumps(
-			obj=simple_balances,
-			sort_keys=True,
-			separators=(',', ':'),
-		)
-		return hashlib.sha256(balance_json.encode('utf-8')).hexdigest()[:16]
+		Args:
+			api_user: API 用户标识
+
+		Returns:
+			完整的 SHA256 hash
+		"""
+		return hashlib.sha256(api_user.encode('utf-8')).hexdigest()
+
+	@staticmethod
+	def _generate_balance_hash(quota: float, used: float) -> str:
+		"""生成单个账号余额的 hash
+
+		Args:
+			quota: 总额度
+			used: 已使用额度
+
+		Returns:
+			完整的 SHA256 hash
+		"""
+		balance_data = f'{quota}_{used}'
+		return hashlib.sha256(balance_data.encode('utf-8')).hexdigest()
 
 	@staticmethod
 	def _should_show_sensitive_info() -> bool:
@@ -761,7 +799,8 @@ class CheckinService:
 			# 构建所有账号的结果列表
 			all_account_results: list[AccountResult] = []
 			for i, account in enumerate(accounts):
-				account_key = f'account_{i + 1}'
+				api_user = account.get('api_user', '')
+				account_key = self._generate_account_key(api_user)
 				# 根据隐私设置获取账号名称
 				account_name = self._get_safe_account_name(account, i)
 
