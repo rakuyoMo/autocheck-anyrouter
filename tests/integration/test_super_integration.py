@@ -151,6 +151,7 @@ class TestSuperIntegration:
 		assert post_calls['count'] >= 2
 		assert post_calls['checkin'] == 2
 
+		# 第二次运行：余额未变化，不发送通知
 		service_second = CheckinService()
 		service_second.balance_hash_file = service.balance_hash_file
 		summary_second = tmp_path / 'summary_second.md'
@@ -194,6 +195,53 @@ class TestSuperIntegration:
 		assert post_calls_second['checkin'] == 2
 		assert mock_push.await_count == 0
 		assert summary_second.exists()
+
+		# 第三次运行：余额发生变化，应该发送通知
+		service_third = CheckinService()
+		service_third.balance_hash_file = service_second.balance_hash_file
+		summary_third = tmp_path / 'summary_third.md'
+
+		with patch.dict(
+			os.environ,
+			{
+				'REPO_VISIBILITY': 'public',
+				'GITHUB_STEP_SUMMARY': str(summary_third),
+			},
+		):
+			with ExitStack() as stack:
+				_patch_playwright_success(stack)
+
+				post_calls_third = {'count': 0, 'checkin': 0}
+
+				async def get_handler_third(*args, **kwargs):
+					# 余额发生变化：从 25000000 变为 30000000
+					return _build_response(
+						status=200,
+						json_data={
+							'success': True,
+							'data': {'quota': 30000000, 'used_quota': 5000000},
+						},
+					)
+
+				async def post_handler_third(*args, **kwargs):
+					post_calls_third['count'] += 1
+					if post_calls_third['checkin'] < 2:
+						post_calls_third['checkin'] += 1
+						return _build_response(status=200, json_data={'ret': 1, 'msg': '签到成功'})
+					return _build_response(status=200, json_data={'errcode': 0})
+
+				_patch_http_client(stack, get_handler_third, post_handler_third)
+				_patch_smtp(stack)
+
+				with patch('notif.notify.NotificationKit.push_message', new=AsyncMock()) as mock_push_third:
+					with pytest.raises(SystemExit) as exc_info:
+						await service_third.run()
+
+		assert exc_info.value.code == 0
+		assert post_calls_third['checkin'] == 2
+		# 验证因为余额变化发送了通知
+		assert mock_push_third.await_count == 1
+		assert summary_third.exists()
 
 	@pytest.mark.asyncio
 	async def test_checkin_with_http_errors(self, accounts_env, config_env_setter, tmp_path):

@@ -174,9 +174,13 @@ jobs:
 **可用变量**：
 
 基础变量：
+
+> **注意**：<br>
+> 从 v1.3.0 开始，`accounts` 包含所有账号的完整结果。您可以使用下面的分组列表来筛选特定类型的账号。
+
 - `timestamp`: 执行时间
 - `stats`: 统计数据（success_count, failed_count, total_count）
-- `accounts`: 账号列表（name, status, quota, used, balance_changed, error）
+- `accounts`: 所有账号的结果列表（name, status, quota, used, balance_changed, error）
 
 账号状态分组：
 - `success_accounts`: 成功账号列表
@@ -188,6 +192,10 @@ jobs:
 - `partial_success`: 部分账号成功
 
 余额变化追踪（v1.3.0+）：
+
+> **注意**：<br>
+> 余额变化相关变量仅包含能够成功获取到余额信息的账号（通常为签到成功的账号）。失败账号的 `balance_changed` 字段通常为 `None`（无法判断）。
+
 - `balance_changed_accounts`: 余额发生变化的账号列表
 - `balance_unchanged_accounts`: 余额未发生变化的账号列表
 - `has_balance_changed`: 是否有账号余额发生变化

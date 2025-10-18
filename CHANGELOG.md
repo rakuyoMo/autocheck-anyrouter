@@ -21,6 +21,7 @@
 * 配置文件中的 `template` 字段从字符串改为对象类型（向后兼容），现在可以分别设置 `title` 和 `content`。[#17]
 * 邮箱、Server 酱和钉钉（markdown 模式）发送器现在会在未提供 title 时抛出 `ValueError` 异常，提示用户必须设置标题。[#17]
 * 优化余额存储机制，使用基于 api_user 的 hash 作为账号标识，支持账号顺序调整和隐私保护。[#20]
+* 通知数据结构优化，`accounts` 现在包含所有账号的结果，用户可通过 `success_accounts`、`failed_accounts`、`balance_changed_accounts` 以及 `balance_unchanged_accounts` 等分组列表在模板中自由选择展示内容。[#20]
 
 ---
 

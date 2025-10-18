@@ -109,11 +109,11 @@ class CheckinService:
 		# 为每个账号执行签到
 		success_count = 0
 		total_count = len(accounts)
-		account_results: list[AccountResult] = []  # 使用结构化数据存储结果
+		account_results: list[AccountResult] = []  # 所有账号的结果
 		current_balance_hash_dict = {}  # 当前余额 hash 字典
 		current_balances = {}  # 当前余额数据（仅内存中使用，用于显示）
-		need_notify = False  # 是否需要发送通知
 		has_any_balance_changed = False  # 是否有任意账号余额变化
+		has_any_failed = False  # 是否有任意账号失败
 
 		for i, account in enumerate(accounts):
 			api_user = account.get('api_user', '')
@@ -131,14 +131,9 @@ class CheckinService:
 
 				if success:
 					success_count += 1
-
-				# 检查是否需要通知
-				should_notify_this_account = False
-
-				# 如果签到失败，需要通知
-				if not success:
-					should_notify_this_account = True
-					need_notify = True
+				else:
+					# 记录有失败账号
+					has_any_failed = True
 					logger.notify('失败，将发送通知', safe_account_name)
 
 				# 收集余额数据和处理结果
@@ -168,7 +163,6 @@ class CheckinService:
 							# 余额发生变化
 							account_result.balance_changed = True
 							has_any_balance_changed = True
-							should_notify_this_account = True
 							logger.notify('余额发生变化，将发送通知', safe_account_name)
 						else:
 							# 余额未变化
@@ -176,7 +170,6 @@ class CheckinService:
 					else:
 						# 首次运行，无历史数据
 						account_result.balance_changed = False
-						should_notify_this_account = True
 
 					# 设置账号结果的余额信息
 					account_result.quota = current_quota
@@ -187,9 +180,8 @@ class CheckinService:
 					account_result.balance_changed = None
 					account_result.error = user_info.get('error', '未知错误')
 
-				# 只有需要通知的账号才添加到结果列表
-				if should_notify_this_account:
-					account_results.append(account_result)
+				# 所有账号都添加到结果列表
+				account_results.append(account_result)
 
 			except Exception as e:
 				# 日志使用脱敏名称，通知使用完整名称
@@ -200,7 +192,7 @@ class CheckinService:
 					account_name=safe_account_name,
 					exc_info=True,
 				)
-				need_notify = True  # 异常也需要通知
+				has_any_failed = True  # 异常也算失败
 
 				# 创建失败的账号结果（通知使用完整名称）
 				account_result = AccountResult(
@@ -212,6 +204,7 @@ class CheckinService:
 				account_results.append(account_result)
 
 		# 判断是否需要发送通知
+		need_notify = False
 		if last_balance_hash_dict is None:
 			# 首次运行
 			need_notify = True
@@ -220,9 +213,13 @@ class CheckinService:
 			# 有任意账号余额发生变化
 			need_notify = True
 			logger.notify('检测到余额变化，将发送通知')
+		elif has_any_failed:
+			# 有任意账号失败
+			need_notify = True
+			logger.notify('检测到账号失败，将发送通知')
 		else:
 			# 没有任何变化
-			logger.info('未检测到余额变化')
+			logger.info('所有账号成功且未检测到余额变化，跳过通知')
 
 		# 保存当前余额 hash 字典
 		if current_balance_hash_dict:
@@ -244,9 +241,9 @@ class CheckinService:
 
 			# 发送通知
 			await notify.push_message(notification_data)
-			logger.notify('因失败或余额变化已发送通知')
-		else:
-			logger.info('所有账号成功且未检测到余额变化，跳过通知')
+			logger.notify('通知已发送')
+		elif not account_results:
+			logger.info('没有账号数据，跳过通知')
 
 		# 日志总结
 		logger.info(
