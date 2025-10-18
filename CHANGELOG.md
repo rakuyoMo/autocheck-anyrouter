@@ -9,14 +9,14 @@
 ## [Unreleased]
 
 #### Add
-* 支持通知 title 的模板化配置，可通过模板变量动态生成通知标题。
+* 支持通知 title 的模板化配置，可通过模板变量动态生成通知标题。[#17]
 
 #### Fix
-* 修复企业微信、飞书和钉钉发送器 `message_type` 配置默认值处理错误的问题。
+* 修复企业微信、飞书和钉钉发送器 `message_type` 配置默认值处理错误的问题。[#17]
 
 #### Change
-* 配置文件中的 `template` 字段从字符串改为对象类型（向后兼容），现在可以分别设置 `title` 和 `content`。
-* 邮箱、Server 酱和钉钉（markdown 模式）发送器现在会在未提供 title 时抛出 `ValueError` 异常，提示用户必须设置标题。
+* 配置文件中的 `template` 字段从字符串改为对象类型（向后兼容），现在可以分别设置 `title` 和 `content`。[#17]
+* 邮箱、Server 酱和钉钉（markdown 模式）发送器现在会在未提供 title 时抛出 `ValueError` 异常，提示用户必须设置标题。[#17]
 
 ---
 
@@ -118,3 +118,4 @@
 [#10]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/10
 [#11]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/11
 [#15]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/15
+[#17]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/17
