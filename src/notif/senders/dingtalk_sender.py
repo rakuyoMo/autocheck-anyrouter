@@ -32,7 +32,9 @@ class DingTalkSender:
 		if configured_type == 'markdown':
 			# markdown 模式下必须提供 title
 			if not title:
-				raise ValueError('钉钉 markdown 模式需要提供非空的 title 参数，请在通知配置的 template.title 中设置标题，或将 message_type 改为纯文本模式')
+				raise ValueError(
+					'钉钉 markdown 模式需要提供非空的 title 参数，请在通知配置的 template.title 中设置标题，或将 message_type 改为纯文本模式'
+				)
 
 			# 构建消息体
 			msgtype = 'markdown'

@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import json5
 import stencil

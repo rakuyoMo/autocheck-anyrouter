@@ -57,18 +57,18 @@ class FeishuSender:
 			elements = {
 				'elements': [
 					{
-						'tag': 'markdown', 
-						'content': content, 
-						'text_align': 'left'
-					}
-				]
+						'tag': 'markdown',
+						'content': content,
+						'text_align': 'left',
+					},
+				],
 			}
 			# 根据版本构造卡片数据
 			card_data: dict
 			if message_type == 'card_v2':
 				card_data = {
-					'schema': '2.0', 
-					'body': elements
+					'schema': '2.0',
+					'body': elements,
 				}
 			else:
 				card_data = elements
@@ -76,23 +76,23 @@ class FeishuSender:
 			# 如果有 title，则添加 header
 			if title:
 				card_data['header'] = {
-					'template': color_theme, 
+					'template': color_theme,
 					'title': {
-						'content': title, 
-						'tag': 'plain_text'
-					}
+						'content': title,
+						'tag': 'plain_text',
+					},
 				}
 
 			data = {
-				'msg_type': 'interactive', 
-				'card': card_data
+				'msg_type': 'interactive',
+				'card': card_data,
 			}
 		else:
 			# 纯文本模式
 			text_content = f'{title}\n{content}' if title else content
 			data = {
-				'msg_type': 'text', 
-				'text': {'content': text_content}
+				'msg_type': 'text',
+				'text': {'content': text_content},
 			}
 
 		async with httpx.AsyncClient(timeout=30.0) as client:
