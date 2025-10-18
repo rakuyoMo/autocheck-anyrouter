@@ -233,6 +233,9 @@ jobs:
 
 {% if has_success %}
 ### 成功账号
+{% if all_balance_unchanged %}
+所有账号余额无变化
+{% else %}
 | 账号 | 已用（$） | 剩余（$） |
 | :----- | :---- | :---- |
 {% for account in success_accounts %}
@@ -265,7 +268,10 @@ jobs:
   "platform_settings":{
     "message_type": "markdown_v2"
   },
-  "template":"{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}\\n\\n### 详细信息\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}{% if has_success %}\\n### 成功账号\\n| 账号 | 已用（$） | 剩余（$） |\\n| :----- | :---- | :---- |\\n{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|\\n{% endfor %}{% endif %}{% if has_failed %}\\n### 失败账号\\n| 账号 | 错误原因 |\\n| :----- | :----- |\\n{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|\\n{% endfor %}{% endif %}"
+  "template": {
+    "title": "{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}",
+    "content": "\\n### 详细信息\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}{% if has_success %}\\n### 成功账号\\n{% if all_balance_unchanged %}所有账号余额无变化{% else %}| 账号 | 已用（$） | 剩余（$） |\\n| :----- | :---- | :---- |\\n{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|{% endfor %}\\n{% endif %}{% endif %}{% if has_failed %}\\n### 失败账号\\n| 账号 | 错误原因 |\\n| :----- | :----- |\\n{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|\\n{% endfor %}{% endif %}"
+  }
 }
 ```
 
