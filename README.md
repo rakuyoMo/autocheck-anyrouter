@@ -126,13 +126,14 @@ jobs:
 
 本系统支持多平台通知：
 - [x] 邮箱：`EMAIL_NOTIF_CONFIG`
-- [x] 钉钉机器人：`DINGTALK_NOTIF_CONFIG`
-- [x] 飞书机器人：`FEISHU_NOTIF_CONFIG`
-- [x] 企业微信：`WECOM_NOTIF_CONFIG`
-- [x] PushPlus：`PUSHPLUS_NOTIF_CONFIG`
-- [x] Server 酱：`SERVERPUSH_NOTIF_CONFIG`
+- [x] [钉钉机器人](https://open.dingtalk.com/document/robots/custom-robot-access)：`DINGTALK_NOTIF_CONFIG`
+- [x] [飞书机器人](https://open.feishu.cn/document/client-docs/bot-v3/add-custom-bot)：`FEISHU_NOTIF_CONFIG`
+- [x] [企业微信](https://developer.work.weixin.qq.com/document/path/99110)：`WECOM_NOTIF_CONFIG`
+- [x] [PushPlus](https://www.pushplus.plus/)：`PUSHPLUS_NOTIF_CONFIG`
+- [x] [Server 酱](https://sct.ftqq.com/)：`SERVERPUSH_NOTIF_CONFIG`
+- [x] [Bark](https://bark.day.app/)：`BARK_NOTIF_CONFIG`
 
-除了邮箱外，其余平台的配置字段均有两种用法：
+除了 Bark 和邮箱外，其余平台的配置字段均有两种用法：
 - 设置为纯字符串：代表 WebHook、Key 或者 Token，此时将使用 [默认配置](/src/notif/configs) 发送通知。
 - 设置为 JSON：高级配置，此时可设置模板样式（`template`），或者一些平台配置（`platform_settings`）。具体可查看：
   - [默认配置](/src/notif/configs)

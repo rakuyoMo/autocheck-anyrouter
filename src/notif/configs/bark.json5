@@ -1,0 +1,84 @@
+{
+  // 【必填】Bark 服务器地址
+  // 官方服务器：https://api.day.app
+  // 也支持自建 Bark 服务器
+  "server_url": "https://api.day.app",
+
+  // 【必填】设备密钥
+  // 在 Bark App 中可以查看，每个设备都有唯一的密钥
+  "device_key": "",
+
+  // 【可选】平台特定设置
+  "platform_settings": {
+    // 通知显示设置
+    "display": {
+      // 通知副标题
+      "subtitle": "",
+
+      // App 图标角标数字
+      "badge": 1,
+
+      // 自定义图标 URL（需要 iOS 15 或更高版本）
+      "icon": "",
+
+      // 通知分组名称，方便在 App 中按组查看
+      "group": "AnyRouter",
+    },
+
+    // 声音和提醒级别设置
+    "alert": {
+      // 通知声音，可选值：
+      // alarm, anticipate, bell, birdsong, bloom, calypso, chime, choo, descent,
+      // electronic, fanfare, glass, gotosleep, healthnotification, horn, ladder,
+      // mailsent, minuet, multiwayinvitation, newmail, newsflash, noir, paymentsuccess,
+      // shake, sherwoodforest, silence, spell, suspense, telegraph, tiptoes, typewriters,
+      // update 等，也支持自定义铃声
+      "sound": "",
+
+      // 是否持续播放声音 30 秒，值为 "1" 时启用
+      "call": "",
+
+      // 通知级别，可选值：
+      // - active：默认值，立即点亮屏幕显示通知
+      // - timeSensitive：时效性通知，可在专注模式下显示
+      // - passive：仅添加到通知列表，不会点亮屏幕
+      // - critical：关键警报，忽略静音和勿扰模式
+      "level": "",
+
+      // 声音音量（仅在 level 为 critical 时有效）
+      // 取值范围：0.0 到 1.0
+      "volume": "",
+    },
+
+    // 交互行为设置
+    "interaction": {
+      // 点击通知后跳转的 URL
+      "url": "",
+
+      // 点击通知的行为，设置为 "none" 表示点击无动作
+      "action": "",
+
+      // 是否自动复制内容到剪贴板，值为 "1" 时启用
+      "autoCopy": "",
+
+      // 指定要复制到剪贴板的内容（如果不设置，则复制整个通知内容）
+      "copy": "",
+    },
+
+    // 其他设置
+    "options": {
+      // 是否自动存档通知，值为 "1" 时启用
+      // 启用后，该通知将直接进入 Bark App 的存档列表
+      "isArchive": "",
+    },
+  },
+
+  // 【可选】自定义通知模板（不设置，或为空时使用下方默认模板）
+  "template": {
+    // 通知标题，不设置，或为空字符串时不展示
+    "title": "AnyRouter 签到提醒",
+
+    // 通知内容
+    "content": "{# Bark 通知模板 #}{% if timestamp %}[TIME] 执行时间：{{ timestamp }}\n\n{% endif %}{% if success_accounts %}{% for account in success_accounts %}[BALANCE] {{ account.name }}\n💰 当前额度：${{ account.quota }}，已使用：${{ account.used }}\n{% endfor %}{% endif %}{% if failed_accounts %}{% for account in failed_accounts %}[FAIL] {{ account.name }} 异常：{{ account.error }}\n{% endfor %}{% endif %}\n[STATS] 签到结果统计：\n[SUCCESS] 成功：{{ stats.success_count }}/{{ stats.total_count }}\n[FAIL] 失败：{{ stats.failed_count }}/{{ stats.total_count }}\n{% if all_success %}[SUCCESS] 全部账号签到成功！{% else %}{% if partial_success %}[WARN] 部分账号签到成功{% else %}[ERROR] 全部账号签到失败{% endif %}{% endif %}",
+  },
+}

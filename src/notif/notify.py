@@ -7,6 +7,7 @@ import stencil
 
 from core.models.notification_data import NotificationData
 from notif.models import (
+	BarkConfig,
 	EmailConfig,
 	NotificationHandler,
 	NotificationTemplate,
@@ -15,6 +16,7 @@ from notif.models import (
 	WebhookConfig,
 )
 from notif.senders import (
+	BarkSender,
 	DingTalkSender,
 	EmailSender,
 	FeishuSender,
@@ -31,6 +33,7 @@ class NotificationKit:
 		self.config_dir = Path(__file__).parent / 'configs'
 
 		# 加载各平台配置
+		self.bark_config = self._load_bark_config()
 		self.email_config = self._load_email_config()
 		self.dingtalk_config = self._load_dingtalk_config()
 		self.feishu_config = self._load_feishu_config()
@@ -106,6 +109,17 @@ class NotificationKit:
 			通知处理器列表
 		"""
 		handlers = []
+
+		# Bark
+		if self.bark_config:
+			sender = BarkSender(self.bark_config)
+			handlers.append(
+				NotificationHandler(
+					name='Bark',
+					config=self.bark_config,
+					send_func=sender.send,
+				)
+			)
 
 		# 邮箱
 		if self.email_config:
@@ -378,6 +392,41 @@ class NotificationKit:
 			password=parsed['pass'],
 			to=parsed['to'],
 			smtp_server=parsed.get('smtp_server'),
+			platform_settings=parsed.get('platform_settings'),
+			template=template,
+		)
+
+	def _load_bark_config(self) -> BarkConfig | None:
+		"""加载 Bark 配置"""
+		bark_notif_config = os.getenv('BARK_NOTIF_CONFIG')
+		if not bark_notif_config:
+			return None
+
+		parsed = self._parse_env_config(bark_notif_config)
+		if not isinstance(parsed, dict):
+			return None
+
+		# 验证必需字段
+		if not self._validate_required_field(
+			parsed=parsed,
+			field='server_url',
+		):
+			return None
+		if not self._validate_required_field(
+			parsed=parsed,
+			field='device_key',
+		):
+			return None
+
+		# 加载模板
+		template = self._load_template(
+			platform='bark',
+			parsed=parsed,
+		)
+
+		return BarkConfig(
+			server_url=parsed['server_url'],
+			device_key=parsed['device_key'],
 			platform_settings=parsed.get('platform_settings'),
 			template=template,
 		)

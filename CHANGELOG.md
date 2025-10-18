@@ -9,6 +9,7 @@
 ## [Unreleased]
 
 #### Add
+* 新增 Bark 通知方式支持，包含丰富的配置选项。[#19]
 * 支持通知 title 的模板化配置，可通过模板变量动态生成通知标题。[#17]
 
 #### Fix
@@ -120,3 +121,4 @@
 [#11]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/11
 [#15]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/15
 [#17]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/17
+[#19]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/19
