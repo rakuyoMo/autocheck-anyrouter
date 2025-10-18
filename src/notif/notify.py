@@ -281,12 +281,12 @@ class NotificationKit:
 			'failed_accounts': failed_accounts,
 			# 保留完整列表供需要的模板使用
 			'accounts': data.accounts,  # AccountResult 对象列表
-			# 便利变量：布尔标志
-			'has_success': len(success_accounts) > 0,
-			'has_failed': len(failed_accounts) > 0,
-			'all_success': len(failed_accounts) == 0,
-			'all_failed': len(success_accounts) == 0,
-			'partial_success': len(success_accounts) > 0 and len(failed_accounts) > 0,
+			# 便利变量：布尔标志（使用 stats 进行判断，确保与 NotificationData 的属性一致）
+			'has_success': data.stats.success_count > 0,
+			'has_failed': data.stats.failed_count > 0,
+			'all_success': data.stats.failed_count == 0,
+			'all_failed': data.stats.success_count == 0,
+			'partial_success': data.stats.success_count > 0 and data.stats.failed_count > 0,
 		}
 
 	def _load_template(self, platform: str, parsed: dict) -> NotificationTemplate | None:
