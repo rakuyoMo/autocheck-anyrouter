@@ -13,32 +13,40 @@ class DingTalkSender:
 		"""
 		self.config = config
 
-	async def send(self, title: str, content: str, context_data: dict | None = None):
+	async def send(self, title: str | None, content: str, context_data: dict | None = None):
 		"""
 		发送钉钉消息
 
 		Args:
-			title: 消息标题
+			title: 消息标题，`markdown` 模式必须提供非空的标题，纯文本模式下 None 或空字符串则不展示标题
 			content: 消息内容
 			context_data: 模板渲染的上下文数据
 
 		Raises:
+			ValueError: 当配置了 markdown 模式但未提供 title 时抛出
 			Exception: 当 HTTP 响应状态码不是 2xx 时抛出异常
 		"""
-		# 获取消息类型
-		platform_settings = self.config.platform_settings
-		message_type = platform_settings.get('message_type', '') if platform_settings else ''
+		platform_settings = self.config.platform_settings or {}
+		configured_type = platform_settings.get('message_type')
 
-		# 根据消息类型构造消息体
-		if message_type == 'markdown':
+		if configured_type == 'markdown':
+			# markdown 模式下必须提供 title
+			if not title:
+				raise ValueError('钉钉 markdown 模式需要提供非空的 title 参数，请在通知配置的 template.title 中设置标题，或将 message_type 改为纯文本模式')
+
+			# 构建消息体
 			msgtype = 'markdown'
-			message_body = {'title': title, 'text': content}
+			message_body = {
+				'title': title,
+				'text': content,
+			}
 		else:
-			# 其他情况都使用纯文本
+			# 纯文本模式
 			msgtype = 'text'
-			message_body = {'content': f'{title}\n{content}'}
+			text_content = f'{title}\n{content}' if title else content
+			message_body = {'content': text_content}
 
-		# 统一构造最终数据
+		# 构建请求数据
 		data = {
 			'msgtype': msgtype,
 			msgtype: message_body,

@@ -8,8 +8,22 @@
 
 ## [Unreleased]
 
+#### Add
+* 支持通知 title 的模板化配置，可通过模板变量动态生成通知标题。
+
+#### Fix
+* 修复企业微信、飞书和钉钉发送器 `message_type` 配置默认值处理错误的问题。
+
 #### Change
-* 统一企业微信配置字段：将 `markdown_style` 改为 `message_type`，与其他通知平台保持一致。
+* 配置文件中的 `template` 字段从字符串改为对象类型（向后兼容），现在可以分别设置 `title` 和 `content`。
+* 邮箱、Server 酱和钉钉（markdown 模式）发送器现在会在未提供 title 时抛出 `ValueError` 异常，提示用户必须设置标题。
+
+---
+
+## [1.2.1] (2025-10-15)
+
+#### Change
+* 统一企业微信配置字段：将 `markdown_style` 改为 `message_type`，与其他通知平台保持一致。[#15]
 
 ---
 
@@ -87,6 +101,7 @@
 * 支持 Fork 定时运行和 Composite Action 两种使用方式。
 * 完善的 CI/CD 工作流、测试体系和项目文档。
 
+[1.2.1]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.2.0
 [1.2.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.2.0
 [1.1.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.1.0
 [1.0.2]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.0.2
@@ -102,3 +117,4 @@
 [#9]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/9
 [#10]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/10
 [#11]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/11
+[#15]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/15

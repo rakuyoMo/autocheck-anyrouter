@@ -230,10 +230,7 @@ class CheckinService:
 			)
 
 			# 发送通知
-			await notify.push_message(
-				title='AnyRouter 签到提醒',
-				content=notification_data,
-			)
+			await notify.push_message(notification_data)
 			logger.notify('因失败或余额变化已发送通知')
 		else:
 			logger.info('所有账号成功且未检测到余额变化，跳过通知')

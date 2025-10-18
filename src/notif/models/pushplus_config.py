@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Any
 
+from notif.models.notification_template import NotificationTemplate
+
 
 @dataclass
 class PushPlusConfig:
@@ -13,4 +15,4 @@ class PushPlusConfig:
 	platform_settings: dict[str, Any] | None = None
 
 	# 模板内容，如果为空则使用默认模板
-	template: str | None = None
+	template: NotificationTemplate | None = None

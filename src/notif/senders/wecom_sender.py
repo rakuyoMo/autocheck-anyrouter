@@ -13,38 +13,38 @@ class WeComSender:
 		"""
 		self.config = config
 
-	async def send(self, title: str, content: str, context_data: dict | None = None):
+	async def send(self, title: str | None, content: str, context_data: dict | None = None):
 		"""
 		发送企业微信消息
 
 		Args:
-			title: 消息标题
+			title: 消息标题，为 None 或空字符串时不展示标题
 			content: 消息内容
 			context_data: 模板渲染的上下文数据
 
 		Raises:
 			Exception: 当 HTTP 响应状态码不是 2xx 时抛出异常
 		"""
-		# 检查 message_type 配置（确保 platform_settings 不为 None）
 		platform_settings = self.config.platform_settings or {}
-		message_type = platform_settings.get('message_type', 'markdown')
+		configured_type = platform_settings.get('message_type')
 
-		# 根据 message_type 选择消息格式
-		# 如果 message_type 包含 'markdown'，则直接作为消息类型；否则使用 text 模式
-		if message_type and 'markdown' in str(message_type):
-			data = {
-				'msgtype': message_type,
-				message_type: {
-					'content': f'**{title}**\n{content}',
-				},
-			}
+		# 确定消息类型：只接受 markdown 和 markdown_v2，其他情况一律使用 text
+		message_type = configured_type if configured_type in ['markdown', 'markdown_v2'] else 'text'
+
+		# 构建消息内容
+		if title:
+			formatted_title = f'**{title}**' if message_type != 'text' else title
+			message_content = f'{formatted_title}\n{content}'
 		else:
-			data = {
-				'msgtype': 'text',
-				'text': {
-					'content': f'{title}\n{content}',
-				},
-			}
+			message_content = content
+
+		# 构建请求数据
+		data = {
+			'msgtype': message_type,
+			message_type: {
+				'content': message_content,
+			},
+		}
 
 		async with httpx.AsyncClient(timeout=30.0) as client:
 			response = await client.post(self.config.webhook, json=data)

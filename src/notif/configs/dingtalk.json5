@@ -11,6 +11,12 @@
     "message_type": "",
   },
 
-  // 【可选】自定义通知模板（为空则使用下方默认模板）
-  "template": "{# 钉钉通知模板 #}{% if timestamp %}[TIME] Execution time: {{ timestamp }}\n\n{% endif %}{% if success_accounts %}{% for account in success_accounts %}[BALANCE] {{ account.name }}\n:money: Current balance: ${{ account.quota }}, Used: ${{ account.used }}\n{% endfor %}{% endif %}{% if failed_accounts %}{% for account in failed_accounts %}[FAIL] {{ account.name }} exception: {{ account.error }}\n{% endfor %}{% endif %}\n[STATS] Check-in result statistics:\n[SUCCESS] Success: {{ stats.success_count }}/{{ stats.total_count }}\n[FAIL] Failed: {{ stats.failed_count }}/{{ stats.total_count }}\n{% if all_success %}[SUCCESS] All accounts check-in successful!{% else %}{% if partial_success %}[WARN] Some accounts check-in successful{% else %}[ERROR] All accounts check-in failed{% endif %}{% endif %}",
+  // 【可选】自定义通知模板（不设置，或为空时使用下方默认模板）
+  "template": {
+    // 通知标题，不设置，或为空字符串时不展示
+    "title": "AnyRouter 签到提醒",
+
+    // 通知内容
+    "content": "{# 钉钉通知模板 #}{% if timestamp %}[TIME] Execution time: {{ timestamp }}\n\n{% endif %}{% if success_accounts %}{% for account in success_accounts %}[BALANCE] {{ account.name }}\n:money: Current balance: ${{ account.quota }}, Used: ${{ account.used }}\n{% endfor %}{% endif %}{% if failed_accounts %}{% for account in failed_accounts %}[FAIL] {{ account.name }} exception: {{ account.error }}\n{% endfor %}{% endif %}\n[STATS] Check-in result statistics:\n[SUCCESS] Success: {{ stats.success_count }}/{{ stats.total_count }}\n[FAIL] Failed: {{ stats.failed_count }}/{{ stats.total_count }}\n{% if all_success %}[SUCCESS] All accounts check-in successful!{% else %}{% if partial_success %}[WARN] Some accounts check-in successful{% else %}[ERROR] All accounts check-in failed{% endif %}{% endif %}",
+  },
 }

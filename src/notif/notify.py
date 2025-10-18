@@ -9,6 +9,7 @@ from core.models.notification_data import NotificationData
 from notif.models import (
 	EmailConfig,
 	NotificationHandler,
+	NotificationTemplate,
 	PushPlusConfig,
 	ServerPushConfig,
 	WebhookConfig,
@@ -40,53 +41,62 @@ class NotificationKit:
 		# 注册所有通知处理器
 		self._handlers = self._register_handlers()
 
-	async def push_message(self, title: str, content: Union[str, NotificationData]):
+	async def push_message(self, content: NotificationData):
 		"""
 		发送通知消息
 
 		Args:
-			title: 消息标题
-			content: 消息内容，可以是字符串或 NotificationData 结构
+			content: 通知数据
 		"""
 		# 检查是否有可用的通知处理器
 		if not self._handlers:
 			logger.warning('没有可用的通知处理器，跳过通知提醒')
 			return
 
-		# 构建 context_data（如果 content 是 NotificationData）
-		context_data = None
-		if isinstance(content, NotificationData):
-			context_data = self._build_context_data(content)
+		# 构建上下文数据
+		context_data = self._build_context_data(content)
 
+		# 向所有可用的 handler 发送通知
 		for handler in self._handlers:
-			# 检查配置是否存在
-			if not handler.is_available():
-				logger.info('未配置，跳过推送', handler.name)
-				continue
-
-			try:
-				# 渲染模板
-				rendered_content = self._render_content(
-					config=handler.config,
-					content=content,
+			if handler.is_available():
+				await self._send_to_handler(
+					handler=handler,
 					context_data=context_data,
 				)
 
-				# 发送消息
-				await handler.send_func(
-					title=title,
-					content=rendered_content,
-					context_data=context_data,
-				)
+	async def _send_to_handler(self, handler: NotificationHandler, context_data: dict):
+		"""
+		向单个 handler 发送通知
 
-				logger.success('消息推送成功！', handler.name)
+		Args:
+			handler: 通知处理器
+			context_data: 模板渲染的上下文数据
+		"""
+		# 类型收窄：确保 config 不是 None
+		assert handler.config is not None
 
-			except Exception as e:
-				logger.error(
-					message=f'消息推送失败！原因：{str(e)}',
-					tag=handler.name,
-					exc_info=True,
-				)
+		try:
+			# 渲染模板
+			rendered_title, rendered_content = self._render_template(
+				template=handler.config.template,
+				context_data=context_data,
+			)
+
+			# 发送消息
+			await handler.send_func(
+				title=rendered_title,
+				content=rendered_content,
+				context_data=context_data,
+			)
+
+			logger.success(f'{handler.name} 消息发送成功！')
+
+		except Exception as e:
+			logger.error(
+				message=f'消息推送失败！原因：{str(e)}',
+				tag=handler.name,
+				exc_info=True,
+			)
 
 	def _register_handlers(self) -> list[NotificationHandler]:
 		"""
@@ -165,60 +175,46 @@ class NotificationKit:
 
 		return handlers
 
-	def _render_content(
+	def _render_template(
 		self,
-		config: Any,
-		content: Union[str, NotificationData],
-		context_data: dict | None,
-	) -> str:
-		"""
-		渲染消息内容（处理模板）
-
-		Args:
-			config: 配置对象（需要有 template 属性）
-			content: 原始内容
-			context_data: 模板渲染的上下文数据
-
-		Returns:
-			渲染后的内容
-		"""
-		# 如果有上下文数据且配置了模板，则渲染模板；否则返回字符串
-		if context_data and config.template:
-			return self._render_template(
-				template=config.template,
-				context_data=context_data,
-			)
-		return str(content)
-
-	def _render_template(self, template: str, context_data: dict) -> str:
+		template: NotificationTemplate,
+		context_data: dict,
+	) -> tuple[str | None, str]:
 		"""
 		渲染模板
 
 		Args:
-			template: 模板字符串
+			template: NotificationTemplate 对象
 			context_data: 上下文数据
 
 		Returns:
-			渲染后的内容
+			(title, content) 元组，title 可能为 None（表示不展示标题）
 
 		注意: Stencil 模板引擎有以下限制:
 		1. 不支持比较操作符 (==, !=, <, > 等)
 		2. 不支持字典的点访问，只能访问对象属性
 		因此我们提供分组的账号列表和对象形式的数据
 		"""
+		context = stencil.Context(context_data)
+
 		try:
-			# 解析并渲染模板
-			template_obj = stencil.Template(template)
-			context = stencil.Context(context_data)
-			rendered_result = template_obj.render(context)
+			# 渲染 title（如果有）
+			rendered_title = self._render_text(
+				text=template.title,
+				context=context,
+			)
 
-			# 检查渲染结果是否为 None
-			if rendered_result is None:
-				raise ValueError('模板渲染返回了 None')
+			# 渲染 content
+			rendered_content = self._render_text(
+				text=template.content,
+				context=context,
+			)
 
-			# 处理换行符：将 \n 转换为真正的换行符
-			rendered_result = rendered_result.replace('\\n', '\n')
-			return rendered_result
+			# content 不能为 None
+			if rendered_content is None:
+				raise ValueError('content 模板渲染返回了 None')
+
+			return (rendered_title, rendered_content)
 
 		except Exception as e:
 			logger.error(
@@ -230,10 +226,38 @@ class NotificationKit:
 			timestamp = context_data.get('timestamp', '')
 			accounts = context_data.get('accounts', [])
 
-			return f'{timestamp}\\n\\n' + '\\n\\n'.join([
+			fallback_content = f'{timestamp}\\n\\n' + '\\n\\n'.join([
 				f'[{"成功" if account.status == "success" else "失败"}] {account.name}'
 				for account in accounts
 			])  # fmt: skip
+			fallback_title = template.title if template.title else None
+			return (fallback_title, fallback_content)
+
+	def _render_text(self, text: str | None, context: stencil.Context) -> str | None:
+		"""
+		渲染单个文本模板
+
+		Args:
+			text: 模板字符串，None 或空字符串表示不渲染
+			context: Stencil 上下文对象
+
+		Returns:
+			渲染后的文本，如果输入为 None 或空字符串则返回 None
+		"""
+		# 如果文本为 None 或空字符串，直接返回 None
+		if not text:
+			return None
+
+		# 渲染模板
+		template_obj = stencil.Template(text)
+		rendered = template_obj.render(context)
+
+		# 检查渲染结果
+		if rendered is None:
+			raise ValueError('模板渲染返回了 None')
+
+		# 处理换行符：将 \n 转换为真正的换行符
+		return rendered.replace('\\n', '\n')
 
 	def _build_context_data(self, data: NotificationData) -> dict:
 		"""
@@ -265,6 +289,37 @@ class NotificationKit:
 			'partial_success': len(success_accounts) > 0 and len(failed_accounts) > 0,
 		}
 
+	def _load_template(self, platform: str, parsed: dict) -> NotificationTemplate | None:
+		"""
+		加载模板配置
+
+		Args:
+			platform: 平台名称
+			parsed: 解析后的配置字典
+
+		Returns:
+			NotificationTemplate 对象，如果没有配置则返回 None
+		"""
+		template_value = parsed.get('template')
+		if template_value is None:
+			default_config = self._load_default_config(platform)
+			template_value = default_config.get('template') if default_config else None
+
+		return NotificationTemplate.from_value(template_value)
+
+	def _validate_required_field(self, parsed: dict, field: str) -> bool:
+		"""
+		验证必需字段是否存在且非空
+
+		Args:
+			parsed: 解析后的配置字典
+			field: 字段名
+
+		Returns:
+			字段存在且非空返回 True，否则返回 False
+		"""
+		return field in parsed and parsed[field]
+
 	def _load_default_config(self, platform: str) -> dict[str, Any] | None:
 		"""加载默认配置文件"""
 		config_file = self.config_dir / f'{platform}.json5'
@@ -291,24 +346,32 @@ class NotificationKit:
 		if not email_notif_config:
 			return None
 
-		# 解析失败
 		parsed = self._parse_env_config(email_notif_config)
 		if not isinstance(parsed, dict):
 			return None
 
-		# 缺少必需字段或字段值为空
-		if 'user' not in parsed or not parsed['user']:
+		# 验证必需字段
+		if not self._validate_required_field(
+			parsed=parsed,
+			field='user',
+		):
 			return None
-		if 'pass' not in parsed or not parsed['pass']:
+		if not self._validate_required_field(
+			parsed=parsed,
+			field='pass',
+		):
 			return None
-		if 'to' not in parsed or not parsed['to']:
+		if not self._validate_required_field(
+			parsed=parsed,
+			field='to',
+		):
 			return None
 
-		# 如果 template 为 None，则使用默认模板
-		template = parsed.get('template')
-		if template is None:
-			default_config = self._load_default_config('email')
-			template = default_config.get('template') if default_config else None
+		# 加载模板
+		template = self._load_template(
+			platform='email',
+			parsed=parsed,
+		)
 
 		return EmailConfig(
 			user=parsed['user'],
@@ -329,15 +392,18 @@ class NotificationKit:
 
 		# 字典格式配置
 		if isinstance(parsed, dict):
-			# 缺少必需字段或字段值为空
-			if 'webhook' not in parsed or not parsed['webhook']:
+			# 验证必需字段
+			if not self._validate_required_field(
+				parsed=parsed,
+				field='webhook',
+			):
 				return None
 
-			# 如果 template 为 None，则使用默认模板
-			template = parsed.get('template')
-			if template is None:
-				default_config = self._load_default_config(platform)
-				template = default_config.get('template') if default_config else None
+			# 加载模板
+			template = self._load_template(
+				platform=platform,
+				parsed=parsed,
+			)
 
 			return WebhookConfig(
 				webhook=parsed['webhook'],
@@ -347,20 +413,32 @@ class NotificationKit:
 
 		# 纯字符串，当做 webhook URL，使用默认模板
 		default_config = self._load_default_config(platform)
+		template_value = default_config.get('template') if default_config else None
+		template = NotificationTemplate.from_value(template_value)
+
 		return WebhookConfig(
 			webhook=parsed,
 			platform_settings=default_config.get('platform_settings') if default_config else None,
-			template=default_config.get('template') if default_config else None,
+			template=template,
 		)
 
 	def _load_dingtalk_config(self) -> WebhookConfig | None:
-		return self._load_webhook_config('dingtalk', 'DINGTALK_NOTIF_CONFIG')
+		return self._load_webhook_config(
+			platform='dingtalk',
+			notif_config_key='DINGTALK_NOTIF_CONFIG',
+		)
 
 	def _load_feishu_config(self) -> WebhookConfig | None:
-		return self._load_webhook_config('feishu', 'FEISHU_NOTIF_CONFIG')
+		return self._load_webhook_config(
+			platform='feishu',
+			notif_config_key='FEISHU_NOTIF_CONFIG',
+		)
 
 	def _load_wecom_config(self) -> WebhookConfig | None:
-		return self._load_webhook_config('wecom', 'WECOM_NOTIF_CONFIG')
+		return self._load_webhook_config(
+			platform='wecom',
+			notif_config_key='WECOM_NOTIF_CONFIG',
+		)
 
 	def _load_pushplus_config(self) -> PushPlusConfig | None:
 		"""加载 PushPlus 配置"""
@@ -372,15 +450,18 @@ class NotificationKit:
 
 		# 字典格式配置
 		if isinstance(parsed, dict):
-			# 缺少必需字段或字段值为空
-			if 'token' not in parsed or not parsed['token']:
+			# 验证必需字段
+			if not self._validate_required_field(
+				parsed=parsed,
+				field='token',
+			):
 				return None
 
-			# 如果 template 为 None，则使用默认模板
-			template = parsed.get('template')
-			if template is None:
-				default_config = self._load_default_config('pushplus')
-				template = default_config.get('template') if default_config else None
+			# 加载模板
+			template = self._load_template(
+				platform='pushplus',
+				parsed=parsed,
+			)
 
 			return PushPlusConfig(
 				token=parsed['token'],
@@ -390,10 +471,13 @@ class NotificationKit:
 
 		# 纯字符串，当做 token，使用默认模板
 		default_config = self._load_default_config('pushplus')
+		template_value = default_config.get('template') if default_config else None
+		template = NotificationTemplate.from_value(template_value)
+
 		return PushPlusConfig(
 			token=parsed,
 			platform_settings=default_config.get('platform_settings') if default_config else None,
-			template=default_config.get('template') if default_config else None,
+			template=template,
 		)
 
 	def _load_serverpush_config(self) -> ServerPushConfig | None:
@@ -406,15 +490,18 @@ class NotificationKit:
 
 		# 字典格式配置
 		if isinstance(parsed, dict):
-			# 缺少必需字段或字段值为空
-			if 'send_key' not in parsed or not parsed['send_key']:
+			# 验证必需字段
+			if not self._validate_required_field(
+				parsed=parsed,
+				field='send_key',
+			):
 				return None
 
-			# 如果 template 为 None，则使用默认模板
-			template = parsed.get('template')
-			if template is None:
-				default_config = self._load_default_config('serverpush')
-				template = default_config.get('template') if default_config else None
+			# 加载模板
+			template = self._load_template(
+				platform='serverpush',
+				parsed=parsed,
+			)
 
 			return ServerPushConfig(
 				send_key=parsed['send_key'],
@@ -424,8 +511,11 @@ class NotificationKit:
 
 		# 纯字符串，当做 send_key，使用默认模板
 		default_config = self._load_default_config('serverpush')
+		template_value = default_config.get('template') if default_config else None
+		template = NotificationTemplate.from_value(template_value)
+
 		return ServerPushConfig(
 			send_key=parsed,
 			platform_settings=default_config.get('platform_settings') if default_config else None,
-			template=default_config.get('template') if default_config else None,
+			template=template,
 		)
