@@ -211,67 +211,69 @@ class NotificationKit:
 		"""
 		context = stencil.Context(context_data)
 
-		try:
-			# 渲染 title（如果有）
-			rendered_title = self._render_text(
-				text=template.title,
-				context=context,
-			)
+		# 分别渲染 title 和 content
+		# 渲染失败时自动返回原始模板字符串
+		rendered_title = self._render_text(
+			text=template.title,
+			context=context,
+			field_name='标题',
+		)
 
-			# 渲染 content
-			rendered_content = self._render_text(
-				text=template.content,
-				context=context,
-			)
+		rendered_content = self._render_text(
+			text=template.content,
+			context=context,
+			field_name='内容',
+		)
 
-			# content 不能为 None
-			if rendered_content is None:
-				raise ValueError('content 模板渲染返回了 None')
+		# content 不能为 None，如果为 None 则使用原始模板或空字符串
+		if rendered_content is None:
+			rendered_content = template.content if template.content else ''
 
-			return (rendered_title, rendered_content)
+		return (rendered_title, rendered_content)
 
-		except Exception as e:
-			logger.error(
-				message=f'模板渲染失败：{e}',
-				exc_info=True,
-			)
-
-			# 如果模板渲染失败，返回简单格式
-			timestamp = context_data.get('timestamp', '')
-			accounts = context_data.get('accounts', [])
-
-			fallback_content = f'{timestamp}\\n\\n' + '\\n\\n'.join([
-				f'[{"成功" if account.status == "success" else "失败"}] {account.name}'
-				for account in accounts
-			])  # fmt: skip
-			fallback_title = template.title if template.title else None
-			return (fallback_title, fallback_content)
-
-	def _render_text(self, text: str | None, context: stencil.Context) -> str | None:
+	def _render_text(
+		self,
+		text: str | None,
+		context: stencil.Context,
+		field_name: str | None = None,
+	) -> str | None:
 		"""
 		渲染单个文本模板
 
 		Args:
 			text: 模板字符串，None 或空字符串表示不渲染
 			context: Stencil 上下文对象
+			field_name: 字段名称，用于错误日志（可选）
 
 		Returns:
-			渲染后的文本，如果输入为 None 或空字符串则返回 None
+			渲染后的文本，渲染失败时返回原始文本，如果输入为 None 或空字符串则返回 None
 		"""
 		# 如果文本为 None 或空字符串，直接返回 None
 		if not text:
 			return None
 
-		# 渲染模板
-		template_obj = stencil.Template(text)
-		rendered = template_obj.render(context)
+		try:
+			# 渲染模板
+			template_obj = stencil.Template(text)
+			rendered = template_obj.render(context)
 
-		# 检查渲染结果
-		if rendered is None:
-			raise ValueError('模板渲染返回了 None')
+			# 检查渲染结果
+			if rendered is None:
+				raise ValueError('模板渲染返回了 None')
 
-		# 处理换行符：将 \n 转换为真正的换行符
-		return rendered.replace('\\n', '\n')
+			# 处理换行符：将 \n 转换为真正的换行符
+			return rendered.replace('\\n', '\n')
+
+		except Exception as e:
+			# 如果提供了 field_name，输出错误日志
+			if field_name:
+				logger.error(
+					message=f'{field_name}模板渲染失败：{e}',
+					exc_info=True,
+				)
+
+			# 返回原始模板字符串
+			return text
 
 	def _build_context_data(self, data: NotificationData) -> dict:
 		"""
