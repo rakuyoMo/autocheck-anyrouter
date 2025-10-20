@@ -10,6 +10,8 @@
 
 ## 功能特性
 
+> 版本更新内容可查看 [CHANGELOG](CHANGELOG.md) 或 [release page](https://github.com/rakuyoMo/autocheck-anyrouter/releases)
+
 ### 核心功能
 - [x] 单个/多账号自动签到
 - [x] 多平台通知，并且支持通过 Stencil 模板自定义通知内容
@@ -143,12 +145,29 @@ jobs:
 您可以在 `Environment secrets` 中添加相应的配置。如下图所示：
 <img src="/assets/github-env-notif-config-example.png" alt="环境变量配置示例" width="500" style="max-width: 100%;" />
 
-通知默认只在以下情况时触发，且暂不支持通过环境变量控制触发时机：
+#### 通知时机
+
+从 [v1.3.1] 版本开始，支持通过环境变量 `NOTIFY_TRIGGERS` 设置通知的触发时机。取值范围参考 [`NotifyTrigger`](src/notif/models/notify_trigger.py)：
+- `balance_changed`：余额变化（包括首次运行）
+- `failed`：任意账号签到失败
+- `success`：任意账号签到成功
+- `always`：总是发送
+- `never`：从不发送
+
+[默认配置](src/notif/trigger_manager.py#L11)为 `NOTIFY_TRIGGERS='balance_changed,failed'`，即余额变化（包括初次运行）时，以及任意账号签到失败时，将发送通知。
+
+您可通过设置该环境变量达到自定义通知时机的目的，比如将 `NOTIFY_TRIGGERS` 设置为 `failed`，则只有在签到失败时才会发送通知，可配合[自定义消息模板](#自定义通知模板)实现仅查看报错信息。
+
+<details>
+<summary>v1.3.1 以下版本时，通知触发时机为：</summary>
+
 - 首次运行时
 - 余额发生变化时
 - 某个账号签到失败时
 
-### 自定义通知模板
+</details>
+
+#### 自定义通知模板
 
 支持使用 [Stencil](https://stencil.pyllyukko.com/) 模板语法自定义通知内容。模板配置支持分别自定义通知的标题和内容。
 
@@ -461,3 +480,4 @@ mise run lint --fix       # 代码检查并自动修复
 **⭐ 如果这个项目对您有帮助，请帮忙点个 Star！**
 
 [v1.3.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.3.0
+[v1.3.1]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.3.1
