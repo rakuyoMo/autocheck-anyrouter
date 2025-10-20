@@ -229,17 +229,17 @@ class NotificationKit:
 		success_accounts = [acc for acc in data.accounts if acc.status == 'success']
 		failed_accounts = [acc for acc in data.accounts if acc.status != 'success']
 
-		# 余额变化相关分组
+		# 余额变化相关分组（明确只包含成功的账号）
 		balance_changed_accounts = [
-			acc for acc in data.accounts
+			acc for acc in success_accounts
 			if acc.balance_changed is True
 		]
 		balance_unchanged_accounts = [
-			acc for acc in data.accounts
+			acc for acc in success_accounts
 			if acc.balance_changed is False
 		]
 
-		# 计算可判断余额的账号数量（排除 balance_changed=None 的账号）
+		# 计算可判断余额的成功账号数量（排除 balance_changed=None 的账号）
 		balance_determinable_count = len(balance_changed_accounts) + len(balance_unchanged_accounts)
 
 		return {
@@ -256,7 +256,7 @@ class NotificationKit:
 			'all_success': data.stats.failed_count == 0,
 			'all_failed': data.stats.success_count == 0,
 			'partial_success': data.stats.success_count > 0 and data.stats.failed_count > 0,
-			# 余额变化相关的新变量
+			# 余额变化相关的变量（只包含成功的账号）
 			'balance_changed_accounts': balance_changed_accounts,
 			'balance_unchanged_accounts': balance_unchanged_accounts,
 			'has_balance_changed': len(balance_changed_accounts) > 0,

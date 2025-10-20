@@ -223,33 +223,44 @@ jobs:
 > 请注意，虽然本系统使用 json5 解析 json 字符串，但是为了避免消息平台方的问题，建议您在设置 `template` 字段时，**不要使用多行字符串**，而是将每个换行符替换为 `\\n`。
 
 以企业微信支持的 markdown 语法为例：
+> 我在该示例中使用了一些**多余的缩进**，目的是让您能够更好的了解 Stencil 的大致语法以及模板内容。实际使用时不需要这些缩进。
+
 ```jinja2
-{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}
+{% if all_success %}
+    **✅ 所有账号全部签到成功！**
+{% else %}
+    {% if partial_success %}
+        **⚠️ 部分账号签到成功**
+    {% else %}
+        **❌ 所有账号签到失败**
+    {% endif %}
+{% endif %}
 
 ### 详细信息
 - **执行时间**：{{ timestamp }}
 - **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}
 - **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}
 
-{% if has_success %}
-### 成功账号
-{% if all_balance_unchanged %}
-所有账号余额无变化
-{% else %}
-| 账号 | 已用（$） | 剩余（$） |
-| :----- | :---- | :---- |
-{% for account in success_accounts %}
-|{{ account.name }}|{{ account.used }}|{{ account.quota }}|
-{% endfor %}
+{% if has_failed %}
+    ### 失败账号
+    | 账号 | 错误原因 |
+    | :----- | :----- |
+    {% for account in failed_accounts %}
+        |{{ account.name }}|{{ account.error }}|
+    {% endfor %}
 {% endif %}
 
-{% if has_failed %}
-### 失败账号
-| 账号 | 错误原因 |
-| :----- | :----- |
-{% for account in failed_accounts %}
-|{{ account.name }}|{{ account.error }}|
-{% endfor %}
+{% if has_success %}
+    ### 成功账号
+    {% if all_balance_unchanged %}
+        所有账号余额无变化
+    {% else %}
+        | 账号 | 已用（$） | 剩余（$） |
+        | :----- | :---- | :---- |
+        {% for account in success_accounts %}
+            |{{ account.name }}|{{ account.used }}|{{ account.quota }}|
+        {% endfor %}
+    {% endif %}
 {% endif %}
 ```
 
@@ -270,7 +281,7 @@ jobs:
   },
   "template": {
     "title": "{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}",
-    "content": "\\n### 详细信息\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}{% if has_success %}\\n### 成功账号\\n{% if all_balance_unchanged %}所有账号余额无变化{% else %}| 账号 | 已用（$） | 剩余（$） |\\n| :----- | :---- | :---- |\\n{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|{% endfor %}\\n{% endif %}{% endif %}{% if has_failed %}\\n### 失败账号\\n| 账号 | 错误原因 |\\n| :----- | :----- |\\n{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|\\n{% endfor %}{% endif %}"
+    "content": "\\n### 详细信息\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}\\n{% if has_failed %}\\n### 失败账号\\n| 账号 | 错误原因 |\\n| :----- | :----- |\\n{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|\\n{% endfor %}{% endif %}{% if has_success %}\\n### 成功账号\\n{% if all_balance_unchanged %}所有账号余额无变化{% else %}| 账号 | 已用（$） | 剩余（$） |\\n| :----- | :---- | :---- |\\n{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|\\n{% endfor %}{% endif %}{% endif %}"
   }
 }
 ```
