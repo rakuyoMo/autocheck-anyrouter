@@ -20,7 +20,8 @@ class EnvManager:
 
 	@staticmethod
 	def set_notification(platform: str, config: dict | str):
-		"""设置通知平台环境变量
+		"""
+		设置通知平台环境变量
 
 		Args:
 			platform: 平台名称（dingtalk/feishu/wecom/email/bark/pushplus/serverpush）
@@ -47,7 +48,8 @@ class EnvManager:
 
 	@staticmethod
 	def set_notify_triggers(triggers: str):
-		"""设置通知触发器
+		"""
+		设置通知触发器
 
 		Args:
 			triggers: 触发器字符串（如 "always"、"never"、"success,failed"）
@@ -56,7 +58,8 @@ class EnvManager:
 
 	@staticmethod
 	def set_repo_visibility(visibility: str):
-		"""设置仓库可见性
+		"""
+		设置仓库可见性
 
 		Args:
 			visibility: 可见性（public/private）
@@ -115,7 +118,8 @@ def config_env_setter(monkeypatch: pytest.MonkeyPatch) -> Callable:
 	"""设置配置环境变量的工厂函数"""
 
 	def _set_config(platform: str, config: dict[str, Any] | str):
-		"""设置平台配置环境变量
+		"""
+		设置平台配置环境变量
 
 		Args:
 			platform: 平台名称 (email, dingtalk, feishu, wecom, pushplus, serverpush, bark)

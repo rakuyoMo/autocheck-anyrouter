@@ -18,7 +18,8 @@ class GitHubReporter:
 		balance_manager: BalanceManager,
 		privacy_handler: PrivacyHandler,
 	):
-		"""初始化 GitHub 报告生成器
+		"""
+		初始化 GitHub 报告生成器
 
 		Args:
 			balance_manager: 余额管理器
@@ -34,7 +35,8 @@ class GitHubReporter:
 		current_balances: dict[str, dict[str, float]],
 		accounts: list[dict[str, Any]],
 	):
-		"""生成 GitHub Actions Step Summary
+		"""
+		生成 GitHub Actions Step Summary
 
 		Args:
 			success_count: 成功数量

@@ -22,7 +22,8 @@ class NotifyTriggerManager:
 		has_balance_changed: bool,
 		is_first_run: bool,
 	) -> bool:
-		"""判断是否应该发送通知
+		"""
+		判断是否应该发送通知
 
 		Args:
 			has_success: 是否有成功的账号
@@ -62,7 +63,8 @@ class NotifyTriggerManager:
 		has_balance_changed: bool,
 		is_first_run: bool,
 	) -> list[str]:
-		"""获取通知触发的原因列表
+		"""
+		获取通知触发的原因列表
 
 		Args:
 			has_success: 是否有成功的账号
@@ -90,7 +92,8 @@ class NotifyTriggerManager:
 		return reasons
 
 	def _parse_triggers(self) -> set[NotifyTrigger]:
-		"""解析通知触发器配置
+		"""
+		解析通知触发器配置
 
 		Returns:
 			通知触发器集合

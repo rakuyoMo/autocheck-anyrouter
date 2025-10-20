@@ -12,7 +12,8 @@ class MockPlaywright:
 
 	@staticmethod
 	def setup_success(stack: ExitStack, cookies: list[dict] = []):
-		"""设置成功的 Playwright Mock
+		"""
+		设置成功的 Playwright Mock
 
 		Args:
 			stack: ExitStack 上下文管理器
@@ -50,7 +51,8 @@ class MockPlaywright:
 
 	@staticmethod
 	def setup_failure(stack: ExitStack, error: Exception = Exception('Playwright 启动失败')):
-		"""设置失败的 Playwright Mock
+		"""
+		设置失败的 Playwright Mock
 
 		Args:
 			stack: ExitStack 上下文管理器
@@ -69,7 +71,8 @@ class MockHttpClient:
 
 	@staticmethod
 	def setup(stack: ExitStack, get_handler, post_handler):
-		"""设置 HTTP 客户端 Mock
+		"""
+		设置 HTTP 客户端 Mock
 
 		Args:
 			stack: ExitStack 上下文管理器
@@ -96,7 +99,8 @@ class MockHttpClient:
 		text: str = '',
 		json_error: Exception | None = None,
 	):
-		"""构建 HTTP 响应对象
+		"""
+		构建 HTTP 响应对象
 
 		Args:
 			status: HTTP 状态码
@@ -149,7 +153,8 @@ class MockSMTP:
 
 	@staticmethod
 	def setup(stack: ExitStack):
-		"""设置 SMTP Mock
+		"""
+		设置 SMTP Mock
 
 		Args:
 			stack: ExitStack 上下文管理器

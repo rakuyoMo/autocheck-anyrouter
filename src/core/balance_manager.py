@@ -9,7 +9,8 @@ class BalanceManager:
 	"""余额管理器"""
 
 	def __init__(self, balance_hash_file: Path):
-		"""初始化余额管理器
+		"""
+		初始化余额管理器
 
 		Args:
 			balance_hash_file: 余额 hash 文件路径
@@ -17,7 +18,8 @@ class BalanceManager:
 		self.balance_hash_file = balance_hash_file
 
 	def load_balance_hash(self) -> dict[str, str] | None:
-		"""加载余额 hash 字典
+		"""
+		加载余额 hash 字典
 
 		Returns:
 			字典格式：{api_user_hash: balance_hash}，加载失败返回 None
@@ -42,7 +44,8 @@ class BalanceManager:
 		return None
 
 	def save_balance_hash(self, balance_hash_dict: dict[str, str]):
-		"""保存余额 hash 字典
+		"""
+		保存余额 hash 字典
 
 		Args:
 			balance_hash_dict: 字典格式 {api_user_hash: balance_hash}
@@ -61,7 +64,8 @@ class BalanceManager:
 
 	@staticmethod
 	def generate_account_key(api_user: str) -> str:
-		"""生成账号标识的 hash
+		"""
+		生成账号标识的 hash
 
 		Args:
 			api_user: API 用户标识
@@ -73,7 +77,8 @@ class BalanceManager:
 
 	@staticmethod
 	def generate_balance_hash(quota: float, used: float) -> str:
-		"""生成单个账号余额的 hash
+		"""
+		生成单个账号余额的 hash
 
 		Args:
 			quota: 总额度

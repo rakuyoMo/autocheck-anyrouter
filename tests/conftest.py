@@ -24,7 +24,8 @@ from tests.fixtures.env import accounts_env, clean_notification_env, config_env_
 
 
 def assert_json_contains(actual: dict[str, Any], expected: dict[str, Any]) -> None:
-	"""断言 JSON 包含预期的键值对（支持嵌套）
+	"""
+	断言 JSON 包含预期的键值对（支持嵌套）
 
 	Args:
 	    actual: 实际的 JSON 数据
@@ -39,7 +40,8 @@ def assert_json_contains(actual: dict[str, Any], expected: dict[str, Any]) -> No
 
 
 def assert_file_content_contains(file_path: Path, expected_content: str) -> None:
-	"""断言文件内容包含预期的字符串
+	"""
+	断言文件内容包含预期的字符串
 
 	Args:
 	    file_path: 文件路径
