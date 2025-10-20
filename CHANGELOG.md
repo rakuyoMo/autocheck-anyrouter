@@ -8,14 +8,17 @@
 
 ## [Unreleased]
 
+#### Change
+* 重构代码结构，拆分 `CheckinService`。[#22]
+* 移除全局的 `notify` 实例，改为在 `CheckinService` 中显式初始化 `NotificationKit`。[#22]
+
 ---
 
 ## [1.3.0] (2025-10-20)
 
 #### Add
 * 新增 Bark 通知方式支持，包含丰富的配置选项。[#19]
-* 支持通知 title 的模板化配置，可通过模板变量动态生成通知标题。[#17]
-* Stencil 模板变量新增余额变化相关内容。[#20]
+* 支持通知 title 的模板化配置，可通过模板变量动态生成通知标题。[#17]* Stencil 模板变量新增余额变化相关内容。[#20]
 
 #### Fix
 * 修复部分账号签到成功但通知显示"所有账号失败"的判断错误。[#18]
@@ -130,3 +133,5 @@
 [#15]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/15
 [#17]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/17
 [#19]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/19
+[#20]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/20
+[#22]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/22

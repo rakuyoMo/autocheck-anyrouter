@@ -9,9 +9,9 @@ from notif.models.webhook_config import WebhookConfig
 __all__ = [
 	'BarkConfig',
 	'EmailConfig',
-	'WebhookConfig',
-	'PushPlusConfig',
-	'ServerPushConfig',
 	'NotificationHandler',
 	'NotificationTemplate',
+	'PushPlusConfig',
+	'ServerPushConfig',
+	'WebhookConfig',
 ]

@@ -1,7 +1,5 @@
-from .notify import NotificationKit
-
-notify = NotificationKit()
+from .models import NotifyTrigger
 
 __all__ = [
-	'notify',
+	'NotificationKit',
 ]
