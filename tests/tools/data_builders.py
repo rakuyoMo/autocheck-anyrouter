@@ -1,51 +1,51 @@
+from datetime import datetime
+
 from core.models import AccountResult, NotificationData, NotificationStats
 
 
-def create_account_result_data(
+def build_account_result(
 	name: str = '测试账号',
 	status: str = 'success',
-	quota: float = 25.0,
-	used: float = 5.0,
-	error: str | None = None,
+	quota: float | None = None,
+	used: float | None = None,
 	balance_changed: bool | None = None,
+	error: str | None = None,
 ) -> AccountResult:
-	"""
-	创建账号结果数据的辅助函数
+	"""构建账号结果数据
 
 	Args:
 		name: 账号名称
-		status: 状态 ('success' 或 'failed')
-		quota: 余额配额
-		used: 已使用配额
+		status: 状态（success/failed）
+		quota: 总额度
+		used: 已使用额度
+		balance_changed: 余额是否变化
 		error: 错误信息
-		balance_changed: 余额是否变化（None 表示无法判断）
 
 	Returns:
-		AccountResult 实例
+		AccountResult 对象
 	"""
 	return AccountResult(
 		name=name,
 		status=status,
-		quota=quota if status == 'success' else None,
-		used=used if status == 'success' else None,
+		quota=quota if status == 'success' and quota is not None else (25.0 if status == 'success' else None),
+		used=used if status == 'success' and used is not None else (5.0 if status == 'success' else None),
 		balance_changed=balance_changed,
-		error=error if status != 'success' else None,
+		error=error,
 	)
 
 
-def create_notification_data(
+def build_notification_data(
 	accounts: list[AccountResult],
-	timestamp: str = '2024-01-01 12:00:00',
+	timestamp: str | None = None,
 ) -> NotificationData:
-	"""
-	创建通知数据的辅助函数
+	"""构建通知数据
 
 	Args:
 		accounts: 账号结果列表
 		timestamp: 时间戳
 
 	Returns:
-		NotificationData 实例
+		NotificationData 对象
 	"""
 	success_count = sum(1 for acc in accounts if acc.status == 'success')
 	failed_count = len(accounts) - success_count
@@ -59,5 +59,5 @@ def create_notification_data(
 	return NotificationData(
 		accounts=accounts,
 		stats=stats,
-		timestamp=timestamp,
+		timestamp=timestamp or datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
 	)

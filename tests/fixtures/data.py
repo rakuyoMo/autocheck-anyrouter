@@ -3,18 +3,57 @@ from collections.abc import Callable
 import pytest
 
 from core.models import NotificationData
-from tests.tools.data_builders import (
-	create_account_result_data,
-)
-from tests.tools.data_builders import (
-	create_notification_data as build_notification_data,
-)
+from tests.tools.data_builders import build_account_result, build_notification_data
+
+# 标准测试账号
+STANDARD_ACCOUNTS = [
+	{
+		'name': '测试账号 A',
+		'cookies': 'session=test_a',
+		'api_user': 'user_a',
+	},
+	{
+		'name': '测试账号 B',
+		'cookies': 'session=test_b',
+		'api_user': 'user_b',
+	},
+]
+
+# 单个测试账号
+SINGLE_ACCOUNT = [
+	{
+		'name': '单个账号',
+		'cookies': 'session=single',
+		'api_user': 'user_single',
+	},
+]
+
+# 无名称的测试账号
+NAMELESS_ACCOUNT = [
+	{
+		'cookies': 'session=nameless',
+		'api_user': 'user_nameless',
+	},
+]
+
+# 混合测试账号（有名称和无名称）
+MIXED_ACCOUNTS = [
+	{
+		'name': '自定义名称',
+		'cookies': 'session=custom',
+		'api_user': 'user_custom',
+	},
+	{
+		'cookies': 'session=default',
+		'api_user': 'user_default',
+	},
+]
 
 
 @pytest.fixture
 def create_account_result() -> Callable:
 	"""创建账号结果的工厂函数"""
-	return create_account_result_data
+	return build_account_result
 
 
 @pytest.fixture
