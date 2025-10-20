@@ -31,11 +31,11 @@ def assert_json_contains(actual: dict[str, Any], expected: dict[str, Any]) -> No
 	    expected: 预期包含的键值对
 	"""
 	for key, value in expected.items():
-		assert key in actual, f"缺少键: {key}"
+		assert key in actual, f'缺少键: {key}'
 		if isinstance(value, dict) and isinstance(actual[key], dict):
 			assert_json_contains(actual[key], value)
 		else:
-			assert actual[key] == value, f"键 {key} 的值不匹配: 期望 {value}, 实际 {actual[key]}"
+			assert actual[key] == value, f'键 {key} 的值不匹配: 期望 {value}, 实际 {actual[key]}'
 
 
 def assert_file_content_contains(file_path: Path, expected_content: str) -> None:
@@ -45,9 +45,9 @@ def assert_file_content_contains(file_path: Path, expected_content: str) -> None
 	    file_path: 文件路径
 	    expected_content: 预期包含的内容
 	"""
-	assert file_path.exists(), f"文件不存在: {file_path}"
+	assert file_path.exists(), f'文件不存在: {file_path}'
 	content = file_path.read_text(encoding='utf-8')
-	assert expected_content in content, f"文件内容不包含: {expected_content}"
+	assert expected_content in content, f'文件内容不包含: {expected_content}'
 
 
 __all__ = [

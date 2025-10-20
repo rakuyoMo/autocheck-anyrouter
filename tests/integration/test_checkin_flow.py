@@ -57,7 +57,13 @@ class TestCheckinFlow:
 		assert_file_content_contains(summary_file, '成功')
 
 	@pytest.mark.asyncio
-	async def test_balance_change_detection_and_notify_triggers(self, accounts_env, config_env_setter, tmp_path, monkeypatch):
+	async def test_balance_change_detection_and_notify_triggers(
+		self,
+		accounts_env,
+		config_env_setter,
+		tmp_path,
+		monkeypatch,
+	):
 		"""测试余额变化检测流程和通知触发器逻辑"""
 		accounts_env(STANDARD_ACCOUNTS)
 		config_env_setter('dingtalk', 'https://mock.dingtalk.com/hook')
@@ -76,7 +82,7 @@ class TestCheckinFlow:
 					with pytest.raises(SystemExit):
 						await service_first.run()
 
-		assert mock_push_first.await_count == 1, "首次运行应该发送通知"
+		assert mock_push_first.await_count == 1, '首次运行应该发送通知'
 
 		# 第二次运行（余额未变化，不发送通知）
 		service_second = CheckinService()
@@ -92,7 +98,7 @@ class TestCheckinFlow:
 					with pytest.raises(SystemExit):
 						await service_second.run()
 
-		assert mock_push_second.await_count == 0, "余额未变化不应该发送通知"
+		assert mock_push_second.await_count == 0, '余额未变化不应该发送通知'
 
 		# 第三次运行（余额变化，发送通知）
 		service_third = CheckinService()
@@ -120,7 +126,7 @@ class TestCheckinFlow:
 					with pytest.raises(SystemExit):
 						await service_third.run()
 
-		assert mock_push_third.await_count == 1, "余额变化应该发送通知"
+		assert mock_push_third.await_count == 1, '余额变化应该发送通知'
 
 		# 测试不同的触发器场景
 		trigger_scenarios = [
@@ -144,7 +150,7 @@ class TestCheckinFlow:
 							await service.run()
 
 			expected_count = 1 if should_notify else 0
-			assert mock_push.await_count == expected_count, f"触发器 {triggers}: {reason}"
+			assert mock_push.await_count == expected_count, f'触发器 {triggers}: {reason}'
 
 	@pytest.mark.asyncio
 	async def test_partial_and_full_failure_scenarios(self, accounts_env, tmp_path):
@@ -173,8 +179,8 @@ class TestCheckinFlow:
 					with pytest.raises(SystemExit):
 						await service_partial.run()
 
-		assert mock_push.await_count == 1, "有失败账号应该发送通知"
-		assert call_count['post'] == 2, "应该尝试签到 2 个账号"
+		assert mock_push.await_count == 1, '有失败账号应该发送通知'
+		assert call_count['post'] == 2, '应该尝试签到 2 个账号'
 
 		# 测试全部失败
 		service_all_fail = CheckinService()
@@ -193,5 +199,5 @@ class TestCheckinFlow:
 					with pytest.raises(SystemExit) as exc_info:
 						await service_all_fail.run()
 
-		assert exc_info.value.code == 1, "全部失败退出码应该是 1"
-		assert mock_push.await_count == 1, "有失败账号应该发送通知"
+		assert exc_info.value.code == 1, '全部失败退出码应该是 1'
+		assert mock_push.await_count == 1, '有失败账号应该发送通知'

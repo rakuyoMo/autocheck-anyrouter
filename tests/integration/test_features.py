@@ -47,7 +47,12 @@ class TestFeatures:
 		assert_file_content_contains(summary_file, expected_in_content)
 
 	@pytest.mark.asyncio
-	async def test_notification_template_rendering(self, config_env_setter, create_account_result, create_notification_data):
+	async def test_notification_template_rendering(
+		self,
+		config_env_setter,
+		create_account_result,
+		create_notification_data,
+	):
 		"""测试通知模板渲染（多平台不同模板格式）"""
 		# 配置多个平台的不同模板格式
 		config_env_setter('dingtalk', 'https://mock.dingtalk.com')
@@ -87,4 +92,4 @@ class TestFeatures:
 
 			await kit.push_message(notif_data)
 
-		assert post_counter['count'] == 4, f"应该向 4 个平台发送通知，实际发送了 {post_counter['count']} 个"
+		assert post_counter['count'] == 4, f'应该向 4 个平台发送通知，实际发送了 {post_counter["count"]} 个'

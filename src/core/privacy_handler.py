@@ -82,8 +82,8 @@ class PrivacyHandler:
 		"""
 		# 获取完整名称
 		full_name = self.get_full_account_name(
-			account_info=account_info, 
-			account_index=account_index
+			account_info=account_info,
+			account_index=account_index,
 		)
 
 		# 如果不需要脱敏，直接返回完整名称

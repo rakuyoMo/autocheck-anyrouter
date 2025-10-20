@@ -68,7 +68,7 @@ class TestNotificationKit:
 		kit = NotificationKit()
 
 		config = getattr(kit, expected_config_attr)
-		assert config is not None, f"{expected_config_attr} 应该不为 None"
+		assert config is not None, f'{expected_config_attr} 应该不为 None'
 
 		# 验证配置值
 		attr_path, expected_value = expected_value_or_key
@@ -78,13 +78,17 @@ class TestNotificationKit:
 			obj = config
 			for part in parts:
 				obj = getattr(obj, part)
-			assert obj == expected_value, f"{attr_path} 的值不匹配"
+			assert obj == expected_value, f'{attr_path} 的值不匹配'
 		else:
 			# 普通属性
 			actual_value = getattr(config, attr_path)
-			assert actual_value == expected_value, f"{attr_path} 的值不匹配"
+			assert actual_value == expected_value, f'{attr_path} 的值不匹配'
 
-	def test_template_merging_and_rendering(self, monkeypatch: pytest.MonkeyPatch, clean_notification_env: None) -> None:
+	def test_template_merging_and_rendering(
+		self,
+		monkeypatch: pytest.MonkeyPatch,
+		clean_notification_env: None,
+	) -> None:
 		"""测试默认模板与用户模板的合并和渲染"""
 		# 测试完全自定义模板
 		monkeypatch.setenv(
@@ -206,7 +210,12 @@ class TestNotificationKit:
 			),
 		],
 	)
-	def test_context_data_building(self, clean_notification_env: None, accounts: list[Any], expected_flags: dict[str, bool]) -> None:
+	def test_context_data_building(
+		self,
+		clean_notification_env: None,
+		accounts: list[Any],
+		expected_flags: dict[str, bool],
+	) -> None:
 		"""测试上下文数据构建（用于模板渲染）"""
 		kit = NotificationKit()
 		data = build_notification_data(accounts)
@@ -215,5 +224,4 @@ class TestNotificationKit:
 		# 验证所有预期的标志
 		for flag_name, expected_value in expected_flags.items():
 			actual_value = context.get(flag_name)
-			assert actual_value == expected_value, f"{flag_name} 应该是 {expected_value}, 实际是 {actual_value}"
-
+			assert actual_value == expected_value, f'{flag_name} 应该是 {expected_value}, 实际是 {actual_value}'

@@ -79,12 +79,8 @@ class CheckinService:
 	def __init__(self):
 		"""初始化签到服务"""
 		# 初始化各个功能模块
-		self.privacy_handler = PrivacyHandler(
-			show_sensitive_info=PrivacyHandler.should_show_sensitive_info()
-		)
-		self.balance_manager = BalanceManager(
-			balance_hash_file=Path(self.Config.File.BALANCE_HASH_NAME)
-		)
+		self.privacy_handler = PrivacyHandler(PrivacyHandler.should_show_sensitive_info())
+		self.balance_manager = BalanceManager(Path(self.Config.File.BALANCE_HASH_NAME))
 		self.notify_trigger_manager = NotifyTriggerManager()
 		self.notification_kit = NotificationKit()
 		self.github_reporter = GitHubReporter(
@@ -653,4 +649,3 @@ class CheckinService:
 			cookies_dict[key] = value
 
 		return cookies_dict
-

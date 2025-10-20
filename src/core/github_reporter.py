@@ -56,8 +56,8 @@ class GitHubReporter:
 				account_key = self.balance_manager.generate_account_key(api_user)
 				# 根据隐私设置获取账号名称
 				account_name = self.privacy_handler.get_safe_account_name(
-					account_info=account, 
-					account_index=i
+					account_info=account,
+					account_index=i,
 				)
 
 				if account_key in current_balances:

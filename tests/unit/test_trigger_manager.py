@@ -28,7 +28,12 @@ class TestNotifyTriggerManager:
 			('success,invalid,failed', {NotifyTrigger.SUCCESS, NotifyTrigger.FAILED}),
 		],
 	)
-	def test_trigger_parsing(self, monkeypatch: pytest.MonkeyPatch, env_value: str | None, expected_triggers: set[NotifyTrigger]) -> None:
+	def test_trigger_parsing(
+		self,
+		monkeypatch: pytest.MonkeyPatch,
+		env_value: str | None,
+		expected_triggers: set[NotifyTrigger],
+	) -> None:
 		"""测试触发器解析逻辑（包括边界情况）"""
 		if env_value is None:
 			monkeypatch.delenv('NOTIFY_TRIGGERS', raising=False)

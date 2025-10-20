@@ -6,7 +6,7 @@ class NotifyTrigger(Enum):
 
 	# 余额变化（包括首次运行）
 	BALANCE_CHANGED = 'balance_changed'
-	
+
 	# 任意账号失败
 	FAILED = 'failed'
 

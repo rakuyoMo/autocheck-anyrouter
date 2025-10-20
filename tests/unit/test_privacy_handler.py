@@ -17,10 +17,16 @@ class TestPrivacyHandler:
 			('private', None, {'name': '我的账号', 'cookies': 'test', 'api_user': 'user1'}, '我的账号', False),
 			# 强制显示敏感信息（不脱敏）
 			('public', 'true', {'name': '我的账号', 'cookies': 'test', 'api_user': 'user1'}, '我的账号', False),
-			# 超长账号名称（测试边界）
-			('public', None, {'name': '这是一个非常非常长的账号名称' * 10, 'cookies': 'test', 'api_user': 'user1'}, '这', True),
 			# Emoji 账号名称
 			('public', None, {'name': '😀测试账号', 'cookies': 'test', 'api_user': 'user1'}, '😀', True),
+			# 超长账号名称（测试边界）
+			(
+				'public',
+				None,
+				{'name': '这是一个非常非常长的账号名称' * 10, 'cookies': 'test', 'api_user': 'user1'},
+				'这',
+				True,
+			),
 		],
 	)
 	def test_account_name_handling(

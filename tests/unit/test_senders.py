@@ -55,11 +55,11 @@ class TestSenders:
 
 			# 验证发送的数据结构
 			for key in expected_json_keys:
-				assert key in sent_data, f"发送数据缺少键: {key}, 实际数据: {sent_data}"
+				assert key in sent_data, f'发送数据缺少键: {key}, 实际数据: {sent_data}'
 
 			# 验证内容被包含（可能在嵌套结构中）
 			sent_json_str = str(sent_data)
-			assert test_title in sent_json_str or test_content in sent_json_str, "发送数据不包含标题或内容"
+			assert test_title in sent_json_str or test_content in sent_json_str, '发送数据不包含标题或内容'
 
 	@pytest.mark.asyncio
 	@pytest.mark.parametrize(
@@ -88,8 +88,16 @@ class TestSenders:
 	@pytest.mark.parametrize(
 		'sender_class,config_builder,error_match',
 		[
-			(DingTalkSender, lambda: WebhookConfig(webhook='https://test.dingtalk.com', template=None), '钉钉推送失败.*500'),
-			(BarkSender, lambda: BarkConfig(device_key='test_key', server_url='https://api.day.app', template=None), 'Bark 推送失败.*400'),
+			(
+				DingTalkSender,
+				lambda: WebhookConfig(webhook='https://test.dingtalk.com', template=None),
+				'钉钉推送失败.*500',
+			),
+			(
+				BarkSender,
+				lambda: BarkConfig(device_key='test_key', server_url='https://api.day.app', template=None),
+				'Bark 推送失败.*400',
+			),
 		],
 	)
 	async def test_http_status_code_errors(self, sender_class, config_builder, error_match: str):
@@ -113,16 +121,59 @@ class TestSenders:
 		'sender_class,config_builder,error_match,title,should_raise',
 		[
 			# Email 发送器
-			(EmailSender, lambda: EmailConfig(user='test@example.com', password='password', to='recipient@example.com', template=None), '邮件推送需要提供非空的 title 参数', None, True),
-			(EmailSender, lambda: EmailConfig(user='test@example.com', password='password', to='recipient@example.com', template=None), '邮件推送需要提供非空的 title 参数', '', True),
-			(EmailSender, lambda: EmailConfig(user='test@example.com', password='password', to='recipient@example.com', template=None), '', '有效标题', False),
+			(
+				EmailSender,
+				lambda: EmailConfig(
+					user='test@example.com', password='password', to='recipient@example.com', template=None
+				),
+				'邮件推送需要提供非空的 title 参数',
+				None,
+				True,
+			),
+			(
+				EmailSender,
+				lambda: EmailConfig(
+					user='test@example.com', password='password', to='recipient@example.com', template=None
+				),
+				'邮件推送需要提供非空的 title 参数',
+				'',
+				True,
+			),
+			(
+				EmailSender,
+				lambda: EmailConfig(
+					user='test@example.com', password='password', to='recipient@example.com', template=None
+				),
+				'',
+				'有效标题',
+				False,
+			),
 			# ServerPush 发送器
-			(ServerPushSender, lambda: ServerPushConfig(send_key='test_key', template=None), 'Server 酱推送需要提供非空的 title 参数', None, True),
-			(ServerPushSender, lambda: ServerPushConfig(send_key='test_key', template=None), 'Server 酱推送需要提供非空的 title 参数', '', True),
+			(
+				ServerPushSender,
+				lambda: ServerPushConfig(send_key='test_key', template=None),
+				'Server 酱推送需要提供非空的 title 参数',
+				None,
+				True,
+			),
+			(
+				ServerPushSender,
+				lambda: ServerPushConfig(send_key='test_key', template=None),
+				'Server 酱推送需要提供非空的 title 参数',
+				'',
+				True,
+			),
 			(ServerPushSender, lambda: ServerPushConfig(send_key='test_key', template=None), '', '有效标题', False),
 		],
 	)
-	async def test_title_validation(self, sender_class, config_builder, error_match: str, title: str | None, should_raise: bool):
+	async def test_title_validation(
+		self,
+		sender_class,
+		config_builder,
+		error_match: str,
+		title: str | None,
+		should_raise: bool,
+	):
 		"""测试发送器的 title 验证（Email/ServerPush）"""
 		config = config_builder()
 		sender = sender_class(config)

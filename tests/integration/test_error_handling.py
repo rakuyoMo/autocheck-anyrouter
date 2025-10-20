@@ -42,7 +42,7 @@ class TestErrorHandling:
 				with pytest.raises(SystemExit):
 					await service_http.run()
 
-		assert call_count['get'] == 2, "应该尝试获取 2 个账号的余额"
+		assert call_count['get'] == 2, '应该尝试获取 2 个账号的余额'
 
 		# 测试超时异常
 		accounts_env(SINGLE_ACCOUNT)
@@ -109,10 +109,13 @@ class TestErrorHandling:
 		with patch.dict(os.environ, {'GITHUB_STEP_SUMMARY': '/dev/null'}):
 			with ExitStack() as stack:
 				# 返回不完整的 cookies
-				MockPlaywright.setup_success(stack, cookies=[
-					{'name': 'acw_tc', 'value': 'value1'},
-					# 缺少其他必需的 cookies
-				])
+				MockPlaywright.setup_success(
+					stack,
+					cookies=[
+						{'name': 'acw_tc', 'value': 'value1'},
+						# 缺少其他必需的 cookies
+					],
+				)
 
 				with pytest.raises(SystemExit):
 					await service2.run()
@@ -128,7 +131,13 @@ class TestErrorHandling:
 			('[{"name": "", "cookies": "c", "api_user": "u"}]', '空名称字段'),
 		],
 	)
-	async def test_account_config_validation(self, monkeypatch: pytest.MonkeyPatch, tmp_path, payload: str | None, description: str):
+	async def test_account_config_validation(
+		self,
+		monkeypatch: pytest.MonkeyPatch,
+		tmp_path,
+		payload: str | None,
+		description: str,
+	):
 		"""测试账号配置验证（参数化测试）"""
 		if payload is None:
 			monkeypatch.delenv('ANYROUTER_ACCOUNTS', raising=False)
@@ -141,8 +150,7 @@ class TestErrorHandling:
 		with pytest.raises(SystemExit) as exc_info:
 			await service.run()
 
-		assert exc_info.value.code == 0, f"{description}: 配置错误时应该正常退出"
-
+		assert exc_info.value.code == 0, f'{description}: 配置错误时应该正常退出'
 
 	@pytest.mark.asyncio
 	async def test_account_execution_exception(self, accounts_env, tmp_path):
@@ -160,5 +168,5 @@ class TestErrorHandling:
 					with pytest.raises(SystemExit) as exc_info:
 						await service.run()
 
-		assert exc_info.value.code == 1, "异常应该导致失败退出"
-		assert mock_push.await_count == 1, "异常也应该发送通知"
+		assert exc_info.value.code == 1, '异常应该导致失败退出'
+		assert mock_push.await_count == 1, '异常也应该发送通知'
