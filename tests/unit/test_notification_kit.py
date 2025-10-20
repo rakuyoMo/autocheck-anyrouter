@@ -64,6 +64,7 @@ class TestNotificationKit:
 		expected_value_or_key: tuple[str, str],
 	) -> None:
 		"""测试所有平台的配置解析（字典和字符串格式）"""
+		# clean_notification_env fixture 用于清理环境变量，无需在函数体内显式使用
 		monkeypatch.setenv(env_key, env_value)
 		kit = NotificationKit()
 
@@ -90,6 +91,7 @@ class TestNotificationKit:
 		clean_notification_env: None,
 	) -> None:
 		"""测试默认模板与用户模板的合并和渲染"""
+		# clean_notification_env fixture 用于清理环境变量，无需在函数体内显式使用
 		# 测试完全自定义模板
 		monkeypatch.setenv(
 			'PUSHPLUS_NOTIF_CONFIG',
@@ -220,6 +222,7 @@ class TestNotificationKit:
 		expected_flags: dict[str, bool],
 	) -> None:
 		"""测试上下文数据构建（用于模板渲染）"""
+		# clean_notification_env fixture 用于清理环境变量，无需在函数体内显式使用
 		kit = NotificationKit()
 		data = build_notification_data(accounts)
 		context = kit._build_context_data(data)

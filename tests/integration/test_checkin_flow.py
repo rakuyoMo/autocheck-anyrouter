@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from core import CheckinService
+from application import Application
 from tests.conftest import assert_file_content_contains
 from tests.fixtures.data import STANDARD_ACCOUNTS
 from tests.fixtures.mock_dependencies import (
@@ -27,8 +27,8 @@ class TestCheckinFlow:
 		accounts_env(STANDARD_ACCOUNTS)
 		config_env_setter('dingtalk', 'https://mock.dingtalk.com/hook')
 
-		service = CheckinService()
-		service.balance_manager.balance_hash_file = tmp_path / 'balance_hash.txt'
+		app = Application()
+		app.balance_manager.balance_hash_file = tmp_path / 'balance_hash.txt'
 		summary_file = tmp_path / 'summary.md'
 
 		with patch.dict(os.environ, {'GITHUB_STEP_SUMMARY': str(summary_file)}):
@@ -40,14 +40,14 @@ class TestCheckinFlow:
 				MockSMTP.setup(stack)
 
 				with pytest.raises(SystemExit) as exc_info:
-					await service.run()
+					await app.run()
 
 		# 验证签到成功
 		assert exc_info.value.code == 0
 
 		# 验证余额文件已保存并包含正确数据
-		assert service.balance_manager.balance_hash_file.exists()
-		balance_data = service.balance_manager.load_balance_hash()
+		assert app.balance_manager.balance_hash_file.exists()
+		balance_data = app.balance_manager.load_balance_hash()
 		assert balance_data is not None
 		assert len(balance_data) == 2  # 2 个账号
 
@@ -69,8 +69,8 @@ class TestCheckinFlow:
 		config_env_setter('dingtalk', 'https://mock.dingtalk.com/hook')
 
 		# 第一次运行（首次运行，会发送通知）
-		service_first = CheckinService()
-		service_first.balance_manager.balance_hash_file = tmp_path / 'balance_hash.txt'
+		app_first = Application()
+		app_first.balance_manager.balance_hash_file = tmp_path / 'balance_hash.txt'
 
 		with patch.dict(os.environ, {'GITHUB_STEP_SUMMARY': '/dev/null'}):
 			with ExitStack() as stack:
@@ -80,13 +80,13 @@ class TestCheckinFlow:
 
 				with patch('notif.notification_kit.NotificationKit.push_message', new=AsyncMock()) as mock_push_first:
 					with pytest.raises(SystemExit):
-						await service_first.run()
+						await app_first.run()
 
 		assert mock_push_first.await_count == 1, '首次运行应该发送通知'
 
 		# 第二次运行（余额未变化，不发送通知）
-		service_second = CheckinService()
-		service_second.balance_manager.balance_hash_file = tmp_path / 'balance_hash.txt'
+		app_second = Application()
+		app_second.balance_manager.balance_hash_file = tmp_path / 'balance_hash.txt'
 
 		with patch.dict(os.environ, {'GITHUB_STEP_SUMMARY': '/dev/null'}):
 			with ExitStack() as stack:
@@ -96,13 +96,13 @@ class TestCheckinFlow:
 
 				with patch('notif.notification_kit.NotificationKit.push_message', new=AsyncMock()) as mock_push_second:
 					with pytest.raises(SystemExit):
-						await service_second.run()
+						await app_second.run()
 
 		assert mock_push_second.await_count == 0, '余额未变化不应该发送通知'
 
 		# 第三次运行（余额变化，发送通知）
-		service_third = CheckinService()
-		service_third.balance_manager.balance_hash_file = tmp_path / 'balance_hash.txt'
+		app_third = Application()
+		app_third.balance_manager.balance_hash_file = tmp_path / 'balance_hash.txt'
 
 		with patch.dict(os.environ, {'GITHUB_STEP_SUMMARY': '/dev/null'}):
 			with ExitStack() as stack:
@@ -124,7 +124,7 @@ class TestCheckinFlow:
 
 				with patch('notif.notification_kit.NotificationKit.push_message', new=AsyncMock()) as mock_push_third:
 					with pytest.raises(SystemExit):
-						await service_third.run()
+						await app_third.run()
 
 		assert mock_push_third.await_count == 1, '余额变化应该发送通知'
 
@@ -137,8 +137,8 @@ class TestCheckinFlow:
 
 		for triggers, should_notify, reason in trigger_scenarios:
 			monkeypatch.setenv('NOTIFY_TRIGGERS', triggers)
-			service = CheckinService()
-			service.balance_manager.balance_hash_file = tmp_path / f'hash_{triggers}.txt'
+			app = Application()
+			app.balance_manager.balance_hash_file = tmp_path / f'hash_{triggers}.txt'
 
 			with patch.dict(os.environ, {'GITHUB_STEP_SUMMARY': '/dev/null'}):
 				with ExitStack() as stack:
@@ -147,7 +147,7 @@ class TestCheckinFlow:
 
 					with patch('notif.notification_kit.NotificationKit.push_message', new=AsyncMock()) as mock_push:
 						with pytest.raises(SystemExit):
-							await service.run()
+							await app.run()
 
 			expected_count = 1 if should_notify else 0
 			assert mock_push.await_count == expected_count, f'触发器 {triggers}: {reason}'
@@ -158,8 +158,8 @@ class TestCheckinFlow:
 		accounts_env(STANDARD_ACCOUNTS)
 
 		# 测试部分失败
-		service_partial = CheckinService()
-		service_partial.balance_manager.balance_hash_file = tmp_path / 'hash_partial.txt'
+		app_partial = Application()
+		app_partial.balance_manager.balance_hash_file = tmp_path / 'hash_partial.txt'
 
 		with patch.dict(os.environ, {'GITHUB_STEP_SUMMARY': '/dev/null'}):
 			with ExitStack() as stack:
@@ -177,14 +177,14 @@ class TestCheckinFlow:
 
 				with patch('notif.notification_kit.NotificationKit.push_message', new=AsyncMock()) as mock_push:
 					with pytest.raises(SystemExit):
-						await service_partial.run()
+						await app_partial.run()
 
 		assert mock_push.await_count == 1, '有失败账号应该发送通知'
 		assert call_count['post'] == 2, '应该尝试签到 2 个账号'
 
 		# 测试全部失败
-		service_all_fail = CheckinService()
-		service_all_fail.balance_manager.balance_hash_file = tmp_path / 'hash_all_fail.txt'
+		app_all_fail = Application()
+		app_all_fail.balance_manager.balance_hash_file = tmp_path / 'hash_all_fail.txt'
 
 		with patch.dict(os.environ, {'GITHUB_STEP_SUMMARY': '/dev/null'}):
 			with ExitStack() as stack:
@@ -197,7 +197,7 @@ class TestCheckinFlow:
 
 				with patch('notif.notification_kit.NotificationKit.push_message', new=AsyncMock()) as mock_push:
 					with pytest.raises(SystemExit) as exc_info:
-						await service_all_fail.run()
+						await app_all_fail.run()
 
 		assert exc_info.value.code == 1, '全部失败退出码应该是 1'
 		assert mock_push.await_count == 1, '有失败账号应该发送通知'

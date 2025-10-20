@@ -11,7 +11,8 @@ def build_account_result(
 	balance_changed: bool | None = None,
 	error: str | None = None,
 ) -> AccountResult:
-	"""构建账号结果数据
+	"""
+	构建账号结果数据
 
 	Args:
 		name: 账号名称
@@ -38,7 +39,8 @@ def build_notification_data(
 	accounts: list[AccountResult],
 	timestamp: str | None = None,
 ) -> NotificationData:
-	"""构建通知数据
+	"""
+	构建通知数据
 
 	Args:
 		accounts: 账号结果列表

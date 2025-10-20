@@ -12,7 +12,8 @@ class PrivacyHandler:
 	ENV_REPO_VISIBILITY = 'REPO_VISIBILITY'
 
 	def __init__(self, show_sensitive_info: bool):
-		"""初始化隐私保护处理器
+		"""
+		初始化隐私保护处理器
 
 		Args:
 			show_sensitive_info: 是否显示敏感信息
@@ -21,7 +22,8 @@ class PrivacyHandler:
 
 	@staticmethod
 	def should_show_sensitive_info() -> bool:
-		"""判断是否应该显示敏感信息
+		"""
+		判断是否应该显示敏感信息
 
 		优先级：
 		1. SHOW_SENSITIVE_INFO（手动控制，最高优先级）
@@ -52,7 +54,8 @@ class PrivacyHandler:
 		return True
 
 	def get_full_account_name(self, account_info: dict[str, Any], account_index: int) -> str:
-		"""获取完整的账号名称（不脱敏）
+		"""
+		获取完整的账号名称（不脱敏）
 
 		Args:
 			account_info: 账号信息
@@ -71,7 +74,8 @@ class PrivacyHandler:
 		return name
 
 	def get_safe_account_name(self, account_info: dict[str, Any], account_index: int) -> str:
-		"""获取安全的账号名称（根据隐私设置）
+		"""
+		获取安全的账号名称（根据隐私设置）
 
 		Args:
 			account_info: 账号信息
@@ -100,7 +104,8 @@ class PrivacyHandler:
 		return f'{first_char}{name_hash}'
 
 	def get_safe_balance_display(self, quota: float, used: float) -> str:
-		"""获取安全的余额展示（根据隐私设置）
+		"""
+		获取安全的余额展示（根据隐私设置）
 
 		Args:
 			quota: 总额度

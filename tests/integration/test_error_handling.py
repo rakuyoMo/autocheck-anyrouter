@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import httpx
 import pytest
 
-from core import CheckinService
+from application import Application
 from tests.fixtures.data import SINGLE_ACCOUNT
 from tests.fixtures.mock_dependencies import MockHttpClient, MockPlaywright
 
@@ -22,8 +22,8 @@ class TestErrorHandling:
 			{'name': '401 账号', 'cookies': 'session=401', 'api_user': 'user_401'},
 			{'name': '500 账号', 'cookies': 'session=500', 'api_user': 'user_500'},
 		])
-		service_http = CheckinService()
-		service_http.balance_manager.balance_hash_file = tmp_path / 'hash_http.txt'
+		app_http = Application()
+		app_http.balance_manager.balance_hash_file = tmp_path / 'hash_http.txt'
 
 		with patch.dict(os.environ, {'GITHUB_STEP_SUMMARY': '/dev/null'}):
 			with ExitStack() as stack:
@@ -40,14 +40,14 @@ class TestErrorHandling:
 				MockHttpClient.setup(stack, get_handler, MockHttpClient.post_success_handler)
 
 				with pytest.raises(SystemExit):
-					await service_http.run()
+					await app_http.run()
 
 		assert call_count['get'] == 2, '应该尝试获取 2 个账号的余额'
 
 		# 测试超时异常
 		accounts_env(SINGLE_ACCOUNT)
-		service_timeout = CheckinService()
-		service_timeout.balance_manager.balance_hash_file = tmp_path / 'hash_timeout.txt'
+		app_timeout = Application()
+		app_timeout.balance_manager.balance_hash_file = tmp_path / 'hash_timeout.txt'
 
 		with patch.dict(os.environ, {'GITHUB_STEP_SUMMARY': '/dev/null'}):
 			with ExitStack() as stack:
@@ -59,12 +59,12 @@ class TestErrorHandling:
 				MockHttpClient.setup(stack, get_handler_timeout, MockHttpClient.post_success_handler)
 
 				with pytest.raises(SystemExit):
-					await service_timeout.run()
+					await app_timeout.run()
 
 		# 测试 JSON 解析错误
 		accounts_env(SINGLE_ACCOUNT)
-		service_json = CheckinService()
-		service_json.balance_manager.balance_hash_file = tmp_path / 'hash_json.txt'
+		app_json = Application()
+		app_json.balance_manager.balance_hash_file = tmp_path / 'hash_json.txt'
 
 		with patch.dict(os.environ, {'GITHUB_STEP_SUMMARY': '/dev/null'}):
 			with ExitStack() as stack:
@@ -83,14 +83,14 @@ class TestErrorHandling:
 				MockHttpClient.setup(stack, get_handler_json, post_handler_json)
 
 				with pytest.raises(SystemExit):
-					await service_json.run()
+					await app_json.run()
 
 	@pytest.mark.asyncio
 	async def test_waf_and_playwright_errors(self, accounts_env, tmp_path):
 		"""测试 WAF cookies 获取异常和 Playwright 错误"""
 		accounts_env(SINGLE_ACCOUNT)
-		service = CheckinService()
-		service.balance_manager.balance_hash_file = tmp_path / 'hash_waf.txt'
+		app = Application()
+		app.balance_manager.balance_hash_file = tmp_path / 'hash_waf.txt'
 
 		with patch.dict(os.environ, {'GITHUB_STEP_SUMMARY': '/dev/null'}):
 			with ExitStack() as stack:
@@ -98,13 +98,13 @@ class TestErrorHandling:
 				MockPlaywright.setup_failure(stack, Exception('Playwright 启动失败'))
 
 				with pytest.raises(SystemExit) as exc_info:
-					await service.run()
+					await app.run()
 
 		assert exc_info.value.code == 1
 
 		# 测试 cookies 缺失
-		service2 = CheckinService()
-		service2.balance_manager.balance_hash_file = tmp_path / 'hash_waf2.txt'
+		app2 = Application()
+		app2.balance_manager.balance_hash_file = tmp_path / 'hash_waf2.txt'
 
 		with patch.dict(os.environ, {'GITHUB_STEP_SUMMARY': '/dev/null'}):
 			with ExitStack() as stack:
@@ -118,7 +118,7 @@ class TestErrorHandling:
 				)
 
 				with pytest.raises(SystemExit):
-					await service2.run()
+					await app2.run()
 
 	@pytest.mark.asyncio
 	@pytest.mark.parametrize(
@@ -144,11 +144,11 @@ class TestErrorHandling:
 		else:
 			monkeypatch.setenv('ANYROUTER_ACCOUNTS', payload)
 
-		service = CheckinService()
-		service.balance_manager.balance_hash_file = tmp_path / f'hash_{description}.txt'
+		app = Application()
+		app.balance_manager.balance_hash_file = tmp_path / f'hash_{description}.txt'
 
 		with pytest.raises(SystemExit) as exc_info:
-			await service.run()
+			await app.run()
 
 		assert exc_info.value.code == 0, f'{description}: 配置错误时应该正常退出'
 
@@ -156,17 +156,17 @@ class TestErrorHandling:
 	async def test_account_execution_exception(self, accounts_env, tmp_path):
 		"""测试账号执行过程中的意外异常"""
 		accounts_env(SINGLE_ACCOUNT)
-		service = CheckinService()
-		service.balance_manager.balance_hash_file = tmp_path / 'hash_exception.txt'
+		app = Application()
+		app.balance_manager.balance_hash_file = tmp_path / 'hash_exception.txt'
 
-		# Mock _check_in_account 方法抛出异常
+		# Mock check_in_account 方法抛出异常
 		failing_checkin = AsyncMock(side_effect=Exception('Unexpected error'))
 
-		with patch.object(service, '_check_in_account', failing_checkin):
+		with patch.object(app.checkin_service, 'check_in_account', failing_checkin):
 			with patch('notif.notification_kit.NotificationKit.push_message', new=AsyncMock()) as mock_push:
 				with patch.dict(os.environ, {'GITHUB_STEP_SUMMARY': '/dev/null'}):
 					with pytest.raises(SystemExit) as exc_info:
-						await service.run()
+						await app.run()
 
 		assert exc_info.value.code == 1, '异常应该导致失败退出'
 		assert mock_push.await_count == 1, '异常也应该发送通知'

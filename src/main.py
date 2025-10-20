@@ -1,15 +1,15 @@
 import asyncio
 import sys
 
-from core import CheckinService
+from application import Application
 from tools.logger import logger
 
 
 def run_main():
 	"""运行主函数的包装函数"""
 	try:
-		service = CheckinService()
-		asyncio.run(service.run())
+		app = Application()
+		asyncio.run(app.run())
 
 	except KeyboardInterrupt:
 		logger.warning('程序被用户中断')
