@@ -14,7 +14,7 @@ from core.balance_manager import BalanceManager
 from core.github_reporter import GitHubReporter
 from core.models import AccountResult, NotificationData, NotificationStats
 from core.privacy_handler import PrivacyHandler
-from notif import NotificationKit
+from notif import NotificationKit, NotifyTrigger, NotifyTriggerManager
 from tools.logger import logger
 
 # 禁用变量插值以保留模板中的 $ 符号
@@ -86,6 +86,7 @@ class CheckinService:
 		self.balance_manager = BalanceManager(
 			balance_hash_file=Path(self.Config.File.BALANCE_HASH_NAME)
 		)
+		self.notify_trigger_manager = NotifyTriggerManager()
 		self.notification_kit = NotificationKit()
 		self.github_reporter = GitHubReporter(
 			balance_manager=self.balance_manager,
@@ -224,22 +225,35 @@ class CheckinService:
 				account_results.append(account_result)
 
 		# 判断是否需要发送通知
-		need_notify = False
-		if last_balance_hash_dict is None:
-			# 首次运行
-			need_notify = True
-			logger.notify('检测到首次运行，将发送包含当前余额的通知')
-		elif has_any_balance_changed:
-			# 有任意账号余额发生变化
-			need_notify = True
-			logger.notify('检测到余额变化，将发送通知')
-		elif has_any_failed:
-			# 有任意账号失败
-			need_notify = True
-			logger.notify('检测到账号失败，将发送通知')
+		is_first_run = last_balance_hash_dict is None
+		need_notify = self.notify_trigger_manager.should_notify(
+			has_success=success_count > 0,
+			has_failed=has_any_failed,
+			has_balance_changed=has_any_balance_changed,
+			is_first_run=is_first_run,
+		)
+
+		# 记录通知决策的原因
+		if need_notify:
+			if NotifyTrigger.ALWAYS in self.notify_trigger_manager.triggers:
+				logger.notify('配置了 always 触发器，将发送通知')
+			else:
+				reasons = self.notify_trigger_manager.get_notify_reasons(
+					has_success=success_count > 0,
+					has_failed=has_any_failed,
+					has_balance_changed=has_any_balance_changed,
+					is_first_run=is_first_run,
+				)
+
+				if reasons:
+					logger.notify(f'检测到 {" 和 ".join(reasons)}，将发送通知')
+				else:
+					logger.notify('满足通知条件，将发送通知')
 		else:
-			# 没有任何变化
-			logger.info('所有账号成功且未检测到余额变化，跳过通知')
+			if NotifyTrigger.NEVER in self.notify_trigger_manager.triggers:
+				logger.info('配置了 never 触发器，跳过通知')
+			else:
+				logger.info('未满足通知触发条件，跳过通知')
 
 		# 保存当前余额 hash 字典
 		if current_balance_hash_dict:
