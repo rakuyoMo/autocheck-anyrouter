@@ -14,6 +14,7 @@
 #### Change
 * 重构代码结构，拆分 `CheckinService`。[#22]
 * 移除全局的 `notify` 实例，改为在 `CheckinService` 中显式初始化 `NotificationKit`。[#22]
+* 重构测试用例。[#22]
 
 ---
 
