@@ -233,11 +233,11 @@ class NotificationKit:
 		balance_changed_accounts = [
 			acc for acc in success_accounts
 			if acc.balance_changed is True
-		]
+		]  # fmt: skip
 		balance_unchanged_accounts = [
 			acc for acc in success_accounts
 			if acc.balance_changed is False
-		]
+		]  # fmt: skip
 
 		# 计算可判断余额的成功账号数量（排除 balance_changed=None 的账号）
 		balance_determinable_count = len(balance_changed_accounts) + len(balance_unchanged_accounts)
