@@ -8,6 +8,10 @@
 
 ## [Unreleased]
 
+---
+
+## [1.3.1] (2025-10-20)
+
 #### Add
 * 新增 `NOTIFY_TRIGGERS` 环境变量，支持通过自定义枚举控制通知发送时机，默认值为 `balance_changed,failed`。[#22]
 
@@ -118,7 +122,9 @@
 * 支持 Fork 定时运行和 Composite Action 两种使用方式。
 * 完善的 CI/CD 工作流、测试体系和项目文档。
 
-[1.2.1]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.2.0
+[1.3.1]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.2.1
+[1.3.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.3.0
+[1.2.1]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.2.1
 [1.2.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.2.0
 [1.1.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.1.0
 [1.0.2]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.0.2
@@ -139,3 +145,4 @@
 [#19]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/19
 [#20]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/20
 [#22]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/22
+[#23]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/23
