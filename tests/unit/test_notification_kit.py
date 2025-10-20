@@ -134,20 +134,23 @@ class TestNotificationKit:
 		assert template_no_title.title is None
 		assert template_no_title.content == '只有内容'
 
-		# 测试模板渲染（Jinja2）
+		# 测试模板渲染（通过 NotificationKit）
+		kit_for_render = NotificationKit()
 		template_with_vars = NotificationTemplate(
 			title='{% if all_success %}全部成功{% else %}部分成功{% endif %}',
-			content='共 {{ total }} 个账号, 成功 {{ success }} 个',
+			content='共 {{ stats.total_count }} 个账号, 成功 {{ stats.success_count }} 个',
 		)
-		# 手动测试渲染逻辑
-		from jinja2 import Template
 
-		assert template_with_vars.title is not None
-		rendered_title = Template(template_with_vars.title).render(all_success=True)
+		# 构造上下文数据（使用对象而不是字典，因为 stencil 不支持字典的点访问）
+		Stats = type('Stats', (), {'total_count': 10, 'success_count': 8})
+		context_data = {
+			'all_success': True,
+			'stats': Stats(),
+		}
+
+		# 通过 _render_template 测试渲染
+		rendered_title, rendered_content = kit_for_render._render_template(template_with_vars, context_data)
 		assert rendered_title == '全部成功'
-
-		assert template_with_vars.content is not None
-		rendered_content = Template(template_with_vars.content).render(total=10, success=8)
 		assert rendered_content == '共 10 个账号, 成功 8 个'
 
 	@pytest.mark.parametrize(
