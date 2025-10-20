@@ -123,11 +123,11 @@ class CheckinService:
 				safe_account_name = self._get_safe_account_name(account, i)
 				full_account_name = self._get_full_account_name(account, i)
 
-				# 创建账号结果（通知使用完整名称）
-				account_result = AccountResult(
-					name=full_account_name,
-					status='success' if success else 'failed',
-				)
+				# 初始化结果变量
+				quota = None
+				used = None
+				balance_changed = None
+				error = None
 
 				if success:
 					success_count += 1
@@ -161,24 +161,34 @@ class CheckinService:
 						last_hash = last_balance_hash_dict[account_key]
 						if current_balance_hash != last_hash:
 							# 余额发生变化
-							account_result.balance_changed = True
+							balance_changed = True
 							has_any_balance_changed = True
 							logger.notify('余额发生变化，将发送通知', safe_account_name)
 						else:
 							# 余额未变化
-							account_result.balance_changed = False
+							balance_changed = False
 					else:
 						# 首次运行，无历史数据
-						account_result.balance_changed = False
+						balance_changed = False
 
-					# 设置账号结果的余额信息
-					account_result.quota = current_quota
-					account_result.used = current_used
+					# 设置余额信息
+					quota = current_quota
+					used = current_used
 
 				elif user_info:
 					# 获取余额失败，无法判断变化
-					account_result.balance_changed = None
-					account_result.error = user_info.get('error', '未知错误')
+					balance_changed = None
+					error = user_info.get('error', '未知错误')
+
+				# 一次性创建账号结果（通知使用完整名称）
+				account_result = AccountResult(
+					name=full_account_name,
+					status='success' if success else 'failed',
+					quota=quota,
+					used=used,
+					balance_changed=balance_changed,
+					error=error,
+				)
 
 				# 所有账号都添加到结果列表
 				account_results.append(account_result)
