@@ -154,7 +154,7 @@ jobs:
 
 **模板格式**：
 
-从 [v1.3.0](https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.3.0) 版本开始，`template` 字段支持对象格式：
+从 [v1.3.0] 版本开始，`template` 字段支持对象格式：
 ```jsonc
 {
   "template": {
@@ -172,9 +172,17 @@ jobs:
 ```
 
 **可用变量**：
+
+基础变量：
+
+> **注意**：<br>
+> 从 [v1.3.0] 开始，`accounts` 包含所有账号的完整结果。您可以使用下面的分组列表来筛选特定类型的账号。
+
 - `timestamp`: 执行时间
-- `stats`: 统计数据（success_count, failed_count, total_count）
-- `accounts`: 账号列表（name, status, quota, used, error）
+- `stats`: 统计数据（`success_count`, `failed_count`, `total_count`）
+- `accounts`: 所有账号的结果列表（`name`, `status`, `quota`, `used`, `balance_changed`, `error`）
+
+账号状态分组：
 - `success_accounts`: 成功账号列表
 - `failed_accounts`: 失败账号列表
 - `has_success`: 有成功的账号
@@ -182,6 +190,18 @@ jobs:
 - `all_success`: 所有账号都成功
 - `all_failed`: 所有账号都失败
 - `partial_success`: 部分账号成功
+
+余额变化追踪（[v1.3.0]+）：
+
+> **注意**：<br>
+> 余额变化相关变量仅包含能够成功获取到余额信息的账号（通常为签到成功的账号）。失败账号的 `balance_changed` 字段通常为 `None`（无法判断）。
+
+- `balance_changed_accounts`: 余额发生变化的账号列表
+- `balance_unchanged_accounts`: 余额未发生变化的账号列表
+- `has_balance_changed`: 是否有账号余额发生变化
+- `has_balance_unchanged`: 是否有账号余额未发生变化
+- `all_balance_changed`: 所有账号余额都发生变化
+- `all_balance_unchanged`: 所有账号余额都未发生变化
 
 以上变量在 `title` 和 `content` 模板中**均可使用**。
 
@@ -203,30 +223,44 @@ jobs:
 > 请注意，虽然本系统使用 json5 解析 json 字符串，但是为了避免消息平台方的问题，建议您在设置 `template` 字段时，**不要使用多行字符串**，而是将每个换行符替换为 `\\n`。
 
 以企业微信支持的 markdown 语法为例：
+> 我在该示例中使用了一些**多余的缩进**，目的是让您能够更好的了解 Stencil 的大致语法以及模板内容。实际使用时不需要这些缩进。
+
 ```jinja2
-{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}
+{% if all_success %}
+    **✅ 所有账号全部签到成功！**
+{% else %}
+    {% if partial_success %}
+        **⚠️ 部分账号签到成功**
+    {% else %}
+        **❌ 所有账号签到失败**
+    {% endif %}
+{% endif %}
 
 ### 详细信息
 - **执行时间**：{{ timestamp }}
 - **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}
 - **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}
 
-{% if has_success %}
-### 成功账号
-| 账号 | 已用（$） | 剩余（$） |
-| :----- | :---- | :---- |
-{% for account in success_accounts %}
-|{{ account.name }}|{{ account.used }}|{{ account.quota }}|
-{% endfor %}
+{% if has_failed %}
+    ### 失败账号
+    | 账号 | 错误原因 |
+    | :----- | :----- |
+    {% for account in failed_accounts %}
+        |{{ account.name }}|{{ account.error }}|
+    {% endfor %}
 {% endif %}
 
-{% if has_failed %}
-### 失败账号
-| 账号 | 错误原因 |
-| :----- | :----- |
-{% for account in failed_accounts %}
-|{{ account.name }}|{{ account.error }}|
-{% endfor %}
+{% if has_success %}
+    ### 成功账号
+    {% if all_balance_unchanged %}
+        所有账号余额无变化
+    {% else %}
+        | 账号 | 已用（$） | 剩余（$） |
+        | :----- | :---- | :---- |
+        {% for account in success_accounts %}
+            |{{ account.name }}|{{ account.used }}|{{ account.quota }}|
+        {% endfor %}
+    {% endif %}
 {% endif %}
 ```
 
@@ -245,7 +279,10 @@ jobs:
   "platform_settings":{
     "message_type": "markdown_v2"
   },
-  "template":"{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}\\n\\n### 详细信息\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}{% if has_success %}\\n### 成功账号\\n| 账号 | 已用（$） | 剩余（$） |\\n| :----- | :---- | :---- |\\n{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|\\n{% endfor %}{% endif %}{% if has_failed %}\\n### 失败账号\\n| 账号 | 错误原因 |\\n| :----- | :----- |\\n{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|\\n{% endfor %}{% endif %}"
+  "template": {
+    "title": "{% if all_success %}**✅ 所有账号全部签到成功！**{% else %}{% if partial_success %}**⚠️ 部分账号签到成功**{% else %}**❌ 所有账号签到失败**{% endif %}{% endif %}",
+    "content": "\\n### 详细信息\\n- **执行时间**：{{ timestamp }}\\n- **成功比例**：{{ stats.success_count }}/{{ stats.total_count }}\\n- **失败比例**：{{ stats.failed_count }}/{{ stats.total_count }}\\n{% if has_failed %}\\n### 失败账号\\n| 账号 | 错误原因 |\\n| :----- | :----- |\\n{% for account in failed_accounts %}|{{ account.name }}|{{ account.error }}|\\n{% endfor %}{% endif %}{% if has_success %}\\n### 成功账号\\n{% if all_balance_unchanged %}所有账号余额无变化{% else %}| 账号 | 已用（$） | 剩余（$） |\\n| :----- | :---- | :---- |\\n{% for account in success_accounts %}|{{ account.name }}|{{ account.used }}|{{ account.quota }}|\\n{% endfor %}{% endif %}{% endif %}"
+  }
 }
 ```
 
@@ -422,3 +459,5 @@ mise run lint --fix       # 代码检查并自动修复
 ---
 
 **⭐ 如果这个项目对您有帮助，请帮忙点个 Star！**
+
+[v1.3.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.3.0

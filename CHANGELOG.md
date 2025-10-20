@@ -11,14 +11,18 @@
 #### Add
 * 新增 Bark 通知方式支持，包含丰富的配置选项。[#19]
 * 支持通知 title 的模板化配置，可通过模板变量动态生成通知标题。[#17]
+* Stencil 模板变量新增余额变化相关内容。[#20]
 
 #### Fix
 * 修复部分账号签到成功但通知显示"所有账号失败"的判断错误。[#18]
 * 修复企业微信、飞书和钉钉发送器 `message_type` 配置默认值处理错误的问题。[#17]
+* 修复 `template` 和 `platform_settings` 配置无法与默认配置合并的问题，现在支持用户单独设置任意的配置，未设置的字段会自动使用默认配置。
 
 #### Change
 * 配置文件中的 `template` 字段从字符串改为对象类型（向后兼容），现在可以分别设置 `title` 和 `content`。[#17]
 * 邮箱、Server 酱和钉钉（markdown 模式）发送器现在会在未提供 title 时抛出 `ValueError` 异常，提示用户必须设置标题。[#17]
+* 优化余额存储机制，使用基于 api_user 的 hash 作为账号标识，支持账号顺序调整和隐私保护。[#20]
+* 通知数据结构优化，`accounts` 现在包含所有账号的结果，用户可通过 `success_accounts`、`failed_accounts`、`balance_changed_accounts` 以及 `balance_unchanged_accounts` 等分组列表在模板中自由选择展示内容。[#20]
 
 ---
 

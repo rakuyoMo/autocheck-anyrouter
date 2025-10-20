@@ -123,6 +123,8 @@ def test_build_context_data_with_stats_mismatch(clean_notification_env):
 	这是一个回归测试，用于验证修复 #18 的问题：
 	当部分账号成功但无余额变化时，accounts 列表中只包含失败的账号，
 	但 stats 显示有成功账号。此时状态判断应该基于 stats 而不是 accounts。
+
+	同时验证余额变化相关的新 Stencil 变量。
 	"""
 	from core.models import NotificationData, NotificationStats
 
@@ -138,7 +140,12 @@ def test_build_context_data_with_stats_mismatch(clean_notification_env):
 
 	# accounts 列表中只有失败的账号（成功的没有被添加）
 	accounts = [
-		create_account_result_data(name='账号 C', status='failed', error='超时'),
+		create_account_result_data(
+			name='账号 C',
+			status='failed',
+			error='超时',
+			balance_changed=None,
+		),
 	]
 
 	data = NotificationData(
@@ -160,3 +167,93 @@ def test_build_context_data_with_stats_mismatch(clean_notification_env):
 	# 验证分组的账号列表（这些基于 accounts 列表）
 	assert len(context['success_accounts']) == 0, 'accounts 列表中没有成功的账号'
 	assert len(context['failed_accounts']) == 1, 'accounts 列表中只有 1 个失败账号'
+
+	# 验证余额变化相关的新 Stencil 变量（场景 1：只有失败账号）
+	assert len(context['balance_changed_accounts']) == 0, '没有余额变化的账号'
+	assert len(context['balance_unchanged_accounts']) == 0, '没有余额未变化的账号'
+	assert context['has_balance_changed'] is False, '没有账号余额变化'
+	assert context['has_balance_unchanged'] is False, '没有账号余额未变化'
+	assert context['all_balance_changed'] is False, '不是所有账号余额都变化（列表为空）'
+	assert context['all_balance_unchanged'] is False, '不是所有账号余额都未变化（列表为空）'
+
+	# 场景 2：测试余额变化的各种情况
+	accounts_with_balance = [
+		create_account_result_data(
+			name='余额变化账号',
+			status='success',
+			quota=30.0,
+			used=10.0,
+			balance_changed=True,
+		),
+		create_account_result_data(
+			name='余额未变化账号',
+			status='success',
+			quota=25.0,
+			used=5.0,
+			balance_changed=False,
+		),
+		create_account_result_data(
+			name='失败账号',
+			status='failed',
+			error='网络错误',
+			balance_changed=None,
+		),
+	]
+
+	data_with_balance = NotificationData(
+		accounts=accounts_with_balance,
+		stats=NotificationStats(success_count=2, failed_count=1, total_count=3),
+		timestamp='2024-01-01 12:00:00',
+	)
+
+	context_with_balance = kit._build_context_data(data_with_balance)
+
+	# 验证余额变化分组
+	assert len(context_with_balance['balance_changed_accounts']) == 1, '应该有 1 个余额变化的账号'
+	assert context_with_balance['balance_changed_accounts'][0].name == '余额变化账号'
+	assert len(context_with_balance['balance_unchanged_accounts']) == 1, '应该有 1 个余额未变化的账号'
+	assert context_with_balance['balance_unchanged_accounts'][0].name == '余额未变化账号'
+
+	# 验证余额变化标志
+	assert context_with_balance['has_balance_changed'] is True, '有账号余额变化'
+	assert context_with_balance['has_balance_unchanged'] is True, '有账号余额未变化'
+	assert context_with_balance['all_balance_changed'] is False, '不是所有账号余额都变化'
+	assert context_with_balance['all_balance_unchanged'] is False, '不是所有账号余额都未变化'
+
+	# 场景 3：所有账号余额都变化
+	accounts_all_changed = [
+		create_account_result_data(name='账号 1', balance_changed=True),
+		create_account_result_data(name='账号 2', balance_changed=True),
+	]
+
+	data_all_changed = NotificationData(
+		accounts=accounts_all_changed,
+		stats=NotificationStats(success_count=2, failed_count=0, total_count=2),
+		timestamp='2024-01-01 12:00:00',
+	)
+
+	context_all_changed = kit._build_context_data(data_all_changed)
+
+	assert len(context_all_changed['balance_changed_accounts']) == 2
+	assert len(context_all_changed['balance_unchanged_accounts']) == 0
+	assert context_all_changed['all_balance_changed'] is True, '所有账号余额都变化'
+	assert context_all_changed['all_balance_unchanged'] is False
+
+	# 场景 4：所有账号余额都未变化
+	accounts_all_unchanged = [
+		create_account_result_data(name='账号 1', balance_changed=False),
+		create_account_result_data(name='账号 2', balance_changed=False),
+	]
+
+	data_all_unchanged = NotificationData(
+		accounts=accounts_all_unchanged,
+		stats=NotificationStats(success_count=2, failed_count=0, total_count=2),
+		timestamp='2024-01-01 12:00:00',
+	)
+
+	context_all_unchanged = kit._build_context_data(data_all_unchanged)
+
+	assert len(context_all_unchanged['balance_changed_accounts']) == 0
+	assert len(context_all_unchanged['balance_unchanged_accounts']) == 2
+	assert context_all_unchanged['all_balance_changed'] is False
+	assert context_all_unchanged['all_balance_unchanged'] is True, '所有账号余额都未变化'
