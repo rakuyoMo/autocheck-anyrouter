@@ -108,92 +108,32 @@ class NotificationKit:
 		Returns:
 			通知处理器列表
 		"""
+		# 平台配置映射表：(平台名称, 配置对象, Sender 类)
+		platform_configs = [
+			('Bark', self.bark_config, BarkSender),
+			('邮箱', self.email_config, EmailSender),
+			('PushPlus', self.pushplus_config, PushPlusSender),
+			('Server 酱', self.serverpush_config, ServerPushSender),
+			('钉钉', self.dingtalk_config, DingTalkSender),
+			('飞书', self.feishu_config, FeishuSender),
+			('企业微信', self.wecom_config, WeComSender),
+		]
+
 		handlers = []
-
-		# Bark
-		if self.bark_config:
-			sender = BarkSender(self.bark_config)
-			handlers.append(
-				NotificationHandler(
-					name='Bark',
-					config=self.bark_config,
-					send_func=sender.send,
+		for name, config, sender_class in platform_configs:
+			if config:
+				sender = sender_class(config)
+				handlers.append(
+					NotificationHandler(
+						name=name,
+						config=config,
+						send_func=sender.send,
+					)
 				)
-			)
-
-		# 邮箱
-		if self.email_config:
-			sender = EmailSender(self.email_config)
-			handlers.append(
-				NotificationHandler(
-					name='邮箱',
-					config=self.email_config,
-					send_func=sender.send,
-				)
-			)
-
-		# PushPlus
-		if self.pushplus_config:
-			sender = PushPlusSender(self.pushplus_config)
-			handlers.append(
-				NotificationHandler(
-					name='PushPlus',
-					config=self.pushplus_config,
-					send_func=sender.send,
-				)
-			)
-
-		# Server 酱
-		if self.serverpush_config:
-			sender = ServerPushSender(self.serverpush_config)
-			handlers.append(
-				NotificationHandler(
-					name='Server 酱',
-					config=self.serverpush_config,
-					send_func=sender.send,
-				)
-			)
-
-		# 钉钉
-		if self.dingtalk_config:
-			sender = DingTalkSender(self.dingtalk_config)
-			handlers.append(
-				NotificationHandler(
-					name='钉钉',
-					config=self.dingtalk_config,
-					send_func=sender.send,
-				)
-			)
-
-		# 飞书
-		if self.feishu_config:
-			sender = FeishuSender(self.feishu_config)
-			handlers.append(
-				NotificationHandler(
-					name='飞书',
-					config=self.feishu_config,
-					send_func=sender.send,
-				)
-			)
-
-		# 企业微信
-		if self.wecom_config:
-			sender = WeComSender(self.wecom_config)
-			handlers.append(
-				NotificationHandler(
-					name='企业微信',
-					config=self.wecom_config,
-					send_func=sender.send,
-				)
-			)
 
 		return handlers
 
-	def _render_template(
-		self,
-		template: NotificationTemplate,
-		context_data: dict,
-	) -> tuple[str | None, str]:
+	def _render_template(self, template: NotificationTemplate, context_data: dict) -> tuple[str | None, str]:
 		"""
 		渲染模板
 
@@ -325,9 +265,221 @@ class NotificationKit:
 			'all_balance_unchanged': balance_determinable_count > 0 and len(balance_changed_accounts) == 0,
 		}
 
+	def _load_email_config(self) -> EmailConfig | None:
+		"""加载邮箱配置"""
+		email_notif_config = os.getenv('EMAIL_NOTIF_CONFIG')
+		if not email_notif_config:
+			return None
+
+		parsed = self._parse_env_config(email_notif_config)
+		if not isinstance(parsed, dict):
+			return None
+
+		# 验证必需字段
+		if not self._validate_required_fields(
+			parsed=parsed,
+			fields=['user', 'pass', 'to'],
+		):
+			return None
+
+		# 加载模板
+		template = self._load_template(
+			platform='email',
+			parsed=parsed,
+		)
+
+		return EmailConfig(
+			user=parsed['user'],
+			password=parsed['pass'],
+			to=parsed['to'],
+			smtp_server=parsed.get('smtp_server'),
+			platform_settings=self._load_platform_settings(
+				platform='email',
+				parsed=parsed,
+			),
+			template=template,
+		)
+
+	def _load_bark_config(self) -> BarkConfig | None:
+		"""加载 Bark 配置"""
+		bark_notif_config = os.getenv('BARK_NOTIF_CONFIG')
+		if not bark_notif_config:
+			return None
+
+		parsed = self._parse_env_config(bark_notif_config)
+		if not isinstance(parsed, dict):
+			return None
+
+		# 验证必需字段
+		if not self._validate_required_fields(
+			parsed=parsed,
+			fields=['server_url', 'device_key'],
+		):
+			return None
+
+		# 加载模板
+		template = self._load_template(
+			platform='bark',
+			parsed=parsed,
+		)
+
+		return BarkConfig(
+			server_url=parsed['server_url'],
+			device_key=parsed['device_key'],
+			platform_settings=self._load_platform_settings(
+				platform='bark',
+				parsed=parsed,
+			),
+			template=template,
+		)
+
+	def _load_dingtalk_config(self) -> WebhookConfig | None:
+		"""加载钉钉配置"""
+		return self._load_webhook_config(
+			platform='dingtalk',
+			notif_config_key='DINGTALK_NOTIF_CONFIG',
+		)
+
+	def _load_feishu_config(self) -> WebhookConfig | None:
+		"""加载飞书配置"""
+		return self._load_webhook_config(
+			platform='feishu',
+			notif_config_key='FEISHU_NOTIF_CONFIG',
+		)
+
+	def _load_wecom_config(self) -> WebhookConfig | None:
+		"""加载企业微信配置"""
+		return self._load_webhook_config(
+			platform='wecom',
+			notif_config_key='WECOM_NOTIF_CONFIG',
+		)
+
+	def _load_pushplus_config(self) -> PushPlusConfig | None:
+		"""加载 PushPlus 配置"""
+		return self._load_token_based_config(
+			platform='pushplus',
+			env_key='PUSHPLUS_NOTIF_CONFIG',
+			config_class=PushPlusConfig,
+			token_field='token',
+		)
+
+	def _load_serverpush_config(self) -> ServerPushConfig | None:
+		"""加载 Server 酱配置"""
+		return self._load_token_based_config(
+			platform='serverpush',
+			env_key='SERVERPUSH_NOTIF_CONFIG',
+			config_class=ServerPushConfig,
+			token_field='send_key',
+		)
+
+	def _load_webhook_config(self, platform: str, notif_config_key: str) -> WebhookConfig | None:
+		"""加载 Webhook 配置的通用方法"""
+		notif_config = os.getenv(notif_config_key)
+		if not notif_config:
+			return None
+
+		parsed = self._parse_env_config(notif_config)
+
+		# 字典格式配置
+		if isinstance(parsed, dict):
+			# 验证必需字段
+			if not self._validate_required_fields(
+				parsed=parsed,
+				fields=['webhook'],
+			):
+				return None
+
+			# 加载模板
+			template = self._load_template(
+				platform=platform,
+				parsed=parsed,
+			)
+
+			return WebhookConfig(
+				webhook=parsed['webhook'],
+				platform_settings=self._load_platform_settings(
+					platform=platform,
+					parsed=parsed,
+				),
+				template=template,
+			)
+
+		# 纯字符串，当做 webhook URL，使用默认配置
+		default_config = self._load_default_config(platform)
+		template_value = default_config.get('template') if default_config else None
+		template = NotificationTemplate.from_value(template_value)
+		platform_settings = default_config.get('platform_settings') if default_config else None
+
+		return WebhookConfig(
+			webhook=parsed,
+			platform_settings=platform_settings,
+			template=template,
+		)
+
+	def _load_token_based_config(
+		self,
+		platform: str,
+		env_key: str,
+		config_class: type,
+		token_field: str,
+	):
+		"""
+		加载基于 token 的配置的通用方法（PushPlus、ServerPush 等）
+
+		Args:
+			platform: 平台名称
+			env_key: 环境变量键名
+			config_class: 配置类
+			token_field: token 字段名（如 'token' 或 'send_key'）
+
+		Returns:
+			配置对象，如果配置不存在则返回 None
+		"""
+		notif_config = os.getenv(env_key)
+		if not notif_config:
+			return None
+
+		parsed = self._parse_env_config(notif_config)
+
+		# 字典格式配置
+		if isinstance(parsed, dict):
+			# 验证必需字段
+			if not self._validate_required_fields(
+				parsed=parsed,
+				fields=[token_field],
+			):
+				return None
+
+			# 加载模板
+			template = self._load_template(
+				platform=platform,
+				parsed=parsed,
+			)
+
+			return config_class(
+				**{token_field: parsed[token_field]},
+				platform_settings=self._load_platform_settings(
+					platform=platform,
+					parsed=parsed,
+				),
+				template=template,
+			)
+
+		# 纯字符串，当做 token，使用默认配置
+		default_config = self._load_default_config(platform)
+		template_value = default_config.get('template') if default_config else None
+		template = NotificationTemplate.from_value(template_value)
+		platform_settings = default_config.get('platform_settings') if default_config else None
+
+		return config_class(
+			**{token_field: parsed},
+			platform_settings=platform_settings,
+			template=template,
+		)
+
 	def _load_template(self, platform: str, parsed: dict) -> NotificationTemplate | None:
 		"""
-		加载模板配置
+		加载模板配置，支持 title 和 content 分别合并
 
 		Args:
 			platform: 平台名称
@@ -336,25 +488,131 @@ class NotificationKit:
 		Returns:
 			NotificationTemplate 对象，如果没有配置则返回 None
 		"""
-		template_value = parsed.get('template')
-		if template_value is None:
-			default_config = self._load_default_config(platform)
-			template_value = default_config.get('template') if default_config else None
+		# 加载默认配置
+		default_config = self._load_default_config(platform)
+		default_template_value = default_config.get('template') if default_config else None
 
-		return NotificationTemplate.from_value(template_value)
+		# 获取用户配置
+		user_template_value = parsed.get('template')
 
-	def _validate_required_field(self, parsed: dict, field: str) -> bool:
+		# 如果两者都不存在，返回 None
+		if user_template_value is None and default_template_value is None:
+			return None
+
+		# 如果用户没有配置，使用默认配置
+		if user_template_value is None:
+			return NotificationTemplate.from_value(default_template_value)
+
+		# 如果用户配置是字符串格式（向后兼容），直接使用
+		if isinstance(user_template_value, str):
+			return NotificationTemplate.from_value(user_template_value)
+
+		# 如果用户配置是字典格式，需要分别合并 title 和 content
+		if isinstance(user_template_value, dict):
+			# 获取默认的 title 和 content
+			default_title = None
+			default_content = ''
+
+			if isinstance(default_template_value, dict):
+				default_title = default_template_value.get('title')
+				default_content = default_template_value.get('content', '')
+
+			# 获取用户的 title 和 content，如果用户没有设置，使用默认值
+			merged_title = user_template_value.get('title', default_title)
+			merged_content = user_template_value.get('content', default_content)
+
+			# 构建合并后的模板配置
+			merged_template_value = {
+				'title': merged_title,
+				'content': merged_content,
+			}
+
+			return NotificationTemplate.from_value(merged_template_value)
+
+		# 其他情况，使用用户配置
+		return NotificationTemplate.from_value(user_template_value)
+
+	def _load_platform_settings(self, platform: str, parsed: dict) -> dict[str, Any] | None:
 		"""
-		验证必需字段是否存在且非空
+		加载平台特定设置，支持与默认配置深度合并
+
+		Args:
+			platform: 平台名称
+			parsed: 解析后的配置字典
+
+		Returns:
+			合并后的 platform_settings，如果都没有则返回 None
+		"""
+		# 加载默认配置
+		default_config = self._load_default_config(platform)
+		default_platform_settings = default_config.get('platform_settings') if default_config else None
+
+		# 获取用户配置
+		user_platform_settings = parsed.get('platform_settings')
+
+		# 如果两者都不存在，返回 None
+		if user_platform_settings is None and default_platform_settings is None:
+			return None
+
+		# 如果用户没有配置，使用默认配置
+		if user_platform_settings is None:
+			return default_platform_settings
+
+		# 如果默认配置不存在，使用用户配置
+		if default_platform_settings is None:
+			return user_platform_settings
+
+		# 深度合并用户配置和默认配置
+		return self._deep_merge_dict(
+			default=default_platform_settings,
+			override=user_platform_settings,
+		)
+
+	def _validate_required_fields(self, parsed: dict, fields: list[str]) -> bool:
+		"""
+		验证多个必需字段是否都存在且非空
 
 		Args:
 			parsed: 解析后的配置字典
-			field: 字段名
+			fields: 字段名列表
 
 		Returns:
-			字段存在且非空返回 True，否则返回 False
+			所有字段都存在且非空返回 True，否则返回 False
 		"""
-		return field in parsed and parsed[field]
+		return all(field in parsed and parsed[field] for field in fields)
+
+	def _deep_merge_dict(
+		self,
+		default: dict[str, Any],
+		override: dict[str, Any] | None,
+	) -> dict[str, Any]:
+		"""
+		深度合并字典，override 中的值会覆盖 default 中的值
+
+		Args:
+			default: 默认配置字典
+			override: 用户配置字典（会覆盖默认配置）
+
+		Returns:
+			合并后的字典
+		"""
+		if override is None:
+			return default.copy()
+
+		result = default.copy()
+
+		for key, value in override.items():
+			# 如果两边都是字典，递归合并
+			if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+				result[key] = self._deep_merge_dict(
+					default=result[key],
+					override=value,
+				)
+			else:
+				# 否则直接覆盖
+				result[key] = value
+
+		return result
 
 	def _load_default_config(self, platform: str) -> dict[str, Any] | None:
 		"""加载默认配置文件"""
@@ -375,218 +633,3 @@ class NotificationKit:
 		except Exception:
 			# 如果不是 JSON，就当做纯字符串（Token 或 Webhook URL）
 			return env_value
-
-	def _load_email_config(self) -> EmailConfig | None:
-		"""加载邮箱配置"""
-		email_notif_config = os.getenv('EMAIL_NOTIF_CONFIG')
-		if not email_notif_config:
-			return None
-
-		parsed = self._parse_env_config(email_notif_config)
-		if not isinstance(parsed, dict):
-			return None
-
-		# 验证必需字段
-		if not self._validate_required_field(
-			parsed=parsed,
-			field='user',
-		):
-			return None
-		if not self._validate_required_field(
-			parsed=parsed,
-			field='pass',
-		):
-			return None
-		if not self._validate_required_field(
-			parsed=parsed,
-			field='to',
-		):
-			return None
-
-		# 加载模板
-		template = self._load_template(
-			platform='email',
-			parsed=parsed,
-		)
-
-		return EmailConfig(
-			user=parsed['user'],
-			password=parsed['pass'],
-			to=parsed['to'],
-			smtp_server=parsed.get('smtp_server'),
-			platform_settings=parsed.get('platform_settings'),
-			template=template,
-		)
-
-	def _load_bark_config(self) -> BarkConfig | None:
-		"""加载 Bark 配置"""
-		bark_notif_config = os.getenv('BARK_NOTIF_CONFIG')
-		if not bark_notif_config:
-			return None
-
-		parsed = self._parse_env_config(bark_notif_config)
-		if not isinstance(parsed, dict):
-			return None
-
-		# 验证必需字段
-		if not self._validate_required_field(
-			parsed=parsed,
-			field='server_url',
-		):
-			return None
-		if not self._validate_required_field(
-			parsed=parsed,
-			field='device_key',
-		):
-			return None
-
-		# 加载模板
-		template = self._load_template(
-			platform='bark',
-			parsed=parsed,
-		)
-
-		return BarkConfig(
-			server_url=parsed['server_url'],
-			device_key=parsed['device_key'],
-			platform_settings=parsed.get('platform_settings'),
-			template=template,
-		)
-
-	def _load_webhook_config(self, platform: str, notif_config_key: str) -> WebhookConfig | None:
-		"""加载 Webhook 配置的通用方法"""
-		notif_config = os.getenv(notif_config_key)
-		if not notif_config:
-			return None
-
-		parsed = self._parse_env_config(notif_config)
-
-		# 字典格式配置
-		if isinstance(parsed, dict):
-			# 验证必需字段
-			if not self._validate_required_field(
-				parsed=parsed,
-				field='webhook',
-			):
-				return None
-
-			# 加载模板
-			template = self._load_template(
-				platform=platform,
-				parsed=parsed,
-			)
-
-			return WebhookConfig(
-				webhook=parsed['webhook'],
-				platform_settings=parsed.get('platform_settings'),
-				template=template,
-			)
-
-		# 纯字符串，当做 webhook URL，使用默认模板
-		default_config = self._load_default_config(platform)
-		template_value = default_config.get('template') if default_config else None
-		template = NotificationTemplate.from_value(template_value)
-
-		return WebhookConfig(
-			webhook=parsed,
-			platform_settings=default_config.get('platform_settings') if default_config else None,
-			template=template,
-		)
-
-	def _load_dingtalk_config(self) -> WebhookConfig | None:
-		return self._load_webhook_config(
-			platform='dingtalk',
-			notif_config_key='DINGTALK_NOTIF_CONFIG',
-		)
-
-	def _load_feishu_config(self) -> WebhookConfig | None:
-		return self._load_webhook_config(
-			platform='feishu',
-			notif_config_key='FEISHU_NOTIF_CONFIG',
-		)
-
-	def _load_wecom_config(self) -> WebhookConfig | None:
-		return self._load_webhook_config(
-			platform='wecom',
-			notif_config_key='WECOM_NOTIF_CONFIG',
-		)
-
-	def _load_pushplus_config(self) -> PushPlusConfig | None:
-		"""加载 PushPlus 配置"""
-		pushplus_notif_config = os.getenv('PUSHPLUS_NOTIF_CONFIG')
-		if not pushplus_notif_config:
-			return None
-
-		parsed = self._parse_env_config(pushplus_notif_config)
-
-		# 字典格式配置
-		if isinstance(parsed, dict):
-			# 验证必需字段
-			if not self._validate_required_field(
-				parsed=parsed,
-				field='token',
-			):
-				return None
-
-			# 加载模板
-			template = self._load_template(
-				platform='pushplus',
-				parsed=parsed,
-			)
-
-			return PushPlusConfig(
-				token=parsed['token'],
-				platform_settings=parsed.get('platform_settings'),
-				template=template,
-			)
-
-		# 纯字符串，当做 token，使用默认模板
-		default_config = self._load_default_config('pushplus')
-		template_value = default_config.get('template') if default_config else None
-		template = NotificationTemplate.from_value(template_value)
-
-		return PushPlusConfig(
-			token=parsed,
-			platform_settings=default_config.get('platform_settings') if default_config else None,
-			template=template,
-		)
-
-	def _load_serverpush_config(self) -> ServerPushConfig | None:
-		"""加载 Server 酱配置"""
-		serverpush_notif_config = os.getenv('SERVERPUSH_NOTIF_CONFIG')
-		if not serverpush_notif_config:
-			return None
-
-		parsed = self._parse_env_config(serverpush_notif_config)
-
-		# 字典格式配置
-		if isinstance(parsed, dict):
-			# 验证必需字段
-			if not self._validate_required_field(
-				parsed=parsed,
-				field='send_key',
-			):
-				return None
-
-			# 加载模板
-			template = self._load_template(
-				platform='serverpush',
-				parsed=parsed,
-			)
-
-			return ServerPushConfig(
-				send_key=parsed['send_key'],
-				platform_settings=parsed.get('platform_settings'),
-				template=template,
-			)
-
-		# 纯字符串，当做 send_key，使用默认模板
-		default_config = self._load_default_config('serverpush')
-		template_value = default_config.get('template') if default_config else None
-		template = NotificationTemplate.from_value(template_value)
-
-		return ServerPushConfig(
-			send_key=parsed,
-			platform_settings=default_config.get('platform_settings') if default_config else None,
-			template=template,
-		)
