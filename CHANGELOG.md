@@ -12,9 +12,9 @@
 * 新增 `NOTIFY_TRIGGERS` 环境变量，支持通过自定义枚举控制通知发送时机，默认值为 `balance_changed,failed`。[#22]
 
 #### Change
-* 重构代码结构，拆分 `CheckinService`。[#22]
 * 移除全局的 `notify` 实例，改为在 `CheckinService` 中显式初始化 `NotificationKit`。[#22]
 * 重构测试用例。[#22]
+* 新增 `Application` 类作为应用编排层，精简 `CheckinService`，使其能专注于签到逻辑。[#22], [#23]
 
 ---
 

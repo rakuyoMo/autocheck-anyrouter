@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from core import CheckinService
+from application import Application
 from tests.conftest import assert_file_content_contains
 from tests.fixtures.data import MIXED_ACCOUNTS
 from tests.fixtures.mock_dependencies import MockHttpClient, MockPlaywright, MockSMTP
@@ -25,8 +25,8 @@ class TestFeatures:
 		"""测试隐私模式（公开/私有仓库）"""
 		accounts_env(MIXED_ACCOUNTS)
 
-		service = CheckinService()
-		service.balance_manager.balance_hash_file = tmp_path / f'hash_{repo_visibility}.txt'
+		app = Application()
+		app.balance_manager.balance_hash_file = tmp_path / f'hash_{repo_visibility}.txt'
 		summary_file = tmp_path / f'summary_{repo_visibility}.md'
 
 		with patch.dict(
@@ -41,7 +41,7 @@ class TestFeatures:
 				MockHttpClient.setup(stack, MockHttpClient.get_success_handler, MockHttpClient.post_success_handler)
 
 				with pytest.raises(SystemExit):
-					await service.run()
+					await app.run()
 
 		assert summary_file.exists()
 		assert_file_content_contains(summary_file, expected_in_content)
