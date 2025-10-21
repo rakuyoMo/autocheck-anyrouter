@@ -379,17 +379,18 @@ jobs:
 
 ```
 src/
-├── core/                   # 核心业务逻辑
-│   ├── checkin_service.py  # 签到服务主逻辑
-│   └── models/             # 数据模型
-├── notif/                  # 通知系统
-│   ├── notify.py           # 通知统一入口
-│   ├── models/             # 通知配置模型
-│   ├── senders/            # 各种通知发送器
-│   └── configs/            # 默认模板配置
-├── tools/                  # 工具模块
-│   └── logger/             # 日志系统
-└── main.py                 # 程序入口
+├── core/                       # 核心业务逻辑
+│   ├── checkin_service.py      # 签到服务主逻辑
+│   └── models/                 # 数据模型
+├── notif/                      # 通知系统
+│   ├── notification_kit.py     # 通知编排器
+│   ├── trigger_manager.py      # 通知触发条件管理
+│   ├── models/                 # 通知配置模型
+│   ├── senders/                # 各种通知发送器
+│   └── configs/                # 默认模板配置
+├── tools/                      # 工具模块
+│   └── logger/                 # 日志系统
+└── main.py                     # 程序入口
 ```
 
 ### 开发环境设置

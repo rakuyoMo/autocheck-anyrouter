@@ -26,7 +26,8 @@
 
 #### Add
 * 新增 Bark 通知方式支持，包含丰富的配置选项。[#19]
-* 支持通知 title 的模板化配置，可通过模板变量动态生成通知标题。[#17]* Stencil 模板变量新增余额变化相关内容。[#20]
+* 支持通知 title 的模板化配置，可通过模板变量动态生成通知标题。[#17]
+* Stencil 模板变量新增余额变化相关内容。[#20]
 
 #### Fix
 * 修复部分账号签到成功但通知显示"所有账号失败"的判断错误。[#18]
@@ -122,7 +123,7 @@
 * 支持 Fork 定时运行和 Composite Action 两种使用方式。
 * 完善的 CI/CD 工作流、测试体系和项目文档。
 
-[1.3.1]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.2.1
+[1.3.1]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.3.1
 [1.3.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.3.0
 [1.2.1]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.2.1
 [1.2.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.2.0
