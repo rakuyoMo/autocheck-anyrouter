@@ -379,15 +379,19 @@ jobs:
 
 ```
 src/
+├── application.py              # 应用层，编排核心服务
 ├── core/                       # 核心业务逻辑
+│   ├── balance_manager.py      # 余额管理器，追踪账号余额变化
 │   ├── checkin_service.py      # 签到服务主逻辑
-│   └── models/                 # 数据模型
+│   ├── github_reporter.py      # GitHub Actions 报告生成器
+│   ├── privacy_handler.py      # 隐私保护和数据脱敏处理
+│   └── models/                 # 核心数据模型
 ├── notif/                      # 通知系统
-│   ├── notification_kit.py     # 通知编排器
+│   ├── notification_kit.py     # 通知编排器，协调各通知平台
 │   ├── trigger_manager.py      # 通知触发条件管理
 │   ├── models/                 # 通知配置模型
-│   ├── senders/                # 各种通知发送器
-│   └── configs/                # 默认模板配置
+│   ├── senders/                # 各平台通知发送器实现
+│   └── configs/                # 默认通知模板配置
 ├── tools/                      # 工具模块
 │   └── logger/                 # 日志系统
 └── main.py                     # 程序入口
