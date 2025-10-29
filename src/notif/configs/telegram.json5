@@ -1,0 +1,39 @@
+{
+  // 【必填】Telegram Bot Token
+  // 获取方式：向 @BotFather 发送 /newbot 命令创建机器人，会获得一个 Token
+  // 示例："123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+  "bot_token": "",
+
+  // 【必填】Telegram Chat ID
+  // 获取方式：向 @userinfobot 发送任意消息，它会返回你的 Chat ID
+  // 对于个人聊天，通常是一个数字，如："123456789"
+  // 对于群组，以 "-" 开头，如："-987654321"
+  "chat_id": "",
+
+  // 【可选】平台特定设置
+  "platform_settings": {
+    // 消息类型（解析模式）：HTML | MarkdownV2
+    // - HTML：支持 <b>、<i>、<a> 等 HTML 标签（推荐，默认值）
+    // - MarkdownV2：Telegram 新版 Markdown 语法（需要转义特殊字符）
+    // 官方文档：https://core.telegram.org/bots/api#formatting-options
+    "message_type": "HTML",
+
+    // 是否禁用网页预览，设置为 true 时不展示链接预览
+    "disable_web_page_preview": false,
+
+    // 是否禁用通知声音，设置为 true 时静默发送
+    "disable_notification": false,
+
+    // 是否保护内容，设置为 true 时禁止转发和保存
+    "protect_content": false,
+  },
+
+  // 【可选】自定义通知模板（不设置，或为空时使用下方默认模板）
+  "template": {
+    // 通知标题，不设置，或为空字符串时不展示
+    "title": "AnyRouter 签到提醒",
+
+    // 通知内容
+    "content": "{# Telegram 通知模板 #}{% if timestamp %}<b>⏰ 执行时间</b>\n{{ timestamp }}\n\n{% endif %}{% if success_accounts %}{% for account in success_accounts %}<b>💰 {{ account.name }}</b>\n当前额度：${{ account.quota }}，已使用：${{ account.used }}\n\n{% endfor %}{% endif %}{% if failed_accounts %}{% for account in failed_accounts %}<b>❌ {{ account.name }}</b>\n异常：{{ account.error }}\n\n{% endfor %}{% endif %}<b>📊 签到结果统计</b>\n✅ 成功：{{ stats.success_count }}/{{ stats.total_count }}\n❌ 失败：{{ stats.failed_count }}/{{ stats.total_count }}\n\n{% if all_success %}<b>🎉 全部账号签到成功！</b>{% else %}{% if partial_success %}<b>⚠️ 部分账号签到成功</b>{% else %}<b>🚫 全部账号签到失败</b>{% endif %}{% endif %}",
+  },
+}

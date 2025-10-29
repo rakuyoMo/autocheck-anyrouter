@@ -8,6 +8,9 @@
 
 ## [Unreleased]
 
+#### Add
+* 新增 Telegram 通知方式支持，支持 HTML/MarkdownV2 解析模式。
+
 ---
 
 ## [1.3.1] (2025-10-20)

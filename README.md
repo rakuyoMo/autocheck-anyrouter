@@ -94,6 +94,7 @@ jobs:
           # 可选：配置通知方式
           dingtalk-notif-config: ${{ secrets.DINGTALK_NOTIF_CONFIG }}
           email-notif-config: ${{ secrets.EMAIL_NOTIF_CONFIG }}
+          telegram-notif-config: ${{ secrets.TELEGRAM_NOTIF_CONFIG }}
           # ... 其他通知配置
 ```
 
@@ -134,8 +135,9 @@ jobs:
 - [x] [PushPlus](https://www.pushplus.plus/)：`PUSHPLUS_NOTIF_CONFIG`
 - [x] [Server 酱](https://sct.ftqq.com/)：`SERVERPUSH_NOTIF_CONFIG`
 - [x] [Bark](https://bark.day.app/)：`BARK_NOTIF_CONFIG`
+- [x] [Telegram Bot](https://core.telegram.org/bots)：`TELEGRAM_NOTIF_CONFIG`
 
-除了 Bark 和邮箱外，其余平台的配置字段均有两种用法：
+除了 Bark、邮箱和 Telegram 外，其余平台的配置字段均有两种用法：
 - 设置为纯字符串：代表 WebHook、Key 或者 Token，此时将使用 [默认配置](/src/notif/configs) 发送通知。
 - 设置为 JSON：高级配置，此时可设置模板样式（`template`），或者一些平台配置（`platform_settings`）。具体可查看：
   - [默认配置](/src/notif/configs)
@@ -227,7 +229,7 @@ jobs:
 **重要说明**：
 
 **关于 title 的限制**：
-- ✅ **支持空 title（不展示标题）**：企业微信、飞书、PushPlus
+- ✅ **支持空 title（不展示标题）**：Telegram、企业微信、飞书、PushPlus、Bark
 - ⚠️ **部分支持**：钉钉（纯文本模式支持空 title；markdown 模式需要 title，不设置会抛出错误）
 - ❌ **必须提供 title**：邮箱、Server 酱（不设置会抛出错误）
 

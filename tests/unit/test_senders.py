@@ -4,7 +4,7 @@ from unittest.mock import patch
 import httpx
 import pytest
 
-from notif.models import BarkConfig, EmailConfig, PushPlusConfig, ServerPushConfig, WebhookConfig
+from notif.models import BarkConfig, EmailConfig, PushPlusConfig, ServerPushConfig, TelegramConfig, WebhookConfig
 from notif.senders import (
 	BarkSender,
 	DingTalkSender,
@@ -12,6 +12,7 @@ from notif.senders import (
 	FeishuSender,
 	PushPlusSender,
 	ServerPushSender,
+	TelegramSender,
 	WeComSender,
 )
 from tests.fixtures.mock_dependencies import MockHttpClient, MockSMTP
@@ -68,6 +69,7 @@ class TestSenders:
 			(DingTalkSender, lambda: WebhookConfig(webhook='https://test.dingtalk.com', template=None)),
 			(PushPlusSender, lambda: PushPlusConfig(token='test_token', template=None)),
 			(BarkSender, lambda: BarkConfig(device_key='test_key', server_url='https://api.day.app', template=None)),
+			(TelegramSender, lambda: TelegramConfig(bot_token='test_token', chat_id='123456', template=None)),
 		],
 	)
 	async def test_http_network_errors(self, sender_class, config_builder):
@@ -98,6 +100,11 @@ class TestSenders:
 				lambda: BarkConfig(device_key='test_key', server_url='https://api.day.app', template=None),
 				'Bark 推送失败.*400',
 			),
+			(
+				TelegramSender,
+				lambda: TelegramConfig(bot_token='test_token', chat_id='123456', template=None),
+				'Telegram 推送失败.*400',
+			),
 		],
 	)
 	async def test_http_status_code_errors(self, sender_class, config_builder, error_match: str):
@@ -105,7 +112,7 @@ class TestSenders:
 		sender = sender_class(config_builder())
 
 		with ExitStack() as stack:
-			# 钉钉用 500 错误，Bark 用 400 错误
+			# 钉钉用 500 错误，Bark 和 Telegram 用 400 错误
 			status_code = 500 if sender_class == DingTalkSender else 400
 
 			async def post_handler_error(*args, **kwargs):
