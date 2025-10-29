@@ -32,6 +32,12 @@ inputs:
   wecom-notif-config:
     description: '企业微信通知配置'
     required: false
+  bark-notif-config:
+    description: 'Bark 通知配置'
+    required: false
+  telegram-notif-config:
+    description: 'Telegram 通知配置'
+    required: false
 
 runs:
   using: 'composite'
@@ -73,4 +79,6 @@ runs:
         SERVERPUSH_NOTIF_CONFIG: ${{ inputs.serverpush-notif-config }}
         FEISHU_NOTIF_CONFIG: ${{ inputs.feishu-notif-config }}
         WECOM_NOTIF_CONFIG: ${{ inputs.wecom-notif-config }}
+        BARK_NOTIF_CONFIG: ${{ inputs.bark-notif-config }}
+        TELEGRAM_NOTIF_CONFIG: ${{ inputs.telegram-notif-config }}
       run: mise run checkin

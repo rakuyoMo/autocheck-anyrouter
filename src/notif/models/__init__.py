@@ -5,6 +5,7 @@ from notif.models.notification_template import NotificationTemplate
 from notif.models.notify_trigger import NotifyTrigger
 from notif.models.pushplus_config import PushPlusConfig
 from notif.models.serverpush_config import ServerPushConfig
+from notif.models.telegram_config import TelegramConfig
 from notif.models.webhook_config import WebhookConfig
 
 __all__ = [
@@ -15,5 +16,6 @@ __all__ = [
 	'NotifyTrigger',
 	'PushPlusConfig',
 	'ServerPushConfig',
+	'TelegramConfig',
 	'WebhookConfig',
 ]

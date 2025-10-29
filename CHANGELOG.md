@@ -8,6 +8,12 @@
 
 ## [Unreleased]
 
+#### Add
+* 新增 Telegram 通知方式支持，支持 HTML/MarkdownV2 解析模式。
+
+#### Fix
+* 修复 Github Action 没有配置 `BARK_NOTIF_CONFIG` 的问题。
+
 ---
 
 ## [1.3.1] (2025-10-20)

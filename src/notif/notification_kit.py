@@ -13,6 +13,7 @@ from notif.models import (
 	NotificationTemplate,
 	PushPlusConfig,
 	ServerPushConfig,
+	TelegramConfig,
 	WebhookConfig,
 )
 from notif.senders import (
@@ -22,6 +23,7 @@ from notif.senders import (
 	FeishuSender,
 	PushPlusSender,
 	ServerPushSender,
+	TelegramSender,
 	WeComSender,
 )
 from tools.logger import logger
@@ -40,6 +42,7 @@ class NotificationKit:
 		self.wecom_config = self._load_wecom_config()
 		self.pushplus_config = self._load_pushplus_config()
 		self.serverpush_config = self._load_serverpush_config()
+		self.telegram_config = self._load_telegram_config()
 
 		# 注册所有通知处理器
 		self._handlers = self._register_handlers()
@@ -117,6 +120,7 @@ class NotificationKit:
 			('钉钉', self.dingtalk_config, DingTalkSender),
 			('飞书', self.feishu_config, FeishuSender),
 			('企业微信', self.wecom_config, WeComSender),
+			('Telegram', self.telegram_config, TelegramSender),
 		]
 
 		handlers = []
@@ -370,6 +374,39 @@ class NotificationKit:
 			env_key='SERVERPUSH_NOTIF_CONFIG',
 			config_class=ServerPushConfig,
 			token_field='send_key',
+		)
+
+	def _load_telegram_config(self) -> TelegramConfig | None:
+		"""加载 Telegram 配置"""
+		telegram_notif_config = os.getenv('TELEGRAM_NOTIF_CONFIG')
+		if not telegram_notif_config:
+			return None
+
+		parsed = self._parse_env_config(telegram_notif_config)
+		if not isinstance(parsed, dict):
+			return None
+
+		# 验证必需字段
+		if not self._validate_required_fields(
+			parsed=parsed,
+			fields=['bot_token', 'chat_id'],
+		):
+			return None
+
+		# 加载模板
+		template = self._load_template(
+			platform='telegram',
+			parsed=parsed,
+		)
+
+		return TelegramConfig(
+			bot_token=parsed['bot_token'],
+			chat_id=parsed['chat_id'],
+			platform_settings=self._load_platform_settings(
+				platform='telegram',
+				parsed=parsed,
+			),
+			template=template,
 		)
 
 	def _load_webhook_config(self, platform: str, notif_config_key: str) -> WebhookConfig | None:
