@@ -8,6 +8,10 @@
 
 ## [Unreleased]
 
+---
+
+## [1.4.1] (2025-10-31)
+
 #### Fix
 * 修复当环境变量 `TZ` 或 `TIMESTAMP_FORMAT` 为空字符串时导致通知中执行时间为空的问题。[#30]
 
@@ -139,6 +143,7 @@
 * 支持 Fork 定时运行和 Composite Action 两种使用方式。
 * 完善的 CI/CD 工作流、测试体系和项目文档。
 
+[1.4.1]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.4.1
 [1.4.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.4.0
 [1.3.1]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.3.1
 [1.3.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.3.0
