@@ -169,17 +169,26 @@ jobs:
 
 </details>
 
-#### 时区配置
+#### 时间配置
 
-从 [v1.4.0] 版本开始，支持通过环境变量 `TZ` 自定义通知中的时间戳时区。
+从 [v1.4.0] 版本开始，支持：
 
-**配置方式**：
-- 在 `Environment secrets` 中添加名为 `TZ` 的环境变量
-- 值设置为标准时区标识符，例如：
-  - `Asia/Shanghai`：中国时区（UTC+8）
-  - `America/New_York`：美国东部时区
-  - `UTC`：协调世界时
-- 如果不配置，默认使用 `Asia/Shanghai`（中国时区）
+- 环境变量 `TZ` 自定义通知中的时间戳时区。
+  - 在 `Environment secrets` 中添加名为 `TZ` 的环境变量
+  - 值设置为标准时区标识符，例如：
+    - `Asia/Shanghai`：中国时区（UTC+8）
+    - `America/New_York`：美国东部时区
+    - `UTC`：协调世界时
+  - 如果不配置，默认使用 `Asia/Shanghai`（中国时区）
+- 环境变量 `TIMESTAMP_FORMAT` 自定义通知中的时间戳格式。
+  - 在 `Environment secrets` 中添加名为 `TIMESTAMP_FORMAT` 的环境变量
+  - 值设置为 Python `strftime` 格式字符串，例如：
+    - `%Y/%m/%d %H:%M:%S`：`2025/10/31 14:23:45`
+    - `%Y年%m月%d日 %H:%M`：`2025年10月31日 14:23`
+    - `%Y-%m-%d %H:%M:%S %Z`：`2025-10-31 14:23:45 CST`（包含时区）
+    - `%m/%d %H:%M`：`10/31 14:23`（简短格式）
+  - 如果不配置，默认使用 `%Y-%m-%d %H:%M:%S`
+  - 更多格式参考 [Python strftime 文档](https://docs.python.org/zh-cn/3/library/datetime.html#strftime-and-strptime-format-codes)
 
 > ⚠️ **注意**：GitHub Actions 的 Cron 定时任务始终使用 UTC 时区，`TZ` 环境变量只影响通知中显示的时间戳，不会改变定时任务的执行时间。
 

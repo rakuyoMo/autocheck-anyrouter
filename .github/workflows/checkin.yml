@@ -14,6 +14,8 @@ jobs:
       REPO_VISIBILITY: ${{ github.event.repository.visibility }}
       # 时区设置（可选，默认为 Asia/Shanghai 中国时区）
       TZ: ${{ secrets.TZ }}
+      # 时间戳格式（可选，默认为 %Y-%m-%d %H:%M:%S）
+      TIMESTAMP_FORMAT: ${{ secrets.TIMESTAMP_FORMAT }}
       # 账号配置
       ANYROUTER_ACCOUNTS: ${{ secrets.ANYROUTER_ACCOUNTS }}
       # 是否显示敏感信息

@@ -21,6 +21,9 @@ class Application:
 	# 默认时区
 	DEFAULT_TIMEZONE = 'Asia/Shanghai'
 
+	# 默认时间戳格式
+	DEFAULT_TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S'
+
 	def __init__(self):
 		"""初始化应用及所有服务"""
 		# 初始化各个功能模块
@@ -210,9 +213,12 @@ class Application:
 				logger.warning(f'时区 {timezone_name} 无效，使用默认时区 {self.DEFAULT_TIMEZONE}')
 				timezone = ZoneInfo(self.DEFAULT_TIMEZONE)
 
+			# 获取时间戳格式配置
+			timestamp_format = os.getenv('TIMESTAMP_FORMAT', self.DEFAULT_TIMESTAMP_FORMAT)
+
 			# 生成带时区的时间戳
 			now = datetime.now(timezone)
-			timestamp = now.strftime('%Y-%m-%d %H:%M:%S')
+			timestamp = now.strftime(timestamp_format)
 			timezone_abbr = now.strftime('%Z')
 
 			# 构建结构化通知数据
