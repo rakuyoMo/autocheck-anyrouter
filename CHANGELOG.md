@@ -8,6 +8,9 @@
 
 ## [Unreleased]
 
+#### Fix
+* 修复当环境变量 `TZ` 或 `TIMESTAMP_FORMAT` 为空字符串时导致通知中执行时间为空的问题。[#30]
+
 ---
 
 ## [1.4.0] (2025-10-31)
@@ -163,3 +166,4 @@
 [#23]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/23
 [#27]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/27
 [#28]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/28
+[#30]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/30
