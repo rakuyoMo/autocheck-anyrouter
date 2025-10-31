@@ -204,8 +204,8 @@ class Application:
 			self.balance_manager.save_balance_hash(current_balance_hash_dict)
 
 		if need_notify and account_results:
-			# 获取时区配置
-			timezone_name = os.getenv('TZ', self.DEFAULT_TIMEZONE)
+			# 获取时区配置（处理空字符串的情况）
+			timezone_name = os.getenv('TZ') or self.DEFAULT_TIMEZONE
 			try:
 				timezone = ZoneInfo(timezone_name)
 			except Exception:
@@ -213,8 +213,8 @@ class Application:
 				logger.warning(f'时区 {timezone_name} 无效，使用默认时区 {self.DEFAULT_TIMEZONE}')
 				timezone = ZoneInfo(self.DEFAULT_TIMEZONE)
 
-			# 获取时间戳格式配置
-			timestamp_format = os.getenv('TIMESTAMP_FORMAT', self.DEFAULT_TIMESTAMP_FORMAT)
+			# 获取时间戳格式配置（处理空字符串的情况）
+			timestamp_format = os.getenv('TIMESTAMP_FORMAT') or self.DEFAULT_TIMESTAMP_FORMAT
 
 			# 生成带时区的时间戳
 			now = datetime.now(timezone)
