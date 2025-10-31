@@ -169,6 +169,20 @@ jobs:
 
 </details>
 
+#### 时区配置
+
+从 [v1.4.0] 版本开始，支持通过环境变量 `TZ` 自定义通知中的时间戳时区。
+
+**配置方式**：
+- 在 `Environment secrets` 中添加名为 `TZ` 的环境变量
+- 值设置为标准时区标识符，例如：
+  - `Asia/Shanghai`：中国时区（UTC+8）
+  - `America/New_York`：美国东部时区
+  - `UTC`：协调世界时
+- 如果不配置，默认使用 `Asia/Shanghai`（中国时区）
+
+> ⚠️ **注意**：GitHub Actions 的 Cron 定时任务始终使用 UTC 时区，`TZ` 环境变量只影响通知中显示的时间戳，不会改变定时任务的执行时间。
+
 #### 自定义通知模板
 
 支持使用 [Stencil](https://stencil.pyllyukko.com/) 模板语法自定义通知内容。模板配置支持分别自定义通知的标题和内容。
@@ -200,6 +214,7 @@ jobs:
 > 从 [v1.3.0] 开始，`accounts` 包含所有账号的完整结果。您可以使用下面的分组列表来筛选特定类型的账号。
 
 - `timestamp`: 执行时间
+- `timezone`: 时区（[v1.4.0] 版本起可用）
 - `stats`: 统计数据（`success_count`, `failed_count`, `total_count`）
 - `accounts`: 所有账号的结果列表（`name`, `status`, `quota`, `used`, `balance_changed`, `error`）
 
@@ -488,3 +503,4 @@ mise run lint --fix       # 代码检查并自动修复
 
 [v1.3.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.3.0
 [v1.3.1]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.3.1
+[v1.4.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.4.0

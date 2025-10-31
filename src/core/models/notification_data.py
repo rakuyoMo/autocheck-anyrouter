@@ -17,6 +17,9 @@ class NotificationData:
 	# 执行时间戳
 	timestamp: str | None = None
 
+	# 时区信息
+	timezone: str | None = None
+
 	@property
 	def all_success(self) -> bool:
 		"""是否全部成功"""

@@ -12,6 +12,8 @@ jobs:
       PYTHONIOENCODING: utf-8
       # 仓库可见性，用于隐私控制
       REPO_VISIBILITY: ${{ github.event.repository.visibility }}
+      # 时区设置（可选，默认为 Asia/Shanghai 中国时区）
+      TZ: ${{ secrets.TZ }}
       # 账号配置
       ANYROUTER_ACCOUNTS: ${{ secrets.ANYROUTER_ACCOUNTS }}
       # 是否显示敏感信息
