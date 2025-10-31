@@ -8,14 +8,18 @@
 
 ## [Unreleased]
 
+---
+
+## [1.4.0] (2025-10-31)
+
 #### Add
-* 新增时区配置支持，通过环境变量 `TZ` 自定义通知中的时间戳时区，默认使用 `Asia/Shanghai`（中国时区）。
-* 新增时间戳格式配置支持，通过环境变量 `TIMESTAMP_FORMAT` 自定义时间戳格式，默认使用 `%Y-%m-%d %H:%M:%S`。
-* 模板变量新增 `timezone` 字段，支持在通知模板中显示时区缩写。
-* 新增 Telegram 通知方式支持，支持 HTML/MarkdownV2 解析模式。
+* 新增时区配置支持，通过环境变量 `TZ` 自定义通知中的时间戳时区，默认使用 `Asia/Shanghai`（中国时区）。[#28]
+* 新增时间戳格式配置支持，通过环境变量 `TIMESTAMP_FORMAT` 自定义时间戳格式，默认使用 `%Y-%m-%d %H:%M:%S`。[#28]
+* 模板变量新增 `timezone` 字段，支持在通知模板中显示时区缩写。[#28]
+* 新增 Telegram 通知方式支持，支持 HTML/MarkdownV2 解析模式。[#27]
 
 #### Fix
-* 修复 Github Action 没有配置 `BARK_NOTIF_CONFIG` 的问题。
+* 修复 Github Action 没有配置 `BARK_NOTIF_CONFIG` 的问题。[#27]
 
 ---
 
@@ -132,6 +136,7 @@
 * 支持 Fork 定时运行和 Composite Action 两种使用方式。
 * 完善的 CI/CD 工作流、测试体系和项目文档。
 
+[1.4.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.4.0
 [1.3.1]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.3.1
 [1.3.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.3.0
 [1.2.1]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.2.1
@@ -156,3 +161,5 @@
 [#20]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/20
 [#22]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/22
 [#23]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/23
+[#27]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/27
+[#28]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/28
