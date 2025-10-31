@@ -9,6 +9,9 @@
 ## [Unreleased]
 
 #### Add
+* 新增时区配置支持，通过环境变量 `TZ` 自定义通知中的时间戳时区，默认使用 `Asia/Shanghai`（中国时区）。
+* 新增时间戳格式配置支持，通过环境变量 `TIMESTAMP_FORMAT` 自定义时间戳格式，默认使用 `%Y-%m-%d %H:%M:%S`。
+* 模板变量新增 `timezone` 字段，支持在通知模板中显示时区缩写。
 * 新增 Telegram 通知方式支持，支持 HTML/MarkdownV2 解析模式。
 
 #### Fix

@@ -248,6 +248,7 @@ class NotificationKit:
 
 		return {
 			'timestamp': data.timestamp,
+			'timezone': data.timezone,
 			'stats': data.stats,  # dataclass 对象，支持 {{ stats.success_count }}
 			# 提供分组的账号列表（AccountResult 对象）
 			'success_accounts': success_accounts,

@@ -1,5 +1,7 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
+from application import Application
 from core.models import AccountResult, NotificationData, NotificationStats
 
 
@@ -38,6 +40,7 @@ def build_account_result(
 def build_notification_data(
 	accounts: list[AccountResult],
 	timestamp: str | None = None,
+	timezone: str | None = None,
 ) -> NotificationData:
 	"""
 	构建通知数据
@@ -45,6 +48,7 @@ def build_notification_data(
 	Args:
 		accounts: 账号结果列表
 		timestamp: 时间戳
+		timezone: 时区缩写
 
 	Returns:
 		NotificationData 对象
@@ -58,8 +62,14 @@ def build_notification_data(
 		total_count=len(accounts),
 	)
 
+	# 如果没有提供 timezone，则使用默认时区生成
+	if timezone is None:
+		default_tz = ZoneInfo(Application.DEFAULT_TIMEZONE)
+		timezone = datetime.now(default_tz).strftime('%Z')
+
 	return NotificationData(
 		accounts=accounts,
 		stats=stats,
 		timestamp=timestamp or datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+		timezone=timezone,
 	)

@@ -4,6 +4,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from core.balance_manager import BalanceManager
 from core.checkin_service import CheckinService
@@ -16,6 +17,12 @@ from tools.logger import logger
 
 class Application:
 	"""应用编排层，负责协调所有服务"""
+
+	# 默认时区
+	DEFAULT_TIMEZONE = 'Asia/Shanghai'
+
+	# 默认时间戳格式
+	DEFAULT_TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 	def __init__(self):
 		"""初始化应用及所有服务"""
@@ -197,6 +204,23 @@ class Application:
 			self.balance_manager.save_balance_hash(current_balance_hash_dict)
 
 		if need_notify and account_results:
+			# 获取时区配置
+			timezone_name = os.getenv('TZ', self.DEFAULT_TIMEZONE)
+			try:
+				timezone = ZoneInfo(timezone_name)
+			except Exception:
+				# 如果时区无效，使用默认时区
+				logger.warning(f'时区 {timezone_name} 无效，使用默认时区 {self.DEFAULT_TIMEZONE}')
+				timezone = ZoneInfo(self.DEFAULT_TIMEZONE)
+
+			# 获取时间戳格式配置
+			timestamp_format = os.getenv('TIMESTAMP_FORMAT', self.DEFAULT_TIMESTAMP_FORMAT)
+
+			# 生成带时区的时间戳
+			now = datetime.now(timezone)
+			timestamp = now.strftime(timestamp_format)
+			timezone_abbr = now.strftime('%Z')
+
 			# 构建结构化通知数据
 			stats = NotificationStats(
 				success_count=success_count,
@@ -207,7 +231,8 @@ class Application:
 			notification_data = NotificationData(
 				accounts=account_results,
 				stats=stats,
-				timestamp=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+				timestamp=timestamp,
+				timezone=timezone_abbr,
 			)
 
 			# 发送通知
