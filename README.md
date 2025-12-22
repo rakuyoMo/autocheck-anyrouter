@@ -142,6 +142,18 @@ ANYROUTER_ACCOUNT_BOB='{"name": "Bob", "cookies": {"session": "..."}, "api_user"
 
 > **提示**：使用前缀方式时，如果某个账号的 Token 过期，只需更新对应的环境变量即可，无需修改其他账号的配置。
 
+#### 字段覆盖功能
+
+如果 `ANYROUTER_ACCOUNTS` 中的账号有 `name` 字段，系统会自动查找对应的 `ANYROUTER_ACCOUNT_{name}` 环境变量（忽略大小写），并用其中的字段覆盖原有配置。这样您可以只更新 `cookies` 而无需重复填写其他字段：
+
+```bash
+# 在 ANYROUTER_ACCOUNTS 中配置完整的账号信息
+ANYROUTER_ACCOUNTS='[{"name": "Alice", "api_user": "12345", "cookies": "old_session"}]'
+
+# 只更新 Alice 的 cookies（会自动匹配并覆盖）
+ANYROUTER_ACCOUNT_ALICE='{"cookies": "new_session"}'
+```
+
 ### 通知配置
 
 本系统支持多平台通知：

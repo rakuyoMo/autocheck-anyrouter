@@ -266,32 +266,106 @@ class Application:
 		1. ANYROUTER_ACCOUNTS: JSON 数组格式，包含多个账号
 		2. ANYROUTER_ACCOUNT_*: 多个环境变量，每个包含单个账号的 JSON 对象
 
-		两种方式可以同时使用，会自动合并并去重。
+		两种方式可以同时使用：
+		- 如果 ANYROUTER_ACCOUNTS 中的账号有 name 字段，会查找对应的 ANYROUTER_ACCOUNT_{name}
+		  并用其中的字段覆盖原有配置
+		- 未被匹配的 ANYROUTER_ACCOUNT_* 会作为新账号添加
+		- 最后会去重和验证，无效的账号会被忽略
 		"""
-		accounts: list[dict[str, Any]] = []
-
-		# 1. 从 ANYROUTER_ACCOUNTS 加载账号列表
+		# 1. 读取两个来源的配置
 		accounts_from_array = self._load_accounts_from_array()
-		accounts.extend(accounts_from_array)
+		prefix_configs = self._load_accounts_from_prefix()
 
-		# 2. 从 ANYROUTER_ACCOUNT_* 加载单个账号
-		accounts_from_prefix = self._load_accounts_from_prefix()
-		accounts.extend(accounts_from_prefix)
+		# 2. 覆盖阶段：用 ANYROUTER_ACCOUNT_{name} 覆盖 ANYROUTER_ACCOUNTS 中的配置
+		accounts = self._apply_prefix_overrides(accounts_from_array, prefix_configs)
+
+		# 3. 合并阶段：将未被匹配的 prefix_configs 作为新账号添加
+		for config in prefix_configs.values():
+			accounts.append(config)
 
 		# 未找到任何账号配置
 		if not accounts:
 			self._print_account_config_guide()
 			return []
 
-		# 去重
+		# 4. 去重
 		accounts = self._deduplicate_accounts(accounts)
 
-		# 验证账号数据格式
-		for i, account in enumerate(accounts):
-			if not self._validate_account(account, i):
-				return []
+		# 5. 验证并过滤无效账号
+		accounts = self._filter_valid_accounts(accounts)
 
 		return accounts
+
+	def _apply_prefix_overrides(
+		self,
+		accounts: list[dict[str, Any]],
+		prefix_configs: dict[str, dict[str, Any]],
+	) -> list[dict[str, Any]]:
+		"""
+		用 ANYROUTER_ACCOUNT_{name} 的配置覆盖 ANYROUTER_ACCOUNTS 中的对应账号
+
+		Args:
+		    accounts: 从 ANYROUTER_ACCOUNTS 加载的账号列表
+		    prefix_configs: 从 ANYROUTER_ACCOUNT_* 加载的配置字典，匹配成功的会被移除
+
+		Returns:
+		    list[dict[str, Any]]: 覆盖后的账号列表
+		"""
+		result: list[dict[str, Any]] = []
+
+		for account in accounts:
+			name = account.get('name')
+			if not name:
+				# 没有 name 字段，无法匹配，直接添加
+				result.append(account)
+				continue
+
+			# 查找匹配的 prefix 配置（忽略大小写）
+			name_upper = name.upper()
+			if name_upper in prefix_configs:
+				# 找到匹配，用 prefix 配置覆盖原有字段
+				override_config = prefix_configs.pop(name_upper)
+				merged_account = {**account, **override_config}
+				result.append(merged_account)
+				logger.info(f'已使用 ANYROUTER_ACCOUNT_{name_upper} 覆盖账号 "{name}" 的配置')
+			else:
+				# 没有匹配，保持原样
+				result.append(account)
+
+		return result
+
+	def _filter_valid_accounts(self, accounts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+		"""
+		过滤无效账号，只保留有效的账号
+
+		Args:
+		    accounts: 账号列表
+
+		Returns:
+		    list[dict[str, Any]]: 有效的账号列表
+		"""
+		valid_accounts: list[dict[str, Any]] = []
+
+		for i, account in enumerate(accounts):
+			# 账号不是字典格式
+			if not isinstance(account, dict):
+				logger.error(f'账号 {i + 1} 配置格式不正确，已忽略')
+				continue
+
+			# 缺少必需字段
+			if 'cookies' not in account or 'api_user' not in account:
+				account_name = account.get('name', f'账号 {i + 1}')
+				logger.error(f'"{account_name}" 缺少必需字段 (cookies, api_user)，已忽略')
+				continue
+
+			# name 字段为空字符串
+			if 'name' in account and not account['name']:
+				logger.error(f'账号 {i + 1} 的名称字段不能为空，已忽略')
+				continue
+
+			valid_accounts.append(account)
+
+		return valid_accounts
 
 	def _load_accounts_from_array(self) -> list[dict[str, Any]]:
 		"""从 ANYROUTER_ACCOUNTS 环境变量加载账号列表"""
@@ -321,15 +395,23 @@ class Application:
 
 		return accounts_data
 
-	def _load_accounts_from_prefix(self) -> list[dict[str, Any]]:
-		"""从 ANYROUTER_ACCOUNT_* 环境变量加载单个账号"""
-		accounts: list[dict[str, Any]] = []
+	def _load_accounts_from_prefix(self) -> dict[str, dict[str, Any]]:
+		"""
+		从 ANYROUTER_ACCOUNT_* 环境变量加载单个账号
+
+		Returns:
+		    dict[str, dict[str, Any]]: 后缀(大写) -> 账号配置 的字典
+		"""
+		accounts: dict[str, dict[str, Any]] = {}
 		prefix = CheckinService.Config.Env.ACCOUNT_PREFIX
 
 		# 扫描所有以 ANYROUTER_ACCOUNT_ 开头的环境变量
 		for key, value in os.environ.items():
 			if not key.startswith(prefix):
 				continue
+
+			# 获取环境变量后缀并转为大写（用于匹配）
+			suffix = key[len(prefix):].upper()
 
 			try:
 				account_data = json.loads(value)
@@ -351,7 +433,7 @@ class Application:
 				logger.error(f'{key} 必须使用对象格式 {{}}')
 				continue
 
-			accounts.append(account_data)
+			accounts[suffix] = account_data
 
 		return accounts
 
@@ -395,34 +477,6 @@ class Application:
 			cookies = json.dumps(cookies, sort_keys=True)
 
 		return f'{name}|{cookies}|{api_user}'
-
-	def _validate_account(self, account: dict[str, Any], index: int) -> bool:
-		"""
-		验证单个账号的格式
-
-		Args:
-		    account: 账号配置
-		    index: 账号索引
-
-		Returns:
-		    bool: 验证是否通过
-		"""
-		# 账号不是字典格式
-		if not isinstance(account, dict):
-			logger.error(f'账号 {index + 1} 配置格式不正确')
-			return False
-
-		# 缺少必需字段
-		if 'cookies' not in account or 'api_user' not in account:
-			logger.error(f'账号 {index + 1} 缺少必需字段 (cookies, api_user)')
-			return False
-
-		# name 字段为空字符串
-		if 'name' in account and not account['name']:
-			logger.error(f'账号 {index + 1} 的名称字段不能为空')
-			return False
-
-		return True
 
 	def _print_account_config_guide(self):
 		"""打印账号配置指南"""

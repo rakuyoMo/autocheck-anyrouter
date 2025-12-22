@@ -97,11 +97,13 @@ class TestFeatures:
 
 	@pytest.mark.asyncio
 	@pytest.mark.parametrize(
-		'setup_type,expected_count',
+		'setup_type,expected_count,expected_cookies',
 		[
-			('prefix_only', 2),  # 仅使用 ANYROUTER_ACCOUNT_* 加载 2 个账号
-			('merge', 3),  # ANYROUTER_ACCOUNTS(1) + ANYROUTER_ACCOUNT_*(2) = 3 个账号
-			('deduplicate', 2),  # 3 个账号中有 1 个重复，去重后 2 个
+			('prefix_only', 2, None),  # 仅使用 ANYROUTER_ACCOUNT_* 加载 2 个账号
+			('merge', 3, None),  # ANYROUTER_ACCOUNTS(1) + ANYROUTER_ACCOUNT_*(2) = 3 个账号
+			('override', 2, 'session=new'),  # 覆盖场景：只更新 cookies
+			('override_partial', 1, 'session=new'),  # 覆盖场景：prefix 配置不完整但能被补全
+			('invalid_prefix', 1, None),  # 无效的 prefix 配置（缺少必要字段）被忽略
 		],
 	)
 	async def test_account_loading_modes(
@@ -110,8 +112,9 @@ class TestFeatures:
 		tmp_path,
 		setup_type: str,
 		expected_count: int,
+		expected_cookies: str | None,
 	):
-		"""测试账号加载方式（前缀环境变量、合并、去重）"""
+		"""测试账号加载方式（前缀环境变量、合并、覆盖、验证）"""
 		# 清理环境变量
 		monkeypatch.delenv('ANYROUTER_ACCOUNTS', raising=False)
 		for key in list(os.environ.keys()):
@@ -128,17 +131,26 @@ class TestFeatures:
 			monkeypatch.setenv('ANYROUTER_ACCOUNT_BOB', json.dumps(account_bob))
 
 		elif setup_type == 'merge':
-			# ANYROUTER_ACCOUNTS + ANYROUTER_ACCOUNT_* 合并
+			# ANYROUTER_ACCOUNTS + ANYROUTER_ACCOUNT_* 合并（无覆盖）
 			account_main = {'name': 'Main', 'cookies': 'session=main', 'api_user': 'user_main'}
 			monkeypatch.setenv('ANYROUTER_ACCOUNTS', json.dumps([account_main]))
 			monkeypatch.setenv('ANYROUTER_ACCOUNT_ALICE', json.dumps(account_alice))
 			monkeypatch.setenv('ANYROUTER_ACCOUNT_BOB', json.dumps(account_bob))
 
-		elif setup_type == 'deduplicate':
-			# 去重测试：ANYROUTER_ACCOUNTS 和 ANYROUTER_ACCOUNT_ALICE 中有重复账号
+		elif setup_type == 'override':
+			# 覆盖场景：ANYROUTER_ACCOUNT_ALICE 只更新 cookies
+			monkeypatch.setenv('ANYROUTER_ACCOUNTS', json.dumps([account_alice, account_bob]))
+			monkeypatch.setenv('ANYROUTER_ACCOUNT_ALICE', json.dumps({'cookies': 'session=new'}))
+
+		elif setup_type == 'override_partial':
+			# 覆盖场景：prefix 配置只有 cookies，但能与 ANYROUTER_ACCOUNTS 合并补全
 			monkeypatch.setenv('ANYROUTER_ACCOUNTS', json.dumps([account_alice]))
-			monkeypatch.setenv('ANYROUTER_ACCOUNT_ALICE', json.dumps(account_alice))  # 重复
-			monkeypatch.setenv('ANYROUTER_ACCOUNT_BOB', json.dumps(account_bob))
+			monkeypatch.setenv('ANYROUTER_ACCOUNT_ALICE', json.dumps({'cookies': 'session=new'}))
+
+		elif setup_type == 'invalid_prefix':
+			# 无效的 prefix 配置（缺少必要字段）被忽略
+			monkeypatch.setenv('ANYROUTER_ACCOUNTS', json.dumps([account_alice]))
+			monkeypatch.setenv('ANYROUTER_ACCOUNT_BOB', json.dumps({'cookies': 'session=bob'}))  # 缺少 api_user
 
 		app = Application()
 		app.balance_manager.balance_hash_file = tmp_path / f'hash_{setup_type}.txt'
@@ -146,4 +158,10 @@ class TestFeatures:
 		# 直接测试 _load_accounts 方法
 		accounts = app._load_accounts()
 		assert len(accounts) == expected_count, f'{setup_type}: 应该加载 {expected_count} 个账号，实际加载了 {len(accounts)} 个'
+
+		# 验证覆盖是否生效
+		if expected_cookies:
+			alice_account = next((a for a in accounts if a.get('name') == 'Alice'), None)
+			assert alice_account is not None, f'{setup_type}: 应该存在 Alice 账号'
+			assert alice_account['cookies'] == expected_cookies, f'{setup_type}: cookies 应该被覆盖为 {expected_cookies}'
 
