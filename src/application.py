@@ -443,11 +443,6 @@ class Application:
 
 			accounts[suffix] = account_data
 
-		# 输出加载结果日志
-		if accounts:
-			suffix_list = ', '.join(sorted(accounts.keys()))
-			logger.info(f'从环境变量加载了 {len(accounts)} 个 ANYROUTER_ACCOUNT_* 配置：{suffix_list}')
-
 		return accounts
 
 	def _deduplicate_accounts(self, accounts: list[dict[str, Any]]) -> list[dict[str, Any]]:
