@@ -302,7 +302,9 @@ class Application:
 		prefix_configs: dict[str, dict[str, Any]],
 	) -> list[dict[str, Any]]:
 		"""
-		用 ANYROUTER_ACCOUNT_{name} 的配置覆盖 ANYROUTER_ACCOUNTS 中的对应账号
+		用 ANYROUTER_ACCOUNT_* 的配置覆盖 ANYROUTER_ACCOUNTS 中的对应账号
+
+		匹配规则：检查环境变量后缀是否包含账号的 api_user 值
 
 		Args:
 		    accounts: 从 ANYROUTER_ACCOUNTS 加载的账号列表
@@ -314,20 +316,26 @@ class Application:
 		result: list[dict[str, Any]] = []
 
 		for account in accounts:
-			name = account.get('name')
-			if not name:
-				# 没有 name 字段，无法匹配，直接添加
+			api_user = account.get('api_user')
+			if not api_user:
+				# 没有 api_user 字段，无法匹配，直接添加
 				result.append(account)
 				continue
 
-			# 查找匹配的 prefix 配置（忽略大小写）
-			name_upper = name.upper()
-			if name_upper in prefix_configs:
+			# 查找后缀包含 api_user 的配置
+			matched_key = None
+			for suffix in prefix_configs:
+				if api_user in suffix:
+					matched_key = suffix
+					break
+
+			if matched_key:
 				# 找到匹配，用 prefix 配置覆盖原有字段
-				override_config = prefix_configs.pop(name_upper)
+				override_config = prefix_configs.pop(matched_key)
 				merged_account = {**account, **override_config}
 				result.append(merged_account)
-				logger.info(f'已使用 ANYROUTER_ACCOUNT_{name_upper} 覆盖账号 "{name}" 的配置')
+				account_name = account.get('name', f'api_user={api_user}')
+				logger.info(f'已使用 ANYROUTER_ACCOUNT_{matched_key} 覆盖账号 "{account_name}" 的配置')
 			else:
 				# 没有匹配，保持原样
 				result.append(account)

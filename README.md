@@ -132,7 +132,7 @@ jobs:
 
 #### 方式二：使用 `ANYROUTER_ACCOUNT_*` 前缀（单账号格式）
 
-适合独立管理每个账号，便于单独更新某个账号的 Token：
+适合独立管理每个账号，或者用于覆盖 `ANYROUTER_ACCOUNTS` 中的配置（详见[下一小节](#字段覆盖功能)）。
 
 ```bash
 # 每个账号使用独立的环境变量
@@ -140,18 +140,19 @@ ANYROUTER_ACCOUNT_ALICE='{"name": "Alice", "cookies": {"session": "..."}, "api_u
 ANYROUTER_ACCOUNT_BOB='{"name": "Bob", "cookies": {"session": "..."}, "api_user": "67890"}'
 ```
 
-> **提示**：使用前缀方式时，如果某个账号的 Token 过期，只需更新对应的环境变量即可，无需修改其他账号的配置。
-
 #### 字段覆盖功能
 
-如果 `ANYROUTER_ACCOUNTS` 中的账号有 `name` 字段，系统会自动查找对应的 `ANYROUTER_ACCOUNT_{name}` 环境变量（忽略大小写），并用其中的字段覆盖原有配置。这样您可以只更新 `cookies` 而无需重复填写其他字段：
+如果 `ANYROUTER_ACCOUNTS` 中的账号有 `api_user` 字段，系统会自动查找后缀包含该 `api_user` 值的 `ANYROUTER_ACCOUNT_*` 环境变量，并用其中的字段覆盖原有配置。这样您可以只更新 `cookies` 而无需重复填写其他字段：
 
 ```bash
-# 在 ANYROUTER_ACCOUNTS 中配置完整的账号信息
-ANYROUTER_ACCOUNTS='[{"name": "Alice", "api_user": "12345", "cookies": "old_session"}]'
+# 在 `ANYROUTER_ACCOUNTS` 中配置完整的账号信息
+ANYROUTER_ACCOUNTS='[{"name": "Alice", "api_user": "12427", "cookies": { "session": "old_session" }}]'
 
-# 只更新 Alice 的 cookies（会自动匹配并覆盖）
-ANYROUTER_ACCOUNT_ALICE='{"cookies": "new_session"}'
+# 使用 api_user 匹配，只包含 `cookies` 字段
+# 以下格式都能匹配 `api_user="12427"` 的账号：
+ANYROUTER_ACCOUNT_12427='{"cookies": { "session": "new_session" }}'  # ✅
+ANYROUTER_ACCOUNT_12427_ALICE='{"cookies": { "session": "new_session" }}'  # ✅ 可添加可读后缀
+12427_ANYROUTER_ACCOUNT_ALICE='{"cookies": { "session": "new_session" }}'  # ❌ 必须以 `ANYROUTER_ACCOUNT_` 开头
 ```
 
 ### 通知配置
