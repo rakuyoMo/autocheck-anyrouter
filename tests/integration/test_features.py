@@ -161,12 +161,15 @@ class TestFeatures:
 
 		# 直接测试 _load_accounts 方法
 		accounts = app._load_accounts()
-		assert len(accounts) == expected_count, f'{setup_type}: 应该加载 {expected_count} 个账号，实际加载了 {len(accounts)} 个'
+		assert len(accounts) == expected_count, (
+			f'{setup_type}: 应该加载 {expected_count} 个账号，实际加载了 {len(accounts)} 个'
+		)
 
 		# 验证覆盖是否生效
 		if expected_cookies:
 			# 查找被覆盖的账号
 			target_account = next((a for a in accounts if a.get('name') == 'Alice'), None)
 			assert target_account is not None, f'{setup_type}: 应该存在 "Alice" 账号'
-			assert target_account['cookies'] == expected_cookies, f'{setup_type}: cookies 应该被覆盖为 {expected_cookies}'
-
+			assert target_account['cookies'] == expected_cookies, (
+				f'{setup_type}: cookies 应该被覆盖为 {expected_cookies}'
+			)

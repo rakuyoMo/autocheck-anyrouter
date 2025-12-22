@@ -419,7 +419,7 @@ class Application:
 				continue
 
 			# 获取环境变量后缀并转为大写（用于匹配）
-			suffix = key[len(prefix):].upper()
+			suffix = key[len(prefix) :].upper()
 
 			try:
 				account_data = json.loads(value)
