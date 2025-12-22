@@ -8,6 +8,15 @@
 
 ## [Unreleased]
 
+#### Add
+* 新增 `ANYROUTER_ACCOUNT_*` 前缀环境变量支持，允许每个账号使用独立的环境变量配置，便于单独更新某个账号的 Token。
+* 支持 `ANYROUTER_ACCOUNTS` 和 `ANYROUTER_ACCOUNT_*` 同时使用，账号会自动合并。
+* 支持使用 `ANYROUTER_ACCOUNT_*` 覆盖 `ANYROUTER_ACCOUNTS` 中对应账号的字段（通过 `api_user` 匹配，检查环境变量后缀是否包含 `api_user` 值），便于只更新 `cookies` 而无需重复填写其他字段。
+* 新增账号去重功能，当 `name` + `cookies` + `api_user` 完全一致时自动去重。
+
+#### Change
+* 账号验证逻辑调整：无效的账号配置会被忽略并记录日志，不再导致所有账号都无法执行。
+
 ---
 
 ## [1.4.1] (2025-10-31)
