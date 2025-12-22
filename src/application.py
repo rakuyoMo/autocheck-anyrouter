@@ -259,53 +259,170 @@ class Application:
 		sys.exit(0 if success_count > 0 else 1)
 
 	def _load_accounts(self) -> list[dict[str, Any]]:
-		"""从环境变量加载多账号配置"""
-		accounts_str = os.getenv(CheckinService.Config.Env.ACCOUNTS_KEY)
-		if not accounts_str:
-			# 未配置账号信息
+		"""
+		从环境变量加载多账号配置
+
+		支持两种配置方式：
+		1. ANYROUTER_ACCOUNTS: JSON 数组格式，包含多个账号
+		2. ANYROUTER_ACCOUNT_*: 多个环境变量，每个包含单个账号的 JSON 对象
+
+		两种方式可以同时使用，会自动合并并去重。
+		"""
+		accounts: list[dict[str, Any]] = []
+
+		# 1. 从 ANYROUTER_ACCOUNTS 加载账号列表
+		accounts_from_array = self._load_accounts_from_array()
+		accounts.extend(accounts_from_array)
+
+		# 2. 从 ANYROUTER_ACCOUNT_* 加载单个账号
+		accounts_from_prefix = self._load_accounts_from_prefix()
+		accounts.extend(accounts_from_prefix)
+
+		# 未找到任何账号配置
+		if not accounts:
 			self._print_account_config_guide()
 			return []
 
-		# JSON 解析失败
+		# 去重
+		accounts = self._deduplicate_accounts(accounts)
+
+		# 验证账号数据格式
+		for i, account in enumerate(accounts):
+			if not self._validate_account(account, i):
+				return []
+
+		return accounts
+
+	def _load_accounts_from_array(self) -> list[dict[str, Any]]:
+		"""从 ANYROUTER_ACCOUNTS 环境变量加载账号列表"""
+		accounts_str = os.getenv(CheckinService.Config.Env.ACCOUNTS_KEY)
+		if not accounts_str:
+			return []
+
 		try:
 			accounts_data = json.loads(accounts_str)
 		except json.JSONDecodeError as e:
 			logger.error(
-				message=f'账号配置中的 JSON 格式无效：{e}',
+				message=f'ANYROUTER_ACCOUNTS 的 JSON 格式无效：{e}',
 				exc_info=True,
 			)
 			return []
-
 		except Exception as e:
 			logger.error(
-				message=f'账号配置格式不正确：{e}',
+				message=f'ANYROUTER_ACCOUNTS 格式不正确：{e}',
 				exc_info=True,
 			)
 			return []
 
 		# 不是数组格式
 		if not isinstance(accounts_data, list):
-			logger.error('账号配置必须使用数组格式 [{}]')
+			logger.error('ANYROUTER_ACCOUNTS 必须使用数组格式 [{}]')
 			return []
 
-		# 验证账号数据格式
-		for i, account in enumerate(accounts_data):
-			# 账号不是字典格式
-			if not isinstance(account, dict):
-				logger.error(f'账号 {i + 1} 配置格式不正确')
-				return []
-
-			# 缺少必需字段
-			if 'cookies' not in account or 'api_user' not in account:
-				logger.error(f'账号 {i + 1} 缺少必需字段 (cookies, api_user)')
-				return []
-
-			# name 字段为空字符串
-			if 'name' in account and not account['name']:
-				logger.error(f'账号 {i + 1} 的名称字段不能为空')
-				return []
-
 		return accounts_data
+
+	def _load_accounts_from_prefix(self) -> list[dict[str, Any]]:
+		"""从 ANYROUTER_ACCOUNT_* 环境变量加载单个账号"""
+		accounts: list[dict[str, Any]] = []
+		prefix = CheckinService.Config.Env.ACCOUNT_PREFIX
+
+		# 扫描所有以 ANYROUTER_ACCOUNT_ 开头的环境变量
+		for key, value in os.environ.items():
+			if not key.startswith(prefix):
+				continue
+
+			try:
+				account_data = json.loads(value)
+			except json.JSONDecodeError as e:
+				logger.error(
+					message=f'{key} 的 JSON 格式无效：{e}',
+					exc_info=True,
+				)
+				continue
+			except Exception as e:
+				logger.error(
+					message=f'{key} 格式不正确：{e}',
+					exc_info=True,
+				)
+				continue
+
+			# 不是字典格式
+			if not isinstance(account_data, dict):
+				logger.error(f'{key} 必须使用对象格式 {{}}')
+				continue
+
+			accounts.append(account_data)
+
+		return accounts
+
+	def _deduplicate_accounts(self, accounts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+		"""
+		对账号列表进行去重
+
+		去重条件：name + cookies + api_user 完全一致
+		"""
+		seen: set[str] = set()
+		unique_accounts: list[dict[str, Any]] = []
+
+		for account in accounts:
+			# 生成唯一标识
+			key = self._generate_account_key(account)
+			if key in seen:
+				continue
+
+			seen.add(key)
+			unique_accounts.append(account)
+
+		# 记录去重结果
+		removed_count = len(accounts) - len(unique_accounts)
+		if removed_count > 0:
+			logger.info(f'去重后移除了 {removed_count} 个重复账号')
+
+		return unique_accounts
+
+	def _generate_account_key(self, account: dict[str, Any]) -> str:
+		"""
+		生成账号的唯一标识
+
+		基于 name + cookies + api_user 生成
+		"""
+		name = account.get('name', '')
+		cookies = account.get('cookies', '')
+		api_user = account.get('api_user', '')
+
+		# cookies 可能是字典，需要序列化为字符串
+		if isinstance(cookies, dict):
+			cookies = json.dumps(cookies, sort_keys=True)
+
+		return f'{name}|{cookies}|{api_user}'
+
+	def _validate_account(self, account: dict[str, Any], index: int) -> bool:
+		"""
+		验证单个账号的格式
+
+		Args:
+		    account: 账号配置
+		    index: 账号索引
+
+		Returns:
+		    bool: 验证是否通过
+		"""
+		# 账号不是字典格式
+		if not isinstance(account, dict):
+			logger.error(f'账号 {index + 1} 配置格式不正确')
+			return False
+
+		# 缺少必需字段
+		if 'cookies' not in account or 'api_user' not in account:
+			logger.error(f'账号 {index + 1} 缺少必需字段 (cookies, api_user)')
+			return False
+
+		# name 字段为空字符串
+		if 'name' in account and not account['name']:
+			logger.error(f'账号 {index + 1} 的名称字段不能为空')
+			return False
+
+		return True
 
 	def _print_account_config_guide(self):
 		"""打印账号配置指南"""
@@ -318,9 +435,9 @@ class Application:
 			'1. 进入 GitHub 仓库设置页面',
 			'2. 点击 "Secrets and variables" > "Actions"',
 			'3. 点击 "New repository secret"',
-			f'4. 创建名为 {CheckinService.Config.Env.ACCOUNTS_KEY} 的 secret',
+			'4. 使用以下任一方式配置账号：',
 			'',
-			f'📝 {CheckinService.Config.Env.ACCOUNTS_KEY} 格式示例：',
+			f'📝 方式一：使用 {CheckinService.Config.Env.ACCOUNTS_KEY}（数组格式）',
 			'[',
 			'  {',
 			'    "name": "账号1",',
@@ -329,7 +446,16 @@ class Application:
 			'  }',
 			']',
 			'',
+			f'📝 方式二：使用 {CheckinService.Config.Env.ACCOUNT_PREFIX}* 前缀（单账号格式）',
+			f'   例如：{CheckinService.Config.Env.ACCOUNT_PREFIX}ALICE',
+			'{',
+			'  "name": "Alice",',
+			'  "cookies": "cookie1=value1; cookie2=value2",',
+			'  "api_user": "your_api_user"',
+			'}',
+			'',
 			'💡 提示：',
+			'- 两种方式可以同时使用，账号会自动合并',
 			'- name 字段为账号显示名称（可选）',
 			'- cookies 为登录后的 cookie 字符串',
 			'- api_user 为 API 用户标识',

@@ -1,3 +1,4 @@
+import json
 import os
 from contextlib import ExitStack
 from unittest.mock import patch
@@ -93,3 +94,56 @@ class TestFeatures:
 			await kit.push_message(notif_data)
 
 		assert post_counter['count'] == 4, f'应该向 4 个平台发送通知，实际发送了 {post_counter["count"]} 个'
+
+	@pytest.mark.asyncio
+	@pytest.mark.parametrize(
+		'setup_type,expected_count',
+		[
+			('prefix_only', 2),  # 仅使用 ANYROUTER_ACCOUNT_* 加载 2 个账号
+			('merge', 3),  # ANYROUTER_ACCOUNTS(1) + ANYROUTER_ACCOUNT_*(2) = 3 个账号
+			('deduplicate', 2),  # 3 个账号中有 1 个重复，去重后 2 个
+		],
+	)
+	async def test_account_loading_modes(
+		self,
+		monkeypatch: pytest.MonkeyPatch,
+		tmp_path,
+		setup_type: str,
+		expected_count: int,
+	):
+		"""测试账号加载方式（前缀环境变量、合并、去重）"""
+		# 清理环境变量
+		monkeypatch.delenv('ANYROUTER_ACCOUNTS', raising=False)
+		for key in list(os.environ.keys()):
+			if key.startswith('ANYROUTER_ACCOUNT_'):
+				monkeypatch.delenv(key, raising=False)
+
+		# 测试数据
+		account_alice = {'name': 'Alice', 'cookies': 'session=alice', 'api_user': 'user_alice'}
+		account_bob = {'name': 'Bob', 'cookies': 'session=bob', 'api_user': 'user_bob'}
+
+		if setup_type == 'prefix_only':
+			# 仅使用 ANYROUTER_ACCOUNT_* 前缀环境变量
+			monkeypatch.setenv('ANYROUTER_ACCOUNT_ALICE', json.dumps(account_alice))
+			monkeypatch.setenv('ANYROUTER_ACCOUNT_BOB', json.dumps(account_bob))
+
+		elif setup_type == 'merge':
+			# ANYROUTER_ACCOUNTS + ANYROUTER_ACCOUNT_* 合并
+			account_main = {'name': 'Main', 'cookies': 'session=main', 'api_user': 'user_main'}
+			monkeypatch.setenv('ANYROUTER_ACCOUNTS', json.dumps([account_main]))
+			monkeypatch.setenv('ANYROUTER_ACCOUNT_ALICE', json.dumps(account_alice))
+			monkeypatch.setenv('ANYROUTER_ACCOUNT_BOB', json.dumps(account_bob))
+
+		elif setup_type == 'deduplicate':
+			# 去重测试：ANYROUTER_ACCOUNTS 和 ANYROUTER_ACCOUNT_ALICE 中有重复账号
+			monkeypatch.setenv('ANYROUTER_ACCOUNTS', json.dumps([account_alice]))
+			monkeypatch.setenv('ANYROUTER_ACCOUNT_ALICE', json.dumps(account_alice))  # 重复
+			monkeypatch.setenv('ANYROUTER_ACCOUNT_BOB', json.dumps(account_bob))
+
+		app = Application()
+		app.balance_manager.balance_hash_file = tmp_path / f'hash_{setup_type}.txt'
+
+		# 直接测试 _load_accounts 方法
+		accounts = app._load_accounts()
+		assert len(accounts) == expected_count, f'{setup_type}: 应该加载 {expected_count} 个账号，实际加载了 {len(accounts)} 个'
+

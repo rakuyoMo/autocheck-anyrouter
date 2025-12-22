@@ -106,7 +106,12 @@ jobs:
 - `cookies`：登录后的 session cookie
 - `api_user`：API 用户标识
 
-配置格式：
+支持两种配置方式，可以同时使用（账号会自动合并并去重）：
+
+#### 方式一：使用 `ANYROUTER_ACCOUNTS`（数组格式）
+
+适合一次性配置所有账号：
+
 ```json5
 [
   {
@@ -124,6 +129,18 @@ jobs:
   }
 ]
 ```
+
+#### 方式二：使用 `ANYROUTER_ACCOUNT_*` 前缀（单账号格式）
+
+适合独立管理每个账号，便于单独更新某个账号的 Token：
+
+```bash
+# 每个账号使用独立的环境变量
+ANYROUTER_ACCOUNT_ALICE='{"name": "Alice", "cookies": {"session": "..."}, "api_user": "12345"}'
+ANYROUTER_ACCOUNT_BOB='{"name": "Bob", "cookies": {"session": "..."}, "api_user": "67890"}'
+```
+
+> **提示**：使用前缀方式时，如果某个账号的 Token 过期，只需更新对应的环境变量即可，无需修改其他账号的配置。
 
 ### 通知配置
 

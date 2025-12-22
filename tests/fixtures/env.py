@@ -19,6 +19,24 @@ class EnvManager:
 		os.environ['ANYROUTER_ACCOUNTS'] = json.dumps(accounts, ensure_ascii=False)
 
 	@staticmethod
+	def set_account_prefix(name: str, account: dict):
+		"""
+		设置单个账号的环境变量（使用 ANYROUTER_ACCOUNT_* 格式）
+
+		Args:
+			name: 环境变量后缀名称
+			account: 账号配置
+		"""
+		os.environ[f'ANYROUTER_ACCOUNT_{name}'] = json.dumps(account, ensure_ascii=False)
+
+	@staticmethod
+	def clear_account_prefix_env():
+		"""清除所有 ANYROUTER_ACCOUNT_* 环境变量"""
+		keys_to_remove = [key for key in os.environ.keys() if key.startswith('ANYROUTER_ACCOUNT_')]
+		for key in keys_to_remove:
+			os.environ.pop(key, None)
+
+	@staticmethod
 	def set_notification(platform: str, config: dict | str):
 		"""
 		设置通知平台环境变量
@@ -103,6 +121,10 @@ def clean_notification_env(monkeypatch: pytest.MonkeyPatch):
 @pytest.fixture
 def accounts_env(monkeypatch):
 	"""设置账号环境变量的工厂函数"""
+	# 清理所有 ANYROUTER_ACCOUNT_* 环境变量
+	for key in list(os.environ.keys()):
+		if key.startswith('ANYROUTER_ACCOUNT_'):
+			monkeypatch.delenv(key, raising=False)
 
 	def _set_accounts(accounts_list: list[dict] = []):
 		if not accounts_list:
@@ -111,6 +133,35 @@ def accounts_env(monkeypatch):
 		monkeypatch.setenv('ANYROUTER_ACCOUNTS', accounts_json)
 
 	return _set_accounts
+
+
+@pytest.fixture
+def account_prefix_env(monkeypatch):
+	"""
+	设置 ANYROUTER_ACCOUNT_* 前缀环境变量的工厂函数
+
+	用于测试单账号环境变量功能
+	"""
+	# 清理 ANYROUTER_ACCOUNTS 环境变量
+	monkeypatch.delenv('ANYROUTER_ACCOUNTS', raising=False)
+
+	# 清理所有 ANYROUTER_ACCOUNT_* 环境变量
+	for key in list(os.environ.keys()):
+		if key.startswith('ANYROUTER_ACCOUNT_'):
+			monkeypatch.delenv(key, raising=False)
+
+	def _set_account(name: str, account: dict):
+		"""
+		设置单个账号环境变量
+
+		Args:
+			name: 环境变量后缀名称
+			account: 账号配置
+		"""
+		account_json = json.dumps(account, ensure_ascii=False)
+		monkeypatch.setenv(f'ANYROUTER_ACCOUNT_{name}', account_json)
+
+	return _set_account
 
 
 @pytest.fixture

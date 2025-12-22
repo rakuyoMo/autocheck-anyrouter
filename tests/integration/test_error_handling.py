@@ -139,6 +139,11 @@ class TestErrorHandling:
 		description: str,
 	):
 		"""测试账号配置验证（参数化测试）"""
+		# 清理所有 ANYROUTER_ACCOUNT_* 环境变量
+		for key in list(os.environ.keys()):
+			if key.startswith('ANYROUTER_ACCOUNT_'):
+				monkeypatch.delenv(key, raising=False)
+
 		if payload is None:
 			monkeypatch.delenv('ANYROUTER_ACCOUNTS', raising=False)
 		else:
