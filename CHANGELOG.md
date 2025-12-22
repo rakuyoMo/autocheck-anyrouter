@@ -9,6 +9,7 @@
 ## [Unreleased]
 
 #### Add
+* Workflow 中使用 `secrets-to-env-action` 自动加载 `ANYROUTER_ACCOUNT_*` secrets 为环境变量，新增账号时无需修改 workflow 文件。
 * 新增 `ANYROUTER_ACCOUNT_*` 前缀环境变量支持，允许每个账号使用独立的环境变量配置，便于单独更新某个账号的 Token。
 * 支持 `ANYROUTER_ACCOUNTS` 和 `ANYROUTER_ACCOUNT_*` 同时使用，账号会自动合并。
 * 支持使用 `ANYROUTER_ACCOUNT_*` 覆盖 `ANYROUTER_ACCOUNTS` 中对应账号的字段（通过 `api_user` 匹配，检查环境变量后缀是否包含 `api_user` 值），便于只更新 `cookies` 而无需重复填写其他字段。
