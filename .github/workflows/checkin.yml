@@ -31,6 +31,12 @@ jobs:
       - name: 📥 检出代码
         uses: actions/checkout@v4
 
+      - name: 🔑 加载账号配置
+        uses: oNaiPs/secrets-to-env-action@ec46a22bfc9b37e014b627b3208b07eb8909ea0f  # v1.5
+        with:
+          secrets: ${{ toJSON(secrets) }}
+          include: ANYROUTER_ACCOUNT_*
+
       - name: 🔧 安装 Mise
         uses: jdx/mise-action@v3
         with:
