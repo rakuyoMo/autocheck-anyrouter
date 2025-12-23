@@ -16,6 +16,9 @@
 * 支持使用 `ANYROUTER_ACCOUNT_*` 覆盖 `ANYROUTER_ACCOUNTS` 中对应账号的字段（通过 `api_user` 匹配，检查环境变量后缀是否包含 `api_user` 值），便于只更新 `cookies` 而无需重复填写其他字段。
 * 新增账号去重功能，当 `name` + `cookies` + `api_user` 完全一致时自动去重。
 
+#### Fix
+* 修复 GitHub Actions Summary 中账号签到结果判断逻辑错误的问题：原来基于余额是否获取成功来判断，现在改为基于签到 API 的实际返回结果。
+
 #### Change
 * 账号验证逻辑调整：无效的账号配置会被忽略并记录日志，不再导致所有账号都无法执行。
 

@@ -32,10 +32,7 @@ class Application:
 		self.balance_manager = BalanceManager(Path(CheckinService.Config.File.BALANCE_HASH_NAME))
 		self.notify_trigger_manager = NotifyTriggerManager()
 		self.notification_kit = NotificationKit()
-		self.github_reporter = GitHubReporter(
-			balance_manager=self.balance_manager,
-			privacy_handler=self.privacy_handler,
-		)
+		self.github_reporter = GitHubReporter(self.privacy_handler)
 
 	async def run(self):
 		"""执行签到流程"""
@@ -248,11 +245,24 @@ class Application:
 		)
 
 		# 生成 GitHub Actions Step Summary
+		# 为 summary 创建使用脱敏名称的结果列表
+		summary_results: list[AccountResult] = []
+		for i, result in enumerate(account_results):
+			safe_name = self.privacy_handler.get_safe_account_name(accounts[i], i)
+			summary_results.append(
+				AccountResult(
+					name=safe_name,
+					status=result.status,
+					quota=result.quota,
+					used=result.used,
+					error=result.error,
+				)
+			)
+
 		self.github_reporter.generate_summary(
 			success_count=success_count,
 			total_count=total_count,
-			current_balances=current_balances,
-			accounts=accounts,
+			account_results=summary_results,
 		)
 
 		# 设置退出码

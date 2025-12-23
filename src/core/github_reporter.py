@@ -1,8 +1,6 @@
 import os
 from datetime import datetime
-from typing import Any
 
-from core.balance_manager import BalanceManager
 from core.models import AccountResult
 from core.privacy_handler import PrivacyHandler
 from tools.logger import logger
@@ -13,27 +11,20 @@ class GitHubReporter:
 
 	ENV_GITHUB_STEP_SUMMARY = 'GITHUB_STEP_SUMMARY'
 
-	def __init__(
-		self,
-		balance_manager: BalanceManager,
-		privacy_handler: PrivacyHandler,
-	):
+	def __init__(self, privacy_handler: PrivacyHandler):
 		"""
 		初始化 GitHub 报告生成器
 
 		Args:
-			balance_manager: 余额管理器
 			privacy_handler: 隐私保护处理器
 		"""
-		self.balance_manager = balance_manager
 		self.privacy_handler = privacy_handler
 
 	def generate_summary(
 		self,
 		success_count: int,
 		total_count: int,
-		current_balances: dict[str, dict[str, float]],
-		accounts: list[dict[str, Any]],
+		account_results: list[AccountResult],
 	):
 		"""
 		生成 GitHub Actions Step Summary
@@ -41,8 +32,7 @@ class GitHubReporter:
 		Args:
 			success_count: 成功数量
 			total_count: 总数量
-			current_balances: 当前余额字典
-			accounts: 账号列表
+			account_results: 账号结果列表
 		"""
 		# 检查是否在 GitHub Actions 环境中运行
 		summary_file = os.getenv(self.ENV_GITHUB_STEP_SUMMARY)
@@ -51,38 +41,9 @@ class GitHubReporter:
 			return
 
 		try:
-			# 构建所有账号的结果列表
-			all_account_results: list[AccountResult] = []
-			for i, account in enumerate(accounts):
-				api_user = account.get('api_user', '')
-				account_key = self.balance_manager.generate_account_key(api_user)
-				# 根据隐私设置获取账号名称
-				account_name = self.privacy_handler.get_safe_account_name(
-					account_info=account,
-					account_index=i,
-				)
-
-				if account_key in current_balances:
-					# 成功获取余额的账号
-					account_result = AccountResult(
-						name=account_name,
-						status='success',
-						quota=current_balances[account_key]['quota'],
-						used=current_balances[account_key]['used'],
-					)
-				else:
-					# 失败的账号
-					account_result = AccountResult(
-						name=account_name,
-						status='failed',
-						error='签到失败',
-					)
-
-				all_account_results.append(account_result)
-
 			# 分组账号
-			success_accounts = [acc for acc in all_account_results if acc.status == 'success']
-			failed_accounts = [acc for acc in all_account_results if acc.status != 'success']
+			success_accounts = [acc for acc in account_results if acc.status == 'success']
+			failed_accounts = [acc for acc in account_results if acc.status != 'success']
 
 			failed_count = total_count - success_count
 			has_success = len(success_accounts) > 0
