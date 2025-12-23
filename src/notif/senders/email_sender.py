@@ -35,8 +35,11 @@ class EmailSender:
 		# 智能确定消息类型：配置优先，没配置则自动检测
 		msg_type = self._determine_msg_type(content)
 
+		# 确定发件人地址：优先使用 sender，没配置则使用 user
+		from_addr = self.config.sender or self.config.user
+
 		msg = MIMEText(content, msg_type, 'utf-8')
-		msg['From'] = f'AnyRouter Assistant <{self.config.user}>'
+		msg['From'] = f'AnyRouter Assistant <{from_addr}>'
 		msg['To'] = self.config.to
 		msg['Subject'] = title
 

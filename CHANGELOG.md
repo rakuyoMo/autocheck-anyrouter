@@ -9,6 +9,7 @@
 ## [Unreleased]
 
 #### Add
+* 邮件通知新增 `sender` 可选字段，支持 SMTP 登录用户与发件人地址不同的场景（如 Resend 服务）。
 * Workflow 中使用 `secrets-to-env-action` 自动加载 `ANYROUTER_ACCOUNT_*` secrets 为环境变量，新增账号时无需修改 workflow 文件。
 * 新增 `ANYROUTER_ACCOUNT_*` 前缀环境变量支持，允许每个账号使用独立的环境变量配置，便于单独更新某个账号的 Token。
 * 支持 `ANYROUTER_ACCOUNTS` 和 `ANYROUTER_ACCOUNT_*` 同时使用，账号会自动合并。

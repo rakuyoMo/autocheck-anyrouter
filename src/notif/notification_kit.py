@@ -297,6 +297,7 @@ class NotificationKit:
 			user=parsed['user'],
 			password=parsed['pass'],
 			to=parsed['to'],
+			sender=parsed.get('sender'),
 			smtp_server=parsed.get('smtp_server'),
 			platform_settings=self._load_platform_settings(
 				platform='email',
