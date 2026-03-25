@@ -7,6 +7,7 @@
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/rakuyoMo/autocheck-anyrouter/ci.yml?branch=main)](https://github.com/rakuyoMo/autocheck-anyrouter/actions)
 [![codecov](https://codecov.io/gh/rakuyoMo/autocheck-anyrouter/branch/main/graph/badge.svg)](https://codecov.io/gh/rakuyoMo/autocheck-anyrouter)
 [![License](https://img.shields.io/badge/license-BSD--2--Clause-green.svg)](LICENSE)
+[![linux.do](https://shorturl.at/ggSqS)](https://linux.do)
 
 ## 功能特性
 
