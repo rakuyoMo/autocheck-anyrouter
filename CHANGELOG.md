@@ -8,6 +8,10 @@
 
 ## [Unreleased]
 
+---
+
+## [1.5.0] (2026-05-14)
+
 #### Add
 * 邮件通知新增 `sender` 可选字段，支持 SMTP 登录用户与发件人地址不同的场景（如 Resend 服务）。[#36]
 * Workflow 中使用 `secrets-to-env-action` 自动加载 `ANYROUTER_ACCOUNT_*` secrets 为环境变量，新增账号时无需修改 workflow 文件。[#34]
@@ -18,11 +22,11 @@
 
 #### Fix
 * 修复 GitHub Actions Summary 中账号签到结果判断逻辑错误的问题：原来基于余额是否获取成功来判断，现在改为基于签到 API 的实际返回结果。[#37]
-* 修复 GitHub Actions 公共日志中 `ANYROUTER_ACCOUNT_*` 环境变量名称后缀和账号名称未脱敏的问题，统一复用现有隐私处理规则展示敏感标识。[#40]
+* 修复 GitHub Actions 公共日志中 `ANYROUTER_ACCOUNT_*` 环境变量名称后缀和账号名称未脱敏的问题，统一复用现有隐私处理规则展示敏感标识。[#41]
 
 #### Change
 * 账号验证逻辑调整：无效的账号配置会被忽略并记录日志，不再导致所有账号都无法执行。[#32]
-* 升级 GitHub Actions 依赖以适配 Node.js 24：`actions/checkout`、`actions/cache` 与 `secrets-to-env-action` 已更新，`jdx/mise-action` 临时固定到支持 Node.js 24 的 commit。[#40]
+* 升级 GitHub Actions 依赖以适配 Node.js 24：`actions/checkout`、`actions/cache` 与 `secrets-to-env-action` 已更新，`jdx/mise-action` 临时固定到支持 Node.js 24 的 commit。[#41]
 
 ---
 
@@ -159,6 +163,7 @@
 * 支持 Fork 定时运行和 Composite Action 两种使用方式。
 * 完善的 CI/CD 工作流、测试体系和项目文档。
 
+[1.5.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.5.0
 [1.4.1]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.4.1
 [1.4.0]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.4.0
 [1.3.1]: https://github.com/rakuyoMo/autocheck-anyrouter/releases/tag/v1.3.1
@@ -188,3 +193,8 @@
 [#27]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/27
 [#28]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/28
 [#30]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/30
+[#32]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/32
+[#34]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/34
+[#36]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/36
+[#37]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/37
+[#41]: https://github.com/rakuyoMo/autocheck-anyrouter/pull/41
