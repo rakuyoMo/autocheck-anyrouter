@@ -10,6 +10,7 @@ class PrivacyHandler:
 	ENV_SHOW_SENSITIVE_INFO = 'SHOW_SENSITIVE_INFO'
 	ENV_ACTIONS_RUNNER_DEBUG = 'ACTIONS_RUNNER_DEBUG'
 	ENV_REPO_VISIBILITY = 'REPO_VISIBILITY'
+	ACCOUNT_ENV_PREFIX = 'ANYROUTER_ACCOUNT_'
 
 	def __init__(self, show_sensitive_info: bool):
 		"""
@@ -98,10 +99,60 @@ class PrivacyHandler:
 		if full_name.startswith('账号 '):
 			return full_name
 
-		# 脱敏模式：首字符 + name 的 hash 后 4 位
-		first_char = full_name[0]
-		name_hash = hashlib.sha256(full_name.encode('utf-8')).hexdigest()[:4]
-		return f'{first_char}{name_hash}'
+		# 自定义账号名属于敏感信息，这里复用统一的脱敏规则，
+		# 避免日志、Step Summary 和其他敏感标识出现多套展示格式。
+		return self.get_safe_sensitive_value(full_name)
+
+	def get_safe_account_env_name(self, env_name: str) -> str:
+		"""
+		获取安全的账号环境变量名称（根据隐私设置）
+
+		Args:
+			env_name: 原始环境变量名称
+
+		Returns:
+			脱敏时保留固定前缀，只对敏感后缀做统一脱敏
+		"""
+		# 调试模式或私有仓库下允许展示完整值，便于定位实际配置来源。
+		if self.show_sensitive_info:
+			return env_name
+
+		# 如果不是账号环境变量，退化为普通敏感值脱敏，避免调用方误传时直接泄露。
+		if not env_name.startswith(self.ACCOUNT_ENV_PREFIX):
+			return self.get_safe_sensitive_value(env_name)
+
+		# 固定前缀本身不包含账号身份信息，因此保留前缀可以帮助定位配置来源。
+		suffix = env_name[len(self.ACCOUNT_ENV_PREFIX) :]
+		if not suffix:
+			return self.ACCOUNT_ENV_PREFIX
+
+		# 只有后缀包含账号标识，因此仅脱敏后缀，保证日志语义清晰且不暴露原值。
+		safe_suffix = self.get_safe_sensitive_value(suffix)
+		return f'{self.ACCOUNT_ENV_PREFIX}{safe_suffix}'
+
+	def get_safe_sensitive_value(self, value: str) -> str:
+		"""
+		获取安全的敏感标识展示（根据隐私设置）
+
+		Args:
+			value: 原始敏感值
+
+		Returns:
+			脱敏时返回 "首字符 + 哈希前 4 位"，否则返回原值
+		"""
+		# 显示敏感信息时直接返回原值，保持现有调试行为不变。
+		if self.show_sensitive_info:
+			return value
+
+		# 空值不包含有效信息，同时也无法按首字符规则脱敏，因此直接返回。
+		if not value:
+			return value
+
+		# 统一使用“首字符 + 哈希前 4 位”的规则，
+		# 这样账号名、环境变量后缀和其他敏感标识在日志中的展示风格完全一致。
+		first_char = value[0]
+		value_hash = hashlib.sha256(value.encode('utf-8')).hexdigest()[:4]
+		return f'{first_char}{value_hash}'
 
 	def get_safe_balance_display(self, quota: float, used: float) -> str:
 		"""
