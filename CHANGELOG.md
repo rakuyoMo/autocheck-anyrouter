@@ -9,18 +9,20 @@
 ## [Unreleased]
 
 #### Add
-* 邮件通知新增 `sender` 可选字段，支持 SMTP 登录用户与发件人地址不同的场景（如 Resend 服务）。
-* Workflow 中使用 `secrets-to-env-action` 自动加载 `ANYROUTER_ACCOUNT_*` secrets 为环境变量，新增账号时无需修改 workflow 文件。
-* 新增 `ANYROUTER_ACCOUNT_*` 前缀环境变量支持，允许每个账号使用独立的环境变量配置，便于单独更新某个账号的 Token。
-* 支持 `ANYROUTER_ACCOUNTS` 和 `ANYROUTER_ACCOUNT_*` 同时使用，账号会自动合并。
-* 支持使用 `ANYROUTER_ACCOUNT_*` 覆盖 `ANYROUTER_ACCOUNTS` 中对应账号的字段（通过 `api_user` 匹配，检查环境变量后缀是否包含 `api_user` 值），便于只更新 `cookies` 而无需重复填写其他字段。
-* 新增账号去重功能，当 `name` + `cookies` + `api_user` 完全一致时自动去重。
+* 邮件通知新增 `sender` 可选字段，支持 SMTP 登录用户与发件人地址不同的场景（如 Resend 服务）。[#36]
+* Workflow 中使用 `secrets-to-env-action` 自动加载 `ANYROUTER_ACCOUNT_*` secrets 为环境变量，新增账号时无需修改 workflow 文件。[#34]
+* 新增 `ANYROUTER_ACCOUNT_*` 前缀环境变量支持，允许每个账号使用独立的环境变量配置，便于单独更新某个账号的 Token。[#32]
+* 支持 `ANYROUTER_ACCOUNTS` 和 `ANYROUTER_ACCOUNT_*` 同时使用，账号会自动合并。[#32]
+* 支持使用 `ANYROUTER_ACCOUNT_*` 覆盖 `ANYROUTER_ACCOUNTS` 中对应账号的字段（通过 `api_user` 匹配，检查环境变量后缀是否包含 `api_user` 值），便于只更新 `cookies` 而无需重复填写其他字段。[#32]
+* 新增账号去重功能，当 `name` + `cookies` + `api_user` 完全一致时自动去重。[#32]
 
 #### Fix
-* 修复 GitHub Actions Summary 中账号签到结果判断逻辑错误的问题：原来基于余额是否获取成功来判断，现在改为基于签到 API 的实际返回结果。
+* 修复 GitHub Actions Summary 中账号签到结果判断逻辑错误的问题：原来基于余额是否获取成功来判断，现在改为基于签到 API 的实际返回结果。[#37]
+* 修复 GitHub Actions 公共日志中 `ANYROUTER_ACCOUNT_*` 环境变量名称后缀和账号名称未脱敏的问题，统一复用现有隐私处理规则展示敏感标识。[#40]
 
 #### Change
-* 账号验证逻辑调整：无效的账号配置会被忽略并记录日志，不再导致所有账号都无法执行。
+* 账号验证逻辑调整：无效的账号配置会被忽略并记录日志，不再导致所有账号都无法执行。[#32]
+* 升级 GitHub Actions 依赖以适配 Node.js 24：`actions/checkout`、`actions/cache` 与 `secrets-to-env-action` 已更新，`jdx/mise-action` 临时固定到支持 Node.js 24 的 commit。[#40]
 
 ---
 

@@ -325,7 +325,7 @@ class Application:
 		"""
 		result: list[dict[str, Any]] = []
 
-		for account in accounts:
+		for account_index, account in enumerate(accounts):
 			api_user = account.get('api_user')
 			if not api_user:
 				# 没有 api_user 字段，无法匹配，直接添加
@@ -344,8 +344,16 @@ class Application:
 				override_config = prefix_configs.pop(matched_key)
 				merged_account = {**account, **override_config}
 				result.append(merged_account)
-				account_name = account.get('name', f'api_user={api_user}')
-				logger.info(f'已使用 ANYROUTER_ACCOUNT_{matched_key} 覆盖账号 "{account_name}" 的配置')
+				# 覆盖日志仍需保留“哪个配置覆盖了哪个账号”的语义，
+				# 但 GitHub Actions 公共日志中不能直接暴露真实账号名和环境变量后缀。
+				safe_account_name = self.privacy_handler.get_safe_account_name(
+					account_info=account,
+					account_index=account_index,
+				)
+				safe_env_name = self.privacy_handler.get_safe_account_env_name(
+					f'{CheckinService.Config.Env.ACCOUNT_PREFIX}{matched_key}'
+				)
+				logger.info(f'已使用 {safe_env_name} 覆盖账号 "{safe_account_name}" 的配置')
 			else:
 				# 没有匹配，保持原样
 				result.append(account)
@@ -372,8 +380,12 @@ class Application:
 
 			# 缺少必需字段
 			if 'cookies' not in account or 'api_user' not in account:
-				account_name = account.get('name', f'账号 {i + 1}')
-				logger.error(f'"{account_name}" 缺少必需字段 (cookies, api_user)，已忽略')
+				# 无效配置也会出现在公共日志中，因此账号名需要和正常日志保持同一套脱敏规则。
+				safe_account_name = self.privacy_handler.get_safe_account_name(
+					account_info=account,
+					account_index=i,
+				)
+				logger.error(f'"{safe_account_name}" 缺少必需字段 (cookies, api_user)，已忽略')
 				continue
 
 			# name 字段为空字符串
@@ -434,21 +446,27 @@ class Application:
 			try:
 				account_data = json.loads(value)
 			except json.JSONDecodeError as e:
+				# 环境变量名称后缀可能包含 api_user 或人工可读标识，因此日志中只输出脱敏后的名称。
+				safe_env_name = self.privacy_handler.get_safe_account_env_name(key)
 				logger.error(
-					message=f'{key} 的 JSON 格式无效：{e}',
+					message=f'{safe_env_name} 的 JSON 格式无效：{e}',
 					exc_info=True,
 				)
 				continue
 			except Exception as e:
+				# 这里同样避免在异常日志中直接泄露完整环境变量名称。
+				safe_env_name = self.privacy_handler.get_safe_account_env_name(key)
 				logger.error(
-					message=f'{key} 格式不正确：{e}',
+					message=f'{safe_env_name} 格式不正确：{e}',
 					exc_info=True,
 				)
 				continue
 
 			# 不是字典格式
 			if not isinstance(account_data, dict):
-				logger.error(f'{key} 必须使用对象格式 {{}}')
+				# 非对象格式的报错也需要走同一套环境变量名称脱敏逻辑。
+				safe_env_name = self.privacy_handler.get_safe_account_env_name(key)
+				logger.error(f'{safe_env_name} 必须使用对象格式 {{}}')
 				continue
 
 			accounts[suffix] = account_data

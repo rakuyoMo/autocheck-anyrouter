@@ -5,7 +5,8 @@ runs:
   using: 'composite'
   steps:
     - name: 🔧 安装 Mise
-      uses: jdx/mise-action@v3
+      # 临时固定到已切换为 Node.js 24 的 commit，待上游发布正式 tag 后再回切。
+      uses: jdx/mise-action@a0eaf7aa03d8c15f7e32f71429266c3d5d3cb442
       with:
         cache_key: "{{default}}-${{ hashFiles('pyproject.toml') }}"
 
