@@ -27,7 +27,7 @@ jobs:
       PYTHONIOENCODING: utf-8
     steps:
       - name: 📥 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 🚀 设置开发环境
         uses: ./.github/actions/setup-environment
@@ -61,7 +61,7 @@ jobs:
       PYTHONIOENCODING: utf-8
     steps:
       - name: 📥 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 🚀 设置开发环境
         uses: ./.github/actions/setup-environment

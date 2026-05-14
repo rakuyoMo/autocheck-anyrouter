@@ -29,16 +29,17 @@ jobs:
       WECOM_NOTIF_CONFIG: ${{ secrets.WECOM_NOTIF_CONFIG }}
     steps:
       - name: 📥 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 🔑 加载账号配置
-        uses: oNaiPs/secrets-to-env-action@ec46a22bfc9b37e014b627b3208b07eb8909ea0f  # v1.5
+        uses: oNaiPs/secrets-to-env-action@v1.8
         with:
           secrets: ${{ toJSON(secrets) }}
           include: ANYROUTER_ACCOUNT_*
 
       - name: 🔧 安装 Mise
-        uses: jdx/mise-action@v3
+        # 临时固定到已切换为 Node.js 24 的 commit，待上游发布正式 tag 后再回切。
+        uses: jdx/mise-action@a0eaf7aa03d8c15f7e32f71429266c3d5d3cb442
         with:
           cache_key: "{{default}}-${{ hashFiles('pyproject.toml') }}"
 
@@ -50,7 +51,7 @@ jobs:
         id: playwright-setup
 
       - name: 💾 恢复余额历史缓存
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: balance_hash.txt
           key: balance-hash-${{ github.run_id }}

@@ -22,6 +22,7 @@
 
 #### Change
 * 账号验证逻辑调整：无效的账号配置会被忽略并记录日志，不再导致所有账号都无法执行。[#32]
+* 升级 GitHub Actions 依赖以适配 Node.js 24：`actions/checkout`、`actions/cache` 与 `secrets-to-env-action` 已更新，`jdx/mise-action` 临时固定到支持 Node.js 24 的 commit。[#40]
 
 ---
 
